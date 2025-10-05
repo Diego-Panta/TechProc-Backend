@@ -292,9 +292,3 @@ Puedes modificar y distribuir el código libremente, citando la autoría origina
 Proyecto de arquitectura DDD con Laravel y React — *TechProc Backend v1.0*
 📧 [diego@techproc.com](mailto:diego@techproc.com)
 
-```
-
----
-
-Si deseas, puedo guardarlo en un archivo `README.md` para ti.
-```
