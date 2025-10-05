@@ -290,5 +290,4 @@ Puedes modificar y distribuir el código libremente, citando la autoría origina
 
 **Diego Panta P.**
 Proyecto de arquitectura DDD con Laravel y React — *TechProc Backend v1.0*
-📧 [diego@techproc.com](mailto:diego@techproc.com)
-
+📧 GitHub: [Diego-Panta](https://github.com/Diego-Panta)
