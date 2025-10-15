@@ -4,6 +4,7 @@ namespace App\Domains\DeveloperWeb\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Domains\Administrator\Models\User;
 
 class Announcement extends Model
 {
@@ -11,6 +12,9 @@ class Announcement extends Model
 
     protected $table = 'announcements';
     protected $primaryKey = 'id';
+
+    // Deshabilitar timestamps automáticos de Laravel
+    public $timestamps = false;
 
     protected $fillable = [
         'id_announcement',
@@ -26,6 +30,7 @@ class Announcement extends Model
         'end_date',
         'views',
         'created_by',
+        'created_date',
     ];
 
     protected $casts = [
@@ -34,6 +39,10 @@ class Announcement extends Model
         'created_date' => 'datetime',
         'views' => 'integer',
     ];
+
+    // Especificar la columna de fecha de creación personalizada
+    const CREATED_AT = 'created_date';
+    const UPDATED_AT = null; // No hay columna updated_at
 
     public function creator()
     {

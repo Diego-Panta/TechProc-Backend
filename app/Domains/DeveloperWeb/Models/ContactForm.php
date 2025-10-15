@@ -12,6 +12,9 @@ class ContactForm extends Model
     protected $table = 'contact_forms';
     protected $primaryKey = 'id';
 
+    // Deshabilitar timestamps automáticos de Laravel
+    public $timestamps = false;
+
     protected $fillable = [
         'id_contact',
         'full_name',
@@ -33,8 +36,12 @@ class ContactForm extends Model
         'submission_date' => 'datetime',
     ];
 
+    // Mapear las columnas personalizadas si quieres usar métodos como save()
+    const CREATED_AT = 'submission_date';
+    const UPDATED_AT = null; // No hay columna updated_at
+
     public function assignedTo()
     {
-        return $this->belongsTo(Employee::class, 'assigned_to');
+        return $this->belongsTo(\App\Domains\Administrator\Models\Employee::class, 'assigned_to');
     }
 }
