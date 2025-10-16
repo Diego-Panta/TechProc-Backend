@@ -15,6 +15,8 @@ class DomainServiceProvider extends ServiceProvider
             'LMS',
             'SupportInfrastructure',
             'SupportSecurity',
+            'SupportTechnical',
+            'AuthenticationSessions',
             'Shared'
         ];
 
