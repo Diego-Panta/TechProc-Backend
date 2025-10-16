@@ -11,6 +11,7 @@ class TicketTracking extends Model
 
     protected $table = 'ticket_trackings';
     protected $primaryKey = 'id';
+    public $timestamps = false;
 
     protected $fillable = [
         'ticket_tracking_id',

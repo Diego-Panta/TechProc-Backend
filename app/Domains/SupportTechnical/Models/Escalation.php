@@ -2,6 +2,7 @@
 
 namespace App\Domains\SupportTechnical\Models;
 
+use App\Domains\Administrator\Models\Employee;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -11,6 +12,7 @@ class Escalation extends Model
 
     protected $table = 'escalations';
     protected $primaryKey = 'id';
+    public $timestamps = false;
 
     protected $fillable = [
         'escalation_id',
@@ -21,6 +23,7 @@ class Escalation extends Model
         'observations',
         'escalation_date',
         'approved',
+        'created_at',
     ];
 
     protected $casts = [
