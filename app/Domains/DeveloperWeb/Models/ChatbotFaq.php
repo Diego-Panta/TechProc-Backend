@@ -12,6 +12,9 @@ class ChatbotFaq extends Model
     protected $table = 'chatbot_faqs';
     protected $primaryKey = 'id';
 
+    // Deshabilitar timestamps automáticos de Laravel
+    public $timestamps = false;
+
     protected $fillable = [
         'id_faq',
         'question',
@@ -20,6 +23,8 @@ class ChatbotFaq extends Model
         'keywords',
         'active',
         'usage_count',
+        'created_date',
+        'updated_date',
     ];
 
     protected $casts = [

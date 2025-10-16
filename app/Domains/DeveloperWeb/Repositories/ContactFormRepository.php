@@ -8,11 +8,26 @@ use Illuminate\Support\Facades\DB;
 
 class ContactFormRepository
 {
-    public function getAllPaginated(int $perPage = 15): LengthAwarePaginator
+    public function getAllPaginated(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
-        return ContactForm::with(['assignedTo.user'])
-            ->orderBy('submission_date', 'desc')
-            ->paginate($perPage);
+        $query = ContactForm::with(['assignedTo.user']);
+
+        // Aplicar filtros
+        if (!empty($filters['status']) && $filters['status'] !== 'all') {
+            $query->where('status', $filters['status']);
+        }
+
+        if (!empty($filters['assigned_to'])) {
+            $query->where('assigned_to', $filters['assigned_to']);
+        }
+
+        if (!empty($filters['form_type'])) {
+            $query->where('form_type', $filters['form_type']);
+        }
+
+        return $query->orderBy('submission_date', 'desc')
+                    ->paginate($perPage)
+                    ->appends($filters);
     }
 
     public function findById(int $id): ?ContactForm
@@ -22,9 +37,7 @@ class ContactFormRepository
 
     public function create(array $data): ContactForm
     {
-        // Usar Query Builder para evitar conflictos con timestamps
         $id = DB::table('contact_forms')->insertGetId($data);
-        
         return ContactForm::find($id);
     }
 
@@ -51,13 +64,19 @@ class ContactFormRepository
         return $contactForm->update(['status' => 'spam']);
     }
 
-    public function respondToContact(ContactForm $contactForm, string $response): bool
+    public function respondToContact(ContactForm $contactForm, string $response, ?int $assignedTo = null): bool
     {
-        return $contactForm->update([
+        $updateData = [
             'response' => $response,
             'response_date' => now(),
             'status' => 'responded'
-        ]);
+        ];
+
+        if ($assignedTo) {
+            $updateData['assigned_to'] = $assignedTo;
+        }
+
+        return $contactForm->update($updateData);
     }
 
     public function getNextContactId(): int
@@ -66,12 +85,29 @@ class ContactFormRepository
         return $lastContact ? $lastContact->id_contact + 1 : 1;
     }
 
-    // Nuevo método para obtener estadísticas
     public function getStats(): array
     {
         return ContactForm::select('status', DB::raw('count(*) as count'))
             ->groupBy('status')
             ->pluck('count', 'status')
+            ->toArray();
+    }
+
+    // Nuevos métodos para obtener opciones de filtros
+    public function getFormTypes(): array
+    {
+        return ContactForm::distinct()
+            ->whereNotNull('form_type')
+            ->pluck('form_type')
+            ->toArray();
+    }
+
+    public function getAssignedEmployees(): array
+    {
+        return ContactForm::with('assignedTo.user')
+            ->whereNotNull('assigned_to')
+            ->get()
+            ->pluck('assignedTo.user.full_name', 'assigned_to')
             ->toArray();
     }
 }

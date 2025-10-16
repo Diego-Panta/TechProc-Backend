@@ -2,10 +2,7 @@
 
 namespace App\Domains\DeveloperWeb\Http\Controllers;
 
-use App\Domains\DeveloperWeb\Http\Requests\RespondContactFormRequest;
-use App\Domains\DeveloperWeb\Http\Requests\StoreContactFormRequest;
 use App\Domains\DeveloperWeb\Services\ContactFormService;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Log;
@@ -23,7 +20,7 @@ class ContactFormController
     }
 
     // Para el frontend público - procesar formulario
-    public function store(StoreContactFormRequest $request): RedirectResponse
+    public function store(\App\Domains\DeveloperWeb\Http\Requests\StoreContactFormRequest $request): RedirectResponse
     {
         try {
             Log::info('Datos recibidos:', $request->all());
@@ -48,25 +45,35 @@ class ContactFormController
         }
     }
 
-    // Para el panel del desarrollador - listar consultas
+    // Para el panel del desarrollador - listar consultas con filtros
     public function index(): View
     {
-        $status = request('status', 'all');
-        
-        if ($status === 'all') {
-            $contactForms = $this->contactFormService->getAllContactForms();
-        } else {
-            $contactForms = $this->contactFormService->getContactFormsByStatus($status);
-        }
+        $filters = [
+            'status' => request('status', 'all'),
+            'assigned_to' => request('assigned_to'),
+            'form_type' => request('form_type'),
+        ];
+
+        $contactForms = $this->contactFormService->getAllContactForms($filters);
 
         $statuses = [
             'all' => 'Todos',
             'pending' => 'Pendientes',
+            'in_progress' => 'En Progreso',
             'responded' => 'Respondidos',
             'spam' => 'Spam'
         ];
+
+        $formTypes = $this->contactFormService->getFormTypes();
+        $assignedEmployees = $this->contactFormService->getAssignedEmployees();
         
-        return view('developer-web.contact-form.index', compact('contactForms', 'status', 'statuses'));
+        return view('developer-web.contact-form.index', compact(
+            'contactForms', 
+            'filters', 
+            'statuses',
+            'formTypes',
+            'assignedEmployees'
+        ));
     }
 
     // Para el panel del desarrollador - mostrar detalles
@@ -124,7 +131,10 @@ class ContactFormController
                     ->withInput();
             }
 
-            $success = $this->contactFormService->respondToContact($id, $response);
+            // TEMPORAL: Asignar un empleado de prueba (en producción esto vendría del usuario autenticado)
+            $assignedTo = 1; // ID del empleado de prueba
+
+            $success = $this->contactFormService->respondToContact($id, $response, $assignedTo);
             
             if ($success) {
                 return redirect()->route('developer-web.contact-forms.index')

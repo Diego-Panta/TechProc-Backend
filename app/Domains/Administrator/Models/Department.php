@@ -12,6 +12,9 @@ class Department extends Model
     protected $table = 'departments';
     protected $primaryKey = 'id';
 
+    // Deshabilitar timestamps automáticos
+    public $timestamps = false;
+
     protected $fillable = [
         'department_name',
         'description',

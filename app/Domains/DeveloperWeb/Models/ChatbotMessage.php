@@ -1,4 +1,5 @@
 <?php
+// app/Domains/DeveloperWeb/Models/ChatbotMessage.php
 
 namespace App\Domains\DeveloperWeb\Models;
 
@@ -12,6 +13,9 @@ class ChatbotMessage extends Model
     protected $table = 'chatbot_messages';
     protected $primaryKey = 'id';
 
+    // Deshabilitar timestamps automáticos
+    public $timestamps = false;
+
     protected $fillable = [
         'id_message',
         'conversation_id',
@@ -23,6 +27,9 @@ class ChatbotMessage extends Model
 
     protected $casts = [
         'timestamp' => 'datetime',
+        'id_message' => 'integer', // Asegurar que sea integer
+        'conversation_id' => 'integer',
+        'faq_matched' => 'integer',
     ];
 
     public function conversation()

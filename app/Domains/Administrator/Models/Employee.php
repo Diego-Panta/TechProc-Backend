@@ -12,6 +12,9 @@ class Employee extends Model
     protected $table = 'employees';
     protected $primaryKey = 'id';
 
+    // Deshabilitar timestamps automáticos
+    public $timestamps = false;
+
     protected $fillable = [
         'employee_id',
         'hire_date',

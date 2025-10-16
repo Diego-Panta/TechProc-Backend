@@ -4,6 +4,7 @@ namespace App\Domains\DeveloperWeb\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Domains\Administrator\Models\User;
 
 class Alert extends Model
 {
@@ -11,6 +12,9 @@ class Alert extends Model
 
     protected $table = 'alerts';
     protected $primaryKey = 'id';
+
+    // Deshabilitar timestamps automáticos de Laravel
+    public $timestamps = false;
 
     protected $fillable = [
         'id_alert',
@@ -23,6 +27,7 @@ class Alert extends Model
         'end_date',
         'priority',
         'created_by',
+        'created_date', // Agregado
     ];
 
     protected $casts = [
@@ -31,6 +36,10 @@ class Alert extends Model
         'created_date' => 'datetime',
         'priority' => 'integer',
     ];
+
+    // Especificar la columna de fecha de creación personalizada
+    const CREATED_AT = 'created_date';
+    const UPDATED_AT = null; // No hay columna updated_at
 
     public function creator()
     {

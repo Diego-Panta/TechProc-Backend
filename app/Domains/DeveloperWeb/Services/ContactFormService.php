@@ -12,9 +12,9 @@ class ContactFormService
         private ContactFormRepository $contactFormRepository
     ) {}
 
-    public function getAllContactForms(int $perPage = 15): LengthAwarePaginator
+    public function getAllContactForms(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
-        return $this->contactFormRepository->getAllPaginated($perPage);
+        return $this->contactFormRepository->getAllPaginated($filters, $perPage);
     }
 
     public function getContactFormById(int $id): ?ContactForm
@@ -51,7 +51,7 @@ class ContactFormService
         return $this->contactFormRepository->markAsSpam($contactForm);
     }
 
-    public function respondToContact(int $id, string $response): bool
+    public function respondToContact(int $id, string $response, ?int $assignedTo = null): bool
     {
         $contactForm = $this->contactFormRepository->findById($id);
         
@@ -59,7 +59,7 @@ class ContactFormService
             return false;
         }
 
-        return $this->contactFormRepository->respondToContact($contactForm, $response);
+        return $this->contactFormRepository->respondToContact($contactForm, $response, $assignedTo);
     }
 
     public function getContactFormsByStatus(string $status, int $perPage = 15): LengthAwarePaginator
@@ -67,9 +67,19 @@ class ContactFormService
         return $this->contactFormRepository->getByStatus($status, $perPage);
     }
 
-    // Nuevo método para obtener estadísticas
     public function getContactStats(): array
     {
         return $this->contactFormRepository->getStats();
+    }
+
+    // Nuevos métodos para filtros
+    public function getFormTypes(): array
+    {
+        return $this->contactFormRepository->getFormTypes();
+    }
+
+    public function getAssignedEmployees(): array
+    {
+        return $this->contactFormRepository->getAssignedEmployees();
     }
 }
