@@ -173,4 +173,19 @@ class AnnouncementService
             throw new \Exception('No se pudo crear un usuario temporal. Error: ' . $e->getMessage());
         }
     }
+
+    public function getActiveCount(): int
+    {
+        return $this->announcementRepository->getActiveCount();
+    }
+
+    public function getTotalViews(): int
+    {
+        return $this->announcementRepository->getTotalViews();
+    }
+
+    public function getActiveAnnouncementsWithStats()
+    {
+        return $this->announcementRepository->getActiveAnnouncementsWithStats();
+    }
 }

@@ -169,4 +169,9 @@ class AlertService
             throw new \Exception('No se pudo crear un usuario temporal. Error: ' . $e->getMessage());
         }
     }
+
+    public function getActiveCount(): int
+    {
+        return $this->alertRepository->getActiveCount();
+    }
 }

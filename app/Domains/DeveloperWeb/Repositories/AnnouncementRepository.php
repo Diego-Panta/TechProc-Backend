@@ -100,4 +100,44 @@ class AnnouncementRepository
             ->orderBy('created_date', 'desc')
             ->get(); // Quitar el ->toArray()
     }
+
+    public function getActiveCount(): int
+    {
+        $now = now();
+        return Announcement::where('status', 'published')
+            ->where('start_date', '<=', $now)
+            ->where('end_date', '>=', $now)
+            ->count();
+    }
+
+    public function getTotalViews(): int
+    {
+        return Announcement::sum('views');
+    }
+
+    public function getActiveAnnouncementsWithStats()
+    {
+        $now = now();
+        return Announcement::with('creator')
+            ->where('status', 'published')
+            ->where('start_date', '<=', $now)
+            ->where('end_date', '>=', $now)
+            ->orderBy('created_date', 'desc')
+            ->get()
+            ->map(function ($announcement) {
+                // Calcular CTR (Click Through Rate) basado en clics/views
+                $clicks = $announcement->clicks ?? 0;
+                $views = $announcement->views ?? 1;
+                $ctr = $views > 0 ? round(($clicks / $views) * 100, 1) : 0;
+
+                return [
+                    'id' => $announcement->id,
+                    'title' => $announcement->title,
+                    'display_type' => $announcement->display_type,
+                    'views' => $views,
+                    'clicks' => $clicks,
+                    'ctr' => $ctr
+                ];
+            });
+    }
 }

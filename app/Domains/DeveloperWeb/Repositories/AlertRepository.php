@@ -119,4 +119,13 @@ class AlertRepository
             ->orderBy('created_date', 'desc')
             ->get();
     }
+
+    public function getActiveCount(): int
+    {
+        $now = now();
+        return Alert::where('status', 'active')
+            ->where('start_date', '<=', $now)
+            ->where('end_date', '>=', $now)
+            ->count();
+    }
 }

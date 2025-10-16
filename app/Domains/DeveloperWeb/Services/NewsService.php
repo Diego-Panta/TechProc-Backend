@@ -54,10 +54,10 @@ class NewsService
                 $tags = [];
             }
         }
-        
+
         // Si es un array, asegurarse de que solo contenga strings
         if (is_array($tags)) {
-            $tags = array_filter($tags, function($tag) {
+            $tags = array_filter($tags, function ($tag) {
                 return is_string($tag) && !empty(trim($tag));
             });
             $tags = array_values($tags); // Reindexar array
@@ -112,9 +112,9 @@ class NewsService
                     $tags = [];
                 }
             }
-            
+
             if (is_array($tags)) {
-                $tags = array_filter($tags, function($tag) {
+                $tags = array_filter($tags, function ($tag) {
                     return is_string($tag) && !empty(trim($tag));
                 });
                 $tags = array_values($tags);
@@ -167,7 +167,7 @@ class NewsService
     public function getRelatedNews(int $id): array
     {
         $news = $this->newsRepository->findById($id);
-        
+
         if (!$news) {
             return [];
         }
@@ -204,7 +204,7 @@ class NewsService
     private function slugExists(string $slug, int $excludeId = null): bool
     {
         $query = News::where('slug', $slug);
-        
+
         if ($excludeId) {
             $query->where('id', '!=', $excludeId);
         }
@@ -274,5 +274,15 @@ class NewsService
 
             throw new \Exception('No se pudo crear un usuario temporal. Error: ' . $e->getMessage());
         }
+    }
+
+    public function getTotalViews(): int
+    {
+        return $this->newsRepository->getTotalViews();
+    }
+
+    public function getRecentNews(int $limit = 5)
+    {
+        return $this->newsRepository->getRecentNews($limit);
     }
 }

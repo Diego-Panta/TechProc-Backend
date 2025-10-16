@@ -23,14 +23,14 @@ class NewsRepository
 
         if (!empty($filters['search'])) {
             $query->where('title', 'ILIKE', '%' . $filters['search'] . '%')
-                  ->orWhere('summary', 'ILIKE', '%' . $filters['search'] . '%');
+                ->orWhere('summary', 'ILIKE', '%' . $filters['search'] . '%');
         }
 
         // Filtrar por publicaciones activas
         if (!empty($filters['published_only'])) {
             $now = now();
             $query->where('status', 'published')
-                  ->where('published_date', '<=', $now);
+                ->where('published_date', '<=', $now);
         }
 
         return $query->orderBy('created_date', 'desc')
@@ -62,7 +62,7 @@ class NewsRepository
     {
         // Actualizar updated_date automáticamente
         $data['updated_date'] = now();
-        
+
         // Asegurar que los campos JSON se actualicen correctamente
         if (isset($data['tags']) && is_array($data['tags'])) {
             $data['tags'] = json_encode($data['tags']);
@@ -119,6 +119,21 @@ class NewsRepository
         return News::with('author')
             ->where('id', '!=', $news->id)
             ->where('category', $news->category)
+            ->where('status', 'published')
+            ->where('published_date', '<=', now())
+            ->orderBy('published_date', 'desc')
+            ->limit($limit)
+            ->get();
+    }
+
+    public function getTotalViews(): int
+    {
+        return News::sum('views');
+    }
+
+    public function getRecentNews(int $limit = 5)
+    {
+        return News::with('author')
             ->where('status', 'published')
             ->where('published_date', '<=', now())
             ->orderBy('published_date', 'desc')

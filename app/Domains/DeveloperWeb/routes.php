@@ -6,6 +6,7 @@ use App\Domains\DeveloperWeb\Http\Controllers\AlertController;
 use App\Domains\DeveloperWeb\Http\Controllers\NewsController;
 use App\Domains\DeveloperWeb\Http\Controllers\ChatbotController;
 use App\Domains\DeveloperWeb\Http\Controllers\ChatbotFaqController;
+use App\Domains\DeveloperWeb\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
 // Rutas públicas para noticias
@@ -68,6 +69,10 @@ Route::prefix('chatbot-faqs')->name('public.chatbot.faqs.')->group(function () {
 // Rutas del panel del desarrollador (requieren autenticación)
 //Route::middleware(['auth'])->prefix('developer-web')->name('developer-web.')->group(function () {
 Route::prefix('developer-web')->name('developer-web.')->group(function () {
+
+    // Dashboard
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/statistics', [DashboardController::class, 'getStatistics'])->name('dashboard.statistics');
 
     // News Routes
     Route::prefix('news')->name('news.')->group(function () {
@@ -135,6 +140,7 @@ Route::prefix('developer-web')->name('developer-web.')->group(function () {
         Route::post('/conversation/end', [ChatbotController::class, 'endConversation'])->name('end-conversation');
         Route::get('/faqs/category/{category?}', [ChatbotController::class, 'getFaqsByCategory'])->name('faqs.by-category');
     });
+    
 });
 
 Route::get('/test-gemini', [ChatbotController::class, 'testGeminiConnection']);

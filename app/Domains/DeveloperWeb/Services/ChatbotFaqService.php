@@ -80,10 +80,10 @@ class ChatbotFaqService
                     $data['keywords'] = [];
                 }
             }
-            
+
             // Filtrar keywords vacías
             if (is_array($data['keywords'])) {
-                $data['keywords'] = array_filter($data['keywords'], function($keyword) {
+                $data['keywords'] = array_filter($data['keywords'], function ($keyword) {
                     return !empty(trim($keyword));
                 });
                 $data['keywords'] = array_values($data['keywords']); // Reindexar
@@ -102,5 +102,20 @@ class ChatbotFaqService
         }
 
         return $data;
+    }
+
+    public function getTotalFaqs(): int
+    {
+        return $this->chatbotRepository->getTotalFaqs();
+    }
+
+    public function getActiveFaqsCount(): int
+    {
+        return $this->chatbotRepository->getActiveFaqsCount();
+    }
+
+    public function getConversationStats(): array
+    {
+        return $this->chatbotRepository->getConversationStats();
     }
 }

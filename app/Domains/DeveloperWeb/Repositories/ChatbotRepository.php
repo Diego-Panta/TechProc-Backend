@@ -26,16 +26,16 @@ class ChatbotRepository
 
         if (!empty($filters['search'])) {
             $search = $filters['search'];
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('question', 'ILIKE', "%{$search}%")
-                  ->orWhere('answer', 'ILIKE', "%{$search}%")
-                  ->orWhere('category', 'ILIKE', "%{$search}%");
+                    ->orWhere('answer', 'ILIKE', "%{$search}%")
+                    ->orWhere('category', 'ILIKE', "%{$search}%");
             });
         }
 
         return $query->orderBy('usage_count', 'desc')
-                    ->orderBy('created_date', 'desc')
-                    ->paginate($perPage);
+            ->orderBy('created_date', 'desc')
+            ->paginate($perPage);
     }
 
     public function findFaqById(int $id): ?ChatbotFaq
@@ -57,7 +57,22 @@ class ChatbotRepository
 
     public function deleteFaq(ChatbotFaq $faq): bool
     {
-        return $faq->delete();
+        try {
+            DB::beginTransaction();
+
+            // Paso 1: Establecer faq_matched a NULL en todos los mensajes que referencian esta FAQ
+            ChatbotMessage::where('faq_matched', $faq->id)
+                ->update(['faq_matched' => null]);
+
+            // Paso 2: Eliminar la FAQ
+            $deleted = $faq->delete();
+
+            DB::commit();
+            return $deleted;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
     }
 
     public function incrementFaqUsage(int $faqId): bool
@@ -89,10 +104,10 @@ class ChatbotRepository
     public function findMatchingFaq(string $question): ?ChatbotFaq
     {
         $faqs = $this->getActiveFaqs();
-        
+
         foreach ($faqs as $faq) {
             $similarity = $this->calculateSimilarity($question, $faq->question);
-            
+
             if ($similarity > 0.6) { // 60% de similitud
                 return $faq;
             }
@@ -105,15 +120,19 @@ class ChatbotRepository
     {
         $words1 = array_count_values(str_word_count(mb_strtolower($text1), 1));
         $words2 = array_count_values(str_word_count(mb_strtolower($text2), 1));
-        
+
         $intersection = array_intersect_key($words1, $words2);
         $dotProduct = array_sum($intersection);
-        
-        $norm1 = sqrt(array_sum(array_map(function($x) { return $x * $x; }, $words1)));
-        $norm2 = sqrt(array_sum(array_map(function($x) { return $x * $x; }, $words2)));
-        
+
+        $norm1 = sqrt(array_sum(array_map(function ($x) {
+            return $x * $x;
+        }, $words1)));
+        $norm2 = sqrt(array_sum(array_map(function ($x) {
+            return $x * $x;
+        }, $words2)));
+
         if ($norm1 * $norm2 == 0) return 0;
-        
+
         return $dotProduct / ($norm1 * $norm2);
     }
 
@@ -152,5 +171,26 @@ class ChatbotRepository
     {
         $lastMessage = ChatbotMessage::orderBy('id_message', 'desc')->first();
         return $lastMessage ? $lastMessage->id_message + 1 : 1;
+    }
+
+    public function getTotalFaqs(): int
+    {
+        return ChatbotFaq::count();
+    }
+
+    public function getActiveFaqsCount(): int
+    {
+        return ChatbotFaq::where('active', true)->count();
+    }
+
+    public function getConversationStats(): array
+    {
+        $total = ChatbotConversation::count();
+        $resolved = ChatbotConversation::where('resolved', true)->count();
+
+        return [
+            'total' => $total,
+            'resolved' => $resolved
+        ];
     }
 }
