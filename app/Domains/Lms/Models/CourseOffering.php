@@ -11,6 +11,9 @@ class CourseOffering extends Model
 
     protected $table = 'course_offerings';
     protected $primaryKey = 'id';
+    
+    // Deshabilitar timestamps automáticos
+    public $timestamps = false;
 
     protected $fillable = [
         'course_offering_id',
@@ -19,9 +22,18 @@ class CourseOffering extends Model
         'instructor_id',
         'schedule',
         'delivery_method',
+        'modality',
+        'max_capacity',
+        'enrolled_count',
+        'start_date',
+        'end_date',
+        'status',
+        'created_at',
     ];
 
     protected $casts = [
+        'start_date' => 'date',
+        'end_date' => 'date',
         'created_at' => 'datetime',
     ];
 

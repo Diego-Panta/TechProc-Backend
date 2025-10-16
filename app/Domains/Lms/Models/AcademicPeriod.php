@@ -11,6 +11,9 @@ class AcademicPeriod extends Model
 
     protected $table = 'academic_periods';
     protected $primaryKey = 'id';
+    
+    // Deshabilitar timestamps automáticos
+    public $timestamps = false;
 
     protected $fillable = [
         'academic_period_id',
@@ -18,6 +21,7 @@ class AcademicPeriod extends Model
         'start_date',
         'end_date',
         'status',
+        'created_at',
     ];
 
     protected $casts = [

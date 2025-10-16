@@ -2,6 +2,7 @@
 
 namespace App\Domains\Lms\Models;
 
+use App\Domains\Administrator\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -11,6 +12,9 @@ class Instructor extends Model
 
     protected $table = 'instructors';
     protected $primaryKey = 'id';
+    
+    // Deshabilitar timestamps automáticos (updated_at no existe en la tabla)
+    public $timestamps = false;
 
     protected $fillable = [
         'instructor_id',
@@ -18,6 +22,7 @@ class Instructor extends Model
         'bio',
         'expertise_area',
         'status',
+        'created_at',
     ];
 
     protected $casts = [

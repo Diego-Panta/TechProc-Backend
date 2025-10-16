@@ -11,12 +11,16 @@ class EnrollmentDetail extends Model
 
     protected $table = 'enrollment_details';
     protected $primaryKey = 'id';
+    
+    // Deshabilitar timestamps automáticos
+    public $timestamps = false;
 
     protected $fillable = [
         'enrollment_id',
         'subject_id',
         'course_offering_id',
         'status',
+        'created_at',
     ];
 
     protected $casts = [

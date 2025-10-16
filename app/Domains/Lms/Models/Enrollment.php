@@ -11,6 +11,9 @@ class Enrollment extends Model
 
     protected $table = 'enrollments';
     protected $primaryKey = 'id';
+    
+    // Deshabilitar timestamps automáticos
+    public $timestamps = false;
 
     protected $fillable = [
         'enrollment_id',
@@ -19,6 +22,7 @@ class Enrollment extends Model
         'enrollment_type',
         'enrollment_date',
         'status',
+        'created_at',
     ];
 
     protected $casts = [
