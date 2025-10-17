@@ -118,7 +118,7 @@ Se encargan de manejar las **peticiones HTTP**, invocando los servicios correspo
 
 Gestionan la **validación de datos entrantes** en las peticiones POST, PUT, PATCH, etc.
 
-### 🧱 Middleware (`Http/Middleware/`)
+### 🧱 Middleware (`Http//`)
 
 Filtran las solicitudes entrantes, por ejemplo: autenticación, permisos, logs, etc.
 
