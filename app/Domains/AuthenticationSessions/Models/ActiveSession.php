@@ -12,6 +12,9 @@ class ActiveSession extends Model
     protected $table = 'active_sessions';
     protected $primaryKey = 'id';
 
+    // Deshabilitar timestamps ya que la tabla no tiene created_at/updated_at
+    public $timestamps = false;
+
     protected $fillable = [
         'session_id',
         'user_id',
