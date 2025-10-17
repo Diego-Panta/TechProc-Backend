@@ -17,7 +17,7 @@ class ActiveSession extends Model
 
     #Registrar los intentos de acceso
     public function securityLogs(){
-        return $this->hasMany(SecurityLog::class, 'session_id')
+        return $this->hasMany(SecurityLog::class, 'session_id');
     }
 
 
