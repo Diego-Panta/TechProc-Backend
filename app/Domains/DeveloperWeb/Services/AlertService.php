@@ -174,4 +174,23 @@ class AlertService
     {
         return $this->alertRepository->getActiveCount();
     }
+
+    /**
+     * Obtener alertas para API pública con mejor formato
+     */
+    /* public function getAlertsForPublicApi(array $filters = []): array
+    {
+        $filters['active_only'] = true;
+        $alerts = $this->alertRepository->getAllPaginated(20, $filters);
+
+        return [
+            'data' => $alerts->items(),
+            'meta' => [
+                'current_page' => $alerts->currentPage(),
+                'per_page' => $alerts->perPage(),
+                'total' => $alerts->total(),
+                'last_page' => $alerts->lastPage(),
+            ]
+        ];
+    }*/
 }

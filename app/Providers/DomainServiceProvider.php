@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use App\Domains\DeveloperWeb\Repositories\ContactFormRepository;
+use App\Domains\DeveloperWeb\Services\ContactFormService;
 
 class DomainServiceProvider extends ServiceProvider
 {
@@ -34,9 +36,16 @@ class DomainServiceProvider extends ServiceProvider
         ];
 
         foreach ($modules as $module) {
-            $path = base_path("app/Domains/{$module}/routes.php");
-            if (file_exists($path)) {
-                require $path;
+            // Cargar rutas web
+            $webPath = base_path("app/Domains/{$module}/routes.php");
+            if (file_exists($webPath)) {
+                require $webPath;
+            }
+
+            // Cargar rutas API
+            $apiPath = base_path("app/Domains/{$module}/api.php");
+            if (file_exists($apiPath)) {
+                require $apiPath;
             }
         }
     }

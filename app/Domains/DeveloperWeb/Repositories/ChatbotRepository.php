@@ -193,4 +193,33 @@ class ChatbotRepository
             'resolved' => $resolved
         ];
     }
+
+    /*public function getTotalFaqs(): int
+    {
+        return ChatbotFaq::whereNull('deleted_at')->count();
+    }
+
+    public function getActiveFaqsCount(): int
+    {
+        return ChatbotFaq::where('active', true)
+            ->whereNull('deleted_at')
+            ->count();
+    }
+
+    public function getConversationStats(): array
+    {
+        $totalConversations = ChatbotConversation::count();
+        $activeConversations = ChatbotConversation::whereNull('ended_date')->count();
+        $resolvedConversations = ChatbotConversation::where('resolved', true)->count();
+
+        $avgSatisfaction = ChatbotConversation::whereNotNull('satisfaction_rating')
+            ->avg('satisfaction_rating');
+
+        return [
+            'total_conversations' => $totalConversations,
+            'active_conversations' => $activeConversations,
+            'avg_satisfaction' => $avgSatisfaction ? round($avgSatisfaction, 2) : 0,
+            'resolved_rate' => $totalConversations > 0 ? round($resolvedConversations / $totalConversations, 2) : 0,
+        ];
+    }*/
 }

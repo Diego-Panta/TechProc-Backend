@@ -19,6 +19,11 @@ class AnnouncementService
         return $this->announcementRepository->getAllPaginated($perPage, $filters);
     }
 
+    /*public function getAllAnnouncementsWithFilters(array $filters = [], int $perPage = 15)
+    {
+        return $this->announcementRepository->getAllPaginated($perPage, $filters);
+    }*/
+
     public function getAnnouncementById(int $id): ?Announcement
     {
         return $this->announcementRepository->findById($id);

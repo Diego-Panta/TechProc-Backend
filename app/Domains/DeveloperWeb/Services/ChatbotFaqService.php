@@ -40,6 +40,12 @@ class ChatbotFaqService
 
         // Limpiar y preparar datos
         $cleanData = $this->prepareFaqData($data);
+        
+        // Remover campos null para no sobreescribir con null
+        $cleanData = array_filter($cleanData, function($value) {
+            return !is_null($value);
+        });
+
         return $this->chatbotRepository->updateFaq($faq, $cleanData);
     }
 
@@ -91,14 +97,21 @@ class ChatbotFaqService
                 $data['keywords'] = [];
             }
         } else {
-            $data['keywords'] = [];
+            // Si no se proporciona keywords, mantener el valor existente
+            unset($data['keywords']);
         }
 
-        // Asegurarse de que active sea boolean
+        // Asegurarse de que active sea boolean si se proporciona
         if (isset($data['active'])) {
             $data['active'] = (bool)$data['active'];
         } else {
-            $data['active'] = true;
+            // Si no se proporciona active, mantener el valor existente
+            unset($data['active']);
+        }
+
+        // Si category es null, mantener la categoría existente
+        if (array_key_exists('category', $data) && is_null($data['category'])) {
+            unset($data['category']);
         }
 
         return $data;
