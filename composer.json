@@ -27,6 +27,8 @@
             "App\\Domains\\": "app/Domains/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/",
+            "Firebase\\JWT\\": "vendor/firebase/php-jwt/src/",
+            "Lcobucci\\JWT\\": "vendor/lcobucci/jwt/src/",
             "Tymon\\JWTAuth\\": "vendor/tymon/jwt-auth/src",
             "Tymon\\JWTAuth\\Providers\\": "vendor/tymon/jwt-auth/src/Providers"
         }
