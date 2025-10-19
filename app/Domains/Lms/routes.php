@@ -6,6 +6,7 @@ use App\Domains\Lms\Http\Controllers\StudentController;
 use App\Domains\Lms\Http\Controllers\InstructorController;
 use App\Domains\Lms\Http\Controllers\CategoryController;
 use App\Domains\Lms\Http\Controllers\EnrollmentController;
+use App\Domains\Lms\Http\Controllers\CompanyController;
 
 // TODO: Agregar middleware de autenticación cuando esté disponible
 // Route::middleware(['auth:api'])->group(function () {
@@ -37,6 +38,13 @@ Route::prefix('api/lms')->group(function () {
     // Matrículas (Enrollments)
     Route::get('/enrollments', [EnrollmentController::class, 'index']);
     Route::post('/enrollments', [EnrollmentController::class, 'store']);
+
+    // Gestión de Empresas
+    Route::get('/companies', [CompanyController::class, 'index']);
+    Route::get('/companies/{company_id}', [CompanyController::class, 'show']);
+    Route::post('/companies', [CompanyController::class, 'store']);
+    Route::put('/companies/{company_id}', [CompanyController::class, 'update']);
+    Route::delete('/companies/{company_id}', [CompanyController::class, 'destroy']);
     
 });
 
