@@ -6,10 +6,6 @@ use App\Domains\Administrator\Models\Employee;
 use App\Domains\Administrator\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use App\Domains\Administrator\Models\User;
-use App\Domains\Administrator\Models\Employee;
 
 class Ticket extends Model
 {
