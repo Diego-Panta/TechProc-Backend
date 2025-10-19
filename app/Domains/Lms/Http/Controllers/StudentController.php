@@ -70,9 +70,12 @@ class StudentController extends Controller
 
     /**
      * Store a newly created student.
-     * 
+     *
      * @authenticated
      * POST /api/lms/students
+     *
+     * Crea automáticamente un usuario con los datos proporcionados.
+     * El usuario se crea con rol "student" y las credenciales permiten hacer login.
      */
     public function store(CreateStudentRequest $request): JsonResponse
     {
@@ -80,10 +83,13 @@ class StudentController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Estudiante creado exitosamente',
+            'message' => 'Estudiante y usuario creados exitosamente',
             'data' => [
                 'id' => $student->id,
                 'student_id' => $student->student_id,
+                'user_id' => $student->user_id,
+                'email' => $student->email,
+                'status' => $student->status,
             ],
         ], 201);
     }

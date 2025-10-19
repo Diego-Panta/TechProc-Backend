@@ -22,12 +22,12 @@ class CreateStudentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'user_id' => 'required|integer|exists:users,id',
+            'password' => 'required|string|min:6|max:255',
             'company_id' => 'nullable|integer|exists:companies,id',
             'document_number' => 'required|string|max:20|unique:students,document_number',
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:students,email',
+            'email' => 'required|email|max:255|unique:students,email|unique:users,email',
             'phone' => 'nullable|string|max:20',
             'status' => 'required|in:active,inactive',
         ];
@@ -41,8 +41,9 @@ class CreateStudentRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'user_id.required' => 'El ID de usuario es obligatorio',
-            'user_id.exists' => 'El usuario especificado no existe',
+            'password.required' => 'La contraseña es obligatoria',
+            'password.min' => 'La contraseña debe tener al menos 6 caracteres',
+            'password.max' => 'La contraseña no puede exceder 255 caracteres',
             'company_id.exists' => 'La empresa especificada no existe',
             'document_number.required' => 'El número de documento es obligatorio',
             'document_number.unique' => 'Este número de documento ya está registrado',
