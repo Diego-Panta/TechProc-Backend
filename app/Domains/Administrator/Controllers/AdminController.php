@@ -303,7 +303,7 @@ class AdminController extends Controller
                 ], 404);
             }
 
-            // Verificar si el usuario tiene relaciones que impidan la eliminación
+            /* Verificar si el usuario tiene relaciones que impidan la eliminación
             $hasRelations = $this->adminService->userHasRelations($user);
 
             if ($hasRelations) {
@@ -315,7 +315,7 @@ class AdminController extends Controller
                     ]
                 ], 400);
             }
-
+            */
             $user->delete();
 
             return response()->json([

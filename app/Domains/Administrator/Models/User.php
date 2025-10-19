@@ -5,6 +5,7 @@ namespace App\Domains\Administrator\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Domains\AuthenticationSessions\Models\ActiveSession;
 
 class User extends Authenticatable
 {
