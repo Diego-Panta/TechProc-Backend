@@ -32,7 +32,7 @@ class TicketController extends Controller
             'priority' => $request->input('priority'),
             'category' => $request->input('category'),
             'user_id' => $request->input('user_id'),
-            'technician_id' => $request->input('technician_id'),
+            'assigned_technician' => $request->input('assigned_technician'),
             'search' => $request->input('search'),
         ];
 

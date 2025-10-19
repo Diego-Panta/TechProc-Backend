@@ -45,8 +45,9 @@ class TicketService
     {
         return DB::transaction(function () use ($ticketId, $technicianId) {
             $ticket = $this->repository->update($ticketId, [
-                'technician_id' => $technicianId,
+                'assigned_technician' => $technicianId,
                 'status' => 'en_proceso',
+                'assignment_date' => now(),
             ]);
 
             $this->repository->createTracking($ticket->id, [
@@ -82,7 +83,7 @@ class TicketService
             $ticket = $this->repository->update($ticketId, [
                 'status' => 'resuelto',
                 'resolution_date' => now(),
-                'technician_id' => $technicianId,
+                'assigned_technician' => $technicianId,
             ]);
 
             $this->repository->createTracking($ticket->id, [
