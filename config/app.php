@@ -1,5 +1,5 @@
 <?php
-
+use Illuminate\Support\ServiceProvider;
 return [
 
     /*
@@ -103,6 +103,30 @@ return [
         ...array_filter(
             explode(',', (string) env('APP_PREVIOUS_KEYS', ''))
         ),
+    ],
+
+
+    'providers' => ServiceProvider::defaultProviders()->merge([
+        /*
+        * Package Service Providers...
+        */
+        Tymon\JWTAuth\Providers\LaravelServiceProvider::class,
+
+        /*
+        * Application Service Providers...
+        */
+        App\Providers\AppServiceProvider::class,
+        App\Providers\AuthServiceProvider::class,
+        // App\Providers\BroadcastServiceProvider::class,
+        App\Providers\EventServiceProvider::class,
+        App\Providers\RouteServiceProvider::class,
+
+        App\Domains\AuthenticationSessions\Providers\AuthenticationServiceProvider::class,
+    ])->toArray(),
+
+    'aliases' => [
+        'JWTAuth' => Tymon\JWTAuth\Facades\JWTAuth::class,
+        'JWTFactory' => Tymon\JWTAuth\Facades\JWTFactory::class,
     ],
 
     /*
