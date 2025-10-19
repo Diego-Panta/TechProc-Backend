@@ -56,7 +56,7 @@ class AdminController extends Controller
             $offset = ($page - 1) * $limit;
 
             $totalRecords = $query->count();
-            $users = $query->skip($offset)->take($limit)->get();
+            $users = $query->with('employee')->skip($offset)->take($limit)->get();
 
             $usersData = $users->map(function ($user) {
                 return [
@@ -66,6 +66,7 @@ class AdminController extends Controller
                     'email' => $user->email,
                     'role' => $user->role,
                     'status' => $user->status,
+                    'employee_id' => $user->employee ? $user->employee->id : null,
                     'last_access' => $user->last_access ? $user->last_access->toISOString() : null,
                     'last_access_ip' => $user->last_access_ip,
                     'created_at' => $user->created_at->toISOString()
