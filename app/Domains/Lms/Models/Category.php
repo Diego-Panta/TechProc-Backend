@@ -12,6 +12,9 @@ class Category extends Model
     protected $table = 'categories';
     protected $primaryKey = 'id';
 
+    // La tabla solo tiene created_at, no tiene updated_at
+    const UPDATED_AT = null;
+
     protected $fillable = [
         'category_id',
         'name',
