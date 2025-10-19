@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Domains\Administrator\Models\User;
+use App\Domains\Lms\Models\Group;
 
 class TeacherEvaluation extends Model
 {

@@ -2,8 +2,10 @@
 
 namespace App\Domains\Lms\Models;
 
+use App\Domains\Administrator\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+
 
 class Evaluation extends Model
 {

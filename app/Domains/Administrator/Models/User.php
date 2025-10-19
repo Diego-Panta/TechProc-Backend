@@ -11,6 +11,15 @@ use App\Domains\Lms\Models\Instructor;
 use App\Domains\Lms\Models\GroupParticipant;
 use App\Domains\SupportTechnical\Models\Ticket;
 use App\Domains\Lms\Models\GradeChange;
+use App\Domains\SupportSecurity\Models\SecurityLog;
+use App\Domains\SupportSecurity\Models\SecurityConfiguration;
+use App\Domains\Lms\Models\Evaluation;
+use App\Domains\Lms\Models\Attempt;
+use App\Domains\Lms\Models\Grading;
+use App\Domains\Lms\Models\GradeRecord;
+use App\Domains\Lms\Models\FinalGrade;
+use App\Domains\Lms\Models\Certificate;
+use App\Domains\Lms\Models\Diploma;
 
 class User extends Authenticatable
 {

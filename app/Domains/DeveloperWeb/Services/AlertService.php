@@ -24,17 +24,10 @@ class AlertService
         return $this->alertRepository->findById($id);
     }
 
-    public function createAlert(array $data): Alert
+    public function createAlert(array $data, int $userId): Alert
     {
-        // Obtener el ID del usuario autenticado o usar uno por defecto
-        $createdBy = $this->getCurrentUserId();
-
-        // Si no hay usuario autenticado, usar el proporcionado o buscar uno por defecto
-        if (!$createdBy && isset($data['created_by'])) {
-            $createdBy = $data['created_by'];
-        } elseif (!$createdBy) {
-            $createdBy = $this->getDefaultUserId();
-        }
+        // Usar el ID del usuario autenticado pasado desde el controlador
+        $createdBy = $userId;
 
         $validatedData = [
             'id_alert' => $this->alertRepository->getNextAlertId(),
@@ -106,69 +99,6 @@ class AlertService
         return $this->alertRepository->getAllPaginated(20, $filters)->items();
     }
 
-    /**
-     * Obtener el ID del usuario actualmente autenticado
-     */
-    private function getCurrentUserId(): ?int
-    {
-        // Temporalmente devolvemos null hasta que tengas autenticación
-        return null;
-
-        // Cuando tengas autenticación, descomenta esto:
-        // return auth()->id();
-    }
-
-    /**
-     * Obtener un ID de usuario por defecto
-     */
-    private function getDefaultUserId(): int
-    {
-        try {
-            // Buscar cualquier usuario existente
-            $user = User::first();
-
-            if ($user) {
-                return $user->id;
-            }
-
-            // Si no hay usuarios, crear uno temporal
-            return $this->createTemporaryUser();
-        } catch (\Exception $e) {
-            Log::error('Error al obtener usuario por defecto para alertas', [
-                'error' => $e->getMessage()
-            ]);
-
-            throw new \Exception('No hay usuarios disponibles en el sistema. Por favor, crea al menos un usuario primero.');
-        }
-    }
-
-    /**
-     * Crear un usuario temporal para desarrollo
-     */
-    private function createTemporaryUser(): int
-    {
-        try {
-            $user = User::create([
-                'first_name' => 'System',
-                'last_name' => 'Alert',
-                'full_name' => 'System Alert',
-                'email' => 'alerts@incadev.com',
-                'password' => bcrypt('temporary_password'),
-                'role' => json_encode(['admin']),
-                'status' => 'active',
-            ]);
-
-            Log::info('Usuario temporal creado para alerts', ['user_id' => $user->id]);
-
-            return $user->id;
-        } catch (\Exception $e) {
-            Log::error('Error al crear usuario temporal para alerts', [
-                'error' => $e->getMessage()
-            ]);
-
-            throw new \Exception('No se pudo crear un usuario temporal. Error: ' . $e->getMessage());
-        }
-    }
 
     public function getActiveCount(): int
     {

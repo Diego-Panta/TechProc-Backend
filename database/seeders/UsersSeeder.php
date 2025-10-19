@@ -15,17 +15,17 @@ class UsersSeeder extends Seeder
         $users = [
             // Estudiantes (más estudiantes para testing)
             [
-                'first_name' => 'Juan',
+                'first_name' => 'admin',
                 'last_name' => 'Pérez',
                 'full_name' => 'Juan Pérez',
                 'dni' => '12345678',
                 'document' => '12345678',
-                'email' => 'juan.perez@email.com',
+                'email' => 'admin@email.com',
                 'phone_number' => '+51987654321',
                 'password' => Hash::make('password123'),
                 'gender' => 'male',
                 'country' => 'Perú',
-                'role' => json_encode(['student']),
+                'role' => json_encode(['admin']),
                 'status' => 'active',
                 'created_at' => Carbon::now(),
                 'updated_at' => Carbon::now(),
@@ -175,30 +175,54 @@ class UsersSeeder extends Seeder
                 'status' => 'active',
                 'created_at' => Carbon::now(),
                 'updated_at' => Carbon::now(),
+            ],
+            [
+                'first_name' => 'Desarrollador',
+                'last_name' => 'Web',
+                'full_name' => 'Desarrollador Web',
+                'dni' => '66554436',
+                'document' => '66554436',
+                'email' => 'developer.web@email.com',
+                'phone_number' => '+51987654328',
+                'password' => Hash::make('devweb123'),
+                'gender' => 'male',
+                'country' => 'Perú',
+                'role' => json_encode(['employee', 'technician', 'web']),
+                'status' => 'active',
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now(),
+            ],
+            [
+                'first_name' => 'Data',
+                'last_name' => 'Analyst',
+                'full_name' => 'Data Analyst',
+                'dni' => '66554430',
+                'document' => '66554430',
+                'email' => 'data.analyst@email.com',
+                'phone_number' => '+51987654320',
+                'password' => Hash::make('data123'),
+                'gender' => 'male',
+                'country' => 'Perú',
+                'role' => json_encode(['employee', 'technician', 'data']),
+                'status' => 'active',
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now(),
             ]
         ];
 
         DB::table('users')->insert($users);
         
-        // Mostrar estadísticas
-        $studentCount = collect($users)->filter(function ($user) {
-            $roles = json_decode($user['role'], true);
-            return is_array($roles) && in_array('student', $roles);
-        })->count();
-        
-        $instructorCount = collect($users)->filter(function ($user) {
-            $roles = json_decode($user['role'], true);
-            return is_array($roles) && in_array('instructor', $roles);
-        })->count();
-        
-        $employeeCount = collect($users)->filter(function ($user) {
-            $roles = json_decode($user['role'], true);
-            return is_array($roles) && in_array('employee', $roles);
-        })->count();
+        // Estadísticas informativas
+        $roles = collect($users)->pluck('role')->map(fn($r) => json_decode($r, true));
+        $countByType = [
+            'student' => $roles->filter(fn($r) => in_array('student', $r))->count(),
+            'instructor' => $roles->filter(fn($r) => in_array('instructor', $r))->count(),
+            'employee' => $roles->filter(fn($r) => in_array('employee', $r))->count(),
+        ];
 
         $this->command->info('Usuarios creados: ' . count($users));
-        $this->command->info(' - Estudiantes: ' . $studentCount);
-        $this->command->info(' - Instructores: ' . $instructorCount);
-        $this->command->info(' - Empleados: ' . $employeeCount);
+        $this->command->info(' - Estudiantes: ' . $countByType['student']);
+        $this->command->info(' - Instructores: ' . $countByType['instructor']);
+        $this->command->info(' - Empleados: ' . $countByType['employee']);
     }
 }

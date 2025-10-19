@@ -43,7 +43,7 @@ class ContactFormService
     public function markAsSpam(int $id): bool
     {
         $contactForm = $this->contactFormRepository->findById($id);
-        
+
         if (!$contactForm) {
             return false;
         }
@@ -54,7 +54,7 @@ class ContactFormService
     public function respondToContact(int $id, string $response, ?int $assignedTo = null): bool
     {
         $contactForm = $this->contactFormRepository->findById($id);
-        
+
         if (!$contactForm) {
             return false;
         }
@@ -81,5 +81,63 @@ class ContactFormService
     public function getAssignedEmployees(): array
     {
         return $this->contactFormRepository->getAssignedEmployees();
+    }
+
+    /**
+     * Actualizar asignación de formulario de contacto
+     */
+    public function updateContactFormAssignment(int $id, int $employeeId): bool
+    {
+        $contactForm = $this->contactFormRepository->findById($id);
+
+        if (!$contactForm) {
+            return false;
+        }
+
+        return $this->contactFormRepository->update($contactForm, [
+            'assigned_to' => $employeeId,
+            'status' => 'in_progress'
+        ]);
+    }
+
+    /**
+     * Actualizar estado del formulario de contacto
+     */
+    public function updateContactFormStatus(int $id, string $status): bool
+    {
+        $contactForm = $this->contactFormRepository->findById($id);
+
+        if (!$contactForm) {
+            return false;
+        }
+
+        return $this->contactFormRepository->update($contactForm, [
+            'status' => $status
+        ]);
+    }
+
+    /**
+     * Exportar formularios de contacto para CSV
+     */
+    public function exportContactForms(array $filters = []): array
+    {
+        $contactForms = $this->contactFormRepository->getAllForExport($filters);
+
+        return $contactForms->map(function ($contact) {
+            return [
+                'id' => $contact->id,
+                'id_contact' => $contact->id_contact,
+                'full_name' => $contact->full_name,
+                'email' => $contact->email,
+                'phone' => $contact->phone,
+                'company' => $contact->company,
+                'subject' => $contact->subject,
+                'form_type' => $contact->form_type,
+                'status' => $contact->status,
+                'submission_date' => $contact->submission_date->format('Y-m-d H:i:s'),
+                'response_date' => $contact->response_date ? $contact->response_date->format('Y-m-d H:i:s') : '',
+                'assigned_to' => $contact->assignedTo ? $contact->assignedTo->user->full_name : 'No asignado'
+            ];
+        })->toArray();
     }
 }

@@ -4,6 +4,7 @@ namespace App\Domains\Lms\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Domains\Administrator\Models\User;
 
 class Grading extends Model
 {

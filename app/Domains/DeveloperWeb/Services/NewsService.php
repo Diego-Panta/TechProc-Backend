@@ -30,20 +30,15 @@ class NewsService
         return $this->newsRepository->findBySlug($slug);
     }
 
-    public function createNews(array $data): News
+    public function createNews(array $data, ?int $authenticatedUserId = null): News
     {
         // Generar slug si no se proporciona
         if (empty($data['slug'])) {
             $data['slug'] = $this->generateUniqueSlug($data['title']);
         }
 
-        // Obtener el ID del autor
-        $authorId = $this->getCurrentUserId();
-
-        // Si no hay usuario autenticado, buscar un usuario por defecto
-        if (!$authorId) {
-            $authorId = $this->getDefaultUserId();
-        }
+        // Usar el ID del usuario autenticado si está disponible
+        $authorId = $authenticatedUserId ?? $data['author_id'] ?? $this->getDefaultUserId();
 
         // Asegurar que los tags sean un array válido y convertirlos a JSON
         $tags = $data['tags'] ?? [];
@@ -72,7 +67,7 @@ class NewsService
             'summary' => $data['summary'],
             'content' => $data['content'],
             'featured_image' => $data['featured_image'] ?? null,
-            'author_id' => $authorId,
+            'author_id' => $authorId, // Usar el ID del usuario autenticado
             'category' => $data['category'] ?? null,
             'tags' => !empty($tags) ? json_encode($tags) : null, // Convertir a JSON string
             'status' => $data['status'],

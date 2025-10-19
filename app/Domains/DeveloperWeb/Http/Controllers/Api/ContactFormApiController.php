@@ -16,65 +16,14 @@ class ContactFormApiController
     ) {}
 
     /**
-     * @OA\Get(
-     *     path="/api/developer-web/contact-forms",
-     *     summary="Listar formularios de contacto",
-     *     tags={"Contact Forms"},
-     *     security={{"sanctum":{}}},
-     *     @OA\Parameter(
-     *         name="status",
-     *         in="query",
-     *         description="Filtrar por estado",
-     *         required=false,
-     *         @OA\Schema(type="string", enum={"all", "pending", "in_progress", "responded", "spam"})
-     *     ),
-     *     @OA\Parameter(
-     *         name="form_type",
-     *         in="query",
-     *         description="Filtrar por tipo de formulario",
-     *         required=false,
-     *         @OA\Schema(type="string")
-     *     ),
-     *     @OA\Parameter(
-     *         name="assigned_to",
-     *         in="query",
-     *         description="Filtrar por empleado asignado",
-     *         required=false,
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\Parameter(
-     *         name="page",
-     *         in="query",
-     *         description="Página para paginación",
-     *         required=false,
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\Parameter(
-     *         name="per_page",
-     *         in="query",
-     *         description="Elementos por página",
-     *         required=false,
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Lista de formularios de contacto",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="data", type="array",
-     *                     @OA\Items(ref="#/components/schemas/ContactForm")
-     *                 ),
-     *                 @OA\Property(property="links", type="object"),
-     *                 @OA\Property(property="meta", type="object")
-     *             )
-     *         )
-     *     )
-     * )
+     * Listar formularios de contacto (PROTEGIDO)
      */
     public function index(Request $request): JsonResponse
     {
         try {
+            // Obtener usuario autenticado desde el middleware
+            $user = $request->user();
+            
             $filters = [
                 'status' => $request->get('status', 'all'),
                 'assigned_to' => $request->get('assigned_to'),
@@ -85,6 +34,13 @@ class ContactFormApiController
 
             $contactForms = $this->contactFormService->getAllContactForms($filters, $perPage);
 
+            // Log de acceso
+            Log::info('Usuario accedió a listado de contact forms', [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'filters' => $filters
+            ]);
+
             return response()->json([
                 'success' => true,
                 'data' => $contactForms
@@ -92,6 +48,7 @@ class ContactFormApiController
 
         } catch (\Exception $e) {
             Log::error('API Error listing contact forms', [
+                'user_id' => $request->user()->id ?? 'unknown',
                 'error' => $e->getMessage(),
                 'filters' => $filters ?? []
             ]);
@@ -105,32 +62,227 @@ class ContactFormApiController
     }
 
     /**
-     * @OA\Get(
-     *     path="/api/developer-web/contact-forms/{id}",
-     *     summary="Obtener detalles de un formulario de contacto",
-     *     tags={"Contact Forms"},
-     *     security={{"sanctum":{}}},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         description="ID del formulario de contacto",
-     *         required=true,
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Detalles del formulario de contacto",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="data", ref="#/components/schemas/ContactForm")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Formulario no encontrado"
-     *     )
-     * )
+     * Responder a formulario de contacto (PROTEGIDO)
      */
+    public function respond(RespondContactFormApiRequest $request, int $id): JsonResponse
+    {
+        try {
+            $user = $request->user();
+            
+            // Buscar el empleado asociado al usuario autenticado
+            $employee = $user->employee;
+            
+            if (!$employee) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se encontró un empleado asociado a tu usuario. Contacta al administrador.'
+                ], 400);
+            }
+
+            $assignedTo = $employee->id;
+
+            $success = $this->contactFormService->respondToContact($id, $request->response, $assignedTo);
+            
+            if ($success) {
+                // Log de la acción
+                Log::info('Usuario respondió contacto', [
+                    'user_id' => $user->id,
+                    'employee_id' => $employee->id,
+                    'contact_form_id' => $id
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Respuesta enviada correctamente.'
+                ]);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'No se pudo enviar la respuesta.'
+            ], 400);
+
+        } catch (\Exception $e) {
+            Log::error('API Error responding to contact form', [
+                'user_id' => $request->user()->id ?? 'unknown',
+                'id' => $id,
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al procesar la respuesta',
+                'error' => config('app.debug') ? $e->getMessage() : null
+            ], 500);
+        }
+    }
+
+    /**
+     * Asignar formulario a mi usuario (PROTEGIDO)
+     */
+    public function assignToMe(Request $request, int $id): JsonResponse
+    {
+        try {
+            $user = $request->user();
+            $employee = $user->employee;
+
+            if (!$employee) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se encontró un empleado asociado a tu usuario.'
+                ], 400);
+            }
+
+            $contactForm = $this->contactFormService->getContactFormById($id);
+            
+            if (!$contactForm) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Formulario de contacto no encontrado'
+                ], 404);
+            }
+
+            // Actualizar asignación
+            $success = $this->contactFormService->updateContactFormAssignment($id, $employee->id);
+            
+            if ($success) {
+                Log::info('Usuario asignó contacto a sí mismo', [
+                    'user_id' => $user->id,
+                    'employee_id' => $employee->id,
+                    'contact_form_id' => $id
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Formulario asignado correctamente a tu usuario.'
+                ]);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'No se pudo asignar el formulario.'
+            ], 400);
+
+        } catch (\Exception $e) {
+            Log::error('API Error assigning contact form', [
+                'user_id' => $request->user()->id ?? 'unknown',
+                'id' => $id,
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al asignar el formulario',
+                'error' => config('app.debug') ? $e->getMessage() : null
+            ], 500);
+        }
+    }
+
+    /**
+     * Actualizar estado del formulario (PROTEGIDO)
+     */
+    public function updateStatus(Request $request, int $id): JsonResponse
+    {
+        try {
+            $user = $request->user();
+            
+            $validated = $request->validate([
+                'status' => 'required|in:pending,in_progress,responded,spam'
+            ]);
+
+            $contactForm = $this->contactFormService->getContactFormById($id);
+            
+            if (!$contactForm) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Formulario de contacto no encontrado'
+                ], 404);
+            }
+
+            $success = $this->contactFormService->updateContactFormStatus($id, $validated['status']);
+            
+            if ($success) {
+                Log::info('Usuario actualizó estado de contacto', [
+                    'user_id' => $user->id,
+                    'contact_form_id' => $id,
+                    'new_status' => $validated['status']
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Estado actualizado correctamente.'
+                ]);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'No se pudo actualizar el estado.'
+            ], 400);
+
+        } catch (\Exception $e) {
+            Log::error('API Error updating contact form status', [
+                'user_id' => $request->user()->id ?? 'unknown',
+                'id' => $id,
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al actualizar el estado',
+                'error' => config('app.debug') ? $e->getMessage() : null
+            ], 500);
+        }
+    }
+
+    /**
+     * Exportar contact forms a CSV (PROTEGIDO)
+     */
+    public function exportToCsv(Request $request): JsonResponse
+    {
+        try {
+            $user = $request->user();
+            
+            $filters = [
+                'status' => $request->get('status', 'all'),
+                'form_type' => $request->get('form_type'),
+                'start_date' => $request->get('start_date'),
+                'end_date' => $request->get('end_date'),
+            ];
+
+            $data = $this->contactFormService->exportContactForms($filters);
+
+            Log::info('Usuario exportó contact forms a CSV', [
+                'user_id' => $user->id,
+                'filters' => $filters,
+                'record_count' => count($data)
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'data' => $data,
+                'export_info' => [
+                    'format' => 'csv',
+                    'record_count' => count($data),
+                    'generated_at' => now()->toISOString(),
+                    'generated_by' => $user->email
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('API Error exporting contact forms', [
+                'user_id' => $request->user()->id ?? 'unknown',
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al exportar los datos',
+                'error' => config('app.debug') ? $e->getMessage() : null
+            ], 500);
+        }
+    }
+
+    
     public function show(int $id): JsonResponse
     {
         try {
@@ -162,39 +314,6 @@ class ContactFormApiController
         }
     }
 
-    /**
-     * @OA\Post(
-     *     path="/api/developer-web/contact-forms",
-     *     summary="Crear un nuevo formulario de contacto",
-     *     tags={"Contact Forms"},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"full_name", "email", "subject", "message"},
-     *             @OA\Property(property="full_name", type="string", maxLength=255),
-     *             @OA\Property(property="email", type="string", format="email", maxLength=255),
-     *             @OA\Property(property="phone", type="string", maxLength=20, nullable=true),
-     *             @OA\Property(property="company", type="string", maxLength=255, nullable=true),
-     *             @OA\Property(property="subject", type="string", maxLength=255),
-     *             @OA\Property(property="message", type="string", minLength=10),
-     *             @OA\Property(property="form_type", type="string", maxLength=50, nullable=true)
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=201,
-     *         description="Formulario creado exitosamente",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="data", ref="#/components/schemas/ContactForm"),
-     *             @OA\Property(property="message", type="string", example="¡Gracias por contactarnos! Te responderemos pronto.")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=422,
-     *         description="Error de validación"
-     *     )
-     * )
-     */
     public function store(StoreContactFormApiRequest $request): JsonResponse
     {
         try {
@@ -220,102 +339,7 @@ class ContactFormApiController
         }
     }
 
-    /**
-     * @OA\Post(
-     *     path="/api/developer-web/contact-forms/{id}/respond",
-     *     summary="Responder a un formulario de contacto",
-     *     tags={"Contact Forms"},
-     *     security={{"sanctum":{}}},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         description="ID del formulario de contacto",
-     *         required=true,
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"response"},
-     *             @OA\Property(property="response", type="string", minLength=10)
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Respuesta enviada exitosamente",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Respuesta enviada correctamente")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Formulario no encontrado"
-     *     )
-     * )
-     */
-    public function respond(RespondContactFormApiRequest $request, int $id): JsonResponse
-    {
-        try {
-            // TEMPORAL: Buscar un empleado activo para asignar
-            $employee = \App\Domains\Administrator\Models\Employee::where('employment_status', 'Active')->first();
-            $assignedTo = $employee ? $employee->id : null;
-
-            $success = $this->contactFormService->respondToContact($id, $request->response, $assignedTo);
-            
-            if ($success) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Respuesta enviada correctamente.'
-                ]);
-            }
-
-            return response()->json([
-                'success' => false,
-                'message' => 'No se pudo enviar la respuesta.'
-            ], 400);
-
-        } catch (\Exception $e) {
-            Log::error('API Error responding to contact form', [
-                'id' => $id,
-                'error' => $e->getMessage()
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Error al procesar la respuesta',
-                'error' => config('app.debug') ? $e->getMessage() : null
-            ], 500);
-        }
-    }
-
-    /**
-     * @OA\Post(
-     *     path="/api/developer-web/contact-forms/{id}/spam",
-     *     summary="Marcar formulario como spam",
-     *     tags={"Contact Forms"},
-     *     security={{"sanctum":{}}},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         description="ID del formulario de contacto",
-     *         required=true,
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Formulario marcado como spam",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Consulta marcada como spam correctamente")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Formulario no encontrado"
-     *     )
-     * )
-     */
+    
     public function markAsSpam(int $id): JsonResponse
     {
         try {
@@ -347,28 +371,7 @@ class ContactFormApiController
         }
     }
 
-    /**
-     * @OA\Get(
-     *     path="/api/developer-web/contact-forms/stats/summary",
-     *     summary="Obtener estadísticas de formularios de contacto",
-     *     tags={"Contact Forms"},
-     *     security={{"sanctum":{}}},
-     *     @OA\Response(
-     *         response=200,
-     *         description="Estadísticas obtenidas exitosamente",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="total", type="integer", example=25),
-     *                 @OA\Property(property="pending", type="integer", example=10),
-     *                 @OA\Property(property="in_progress", type="integer", example=5),
-     *                 @OA\Property(property="responded", type="integer", example=8),
-     *                 @OA\Property(property="spam", type="integer", example=2)
-     *             )
-     *         )
-     *     )
-     * )
-     */
+    
     public function getStats(): JsonResponse
     {
         try {

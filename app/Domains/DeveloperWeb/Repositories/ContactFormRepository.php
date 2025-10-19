@@ -26,8 +26,8 @@ class ContactFormRepository
         }
 
         return $query->orderBy('submission_date', 'desc')
-                    ->paginate($perPage)
-                    ->appends($filters);
+            ->paginate($perPage)
+            ->appends($filters);
     }
 
     public function findById(int $id): ?ContactForm
@@ -109,5 +109,32 @@ class ContactFormRepository
             ->get()
             ->pluck('assignedTo.user.full_name', 'assigned_to')
             ->toArray();
+    }
+
+    /**
+     * Obtener todos los contact forms para exportación (sin paginación)
+     */
+    public function getAllForExport(array $filters = [])
+    {
+        $query = ContactForm::with(['assignedTo.user']);
+
+        // Aplicar filtros
+        if (!empty($filters['status']) && $filters['status'] !== 'all') {
+            $query->where('status', $filters['status']);
+        }
+
+        if (!empty($filters['form_type'])) {
+            $query->where('form_type', $filters['form_type']);
+        }
+
+        if (!empty($filters['start_date'])) {
+            $query->where('submission_date', '>=', $filters['start_date']);
+        }
+
+        if (!empty($filters['end_date'])) {
+            $query->where('submission_date', '<=', $filters['end_date']);
+        }
+
+        return $query->orderBy('submission_date', 'desc')->get();
     }
 }

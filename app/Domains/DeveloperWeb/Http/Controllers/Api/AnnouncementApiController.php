@@ -14,127 +14,8 @@ class AnnouncementApiController
     public function __construct(
         private AnnouncementService $announcementService
     ) {}
-
-    /**
-     * @OA\Get(
-     *     path="/api/developer-web/announcements",
-     *     summary="Listar anuncios (admin)",
-     *     tags={"Announcements"},
-     *     security={{"sanctum":{}}},
-     *     @OA\Parameter(
-     *         name="status",
-     *         in="query",
-     *         description="Filtrar por estado",
-     *         required=false,
-     *         @OA\Schema(type="string", enum={"draft", "published", "archived"})
-     *     ),
-     *     @OA\Parameter(
-     *         name="target_page",
-     *         in="query",
-     *         description="Filtrar por página objetivo",
-     *         required=false,
-     *         @OA\Schema(type="string")
-     *     ),
-     *     @OA\Parameter(
-     *         name="display_type",
-     *         in="query",
-     *         description="Filtrar por tipo de visualización",
-     *         required=false,
-     *         @OA\Schema(type="string", enum={"banner", "modal", "popup", "notification"})
-     *     ),
-     *     @OA\Parameter(
-     *         name="page",
-     *         in="query",
-     *         description="Página para paginación",
-     *         required=false,
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\Parameter(
-     *         name="per_page",
-     *         in="query",
-     *         description="Elementos por página",
-     *         required=false,
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Lista de anuncios",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="data", type="array",
-     *                     @OA\Items(ref="#/components/schemas/Announcement")
-     *                 ),
-     *                 @OA\Property(property="links", type="object"),
-     *                 @OA\Property(property="meta", type="object")
-     *             )
-     *         )
-     *     )
-     * )
-     */
-    public function index(Request $request): JsonResponse
-    {
-        try {
-            $filters = [
-                'status' => $request->get('status'),
-                'target_page' => $request->get('target_page'),
-                'display_type' => $request->get('display_type'),
-            ];
-
-            $perPage = $request->get('per_page', 15);
-
-            $announcements = $this->announcementService->getAllAnnouncements($perPage, $filters);
-
-            return response()->json([
-                'success' => true,
-                'data' => $announcements
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('API Error listing announcements', [
-                'error' => $e->getMessage(),
-                'filters' => $filters ?? []
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Error al obtener los anuncios',
-                'error' => config('app.debug') ? $e->getMessage() : null
-            ], 500);
-        }
-    }
-
-    /**
-     * @OA\Get(
-     *     path="/api/developer-web/announcements/public",
-     *     summary="Listar anuncios públicos activos",
-     *     tags={"Announcements"},
-     *     @OA\Parameter(
-     *         name="target_page",
-     *         in="query",
-     *         description="Filtrar por página objetivo",
-     *         required=false,
-     *         @OA\Schema(type="string")
-     *     ),
-     *     @OA\Parameter(
-     *         name="display_type",
-     *         in="query",
-     *         description="Filtrar por tipo de visualización",
-     *         required=false,
-     *         @OA\Schema(type="string", enum={"banner", "modal", "popup", "notification"})
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Lista de anuncios públicos",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="data", type="array",
-     *                 @OA\Items(ref="#/components/schemas/Announcement")
-     *             )
-     *         )
-     *     )
-     * )
-     */
+    
+    
     public function publicIndex(Request $request): JsonResponse
     {
         try {
@@ -176,90 +57,7 @@ class AnnouncementApiController
         }
     }
 
-    /**
-     * @OA\Get(
-     *     path="/api/developer-web/announcements/{id}",
-     *     summary="Obtener detalles de un anuncio",
-     *     tags={"Announcements"},
-     *     security={{"sanctum":{}}},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         description="ID del anuncio",
-     *         required=true,
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Detalles del anuncio",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="data", ref="#/components/schemas/Announcement")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Anuncio no encontrado"
-     *     )
-     * )
-     */
-    public function show(int $id): JsonResponse
-    {
-        try {
-            $announcement = $this->announcementService->getAnnouncementById($id);
-
-            if (!$announcement) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Anuncio no encontrado'
-                ], 404);
-            }
-
-            return response()->json([
-                'success' => true,
-                'data' => $announcement
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('API Error showing announcement', [
-                'id' => $id,
-                'error' => $e->getMessage()
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Error al obtener el anuncio',
-                'error' => config('app.debug') ? $e->getMessage() : null
-            ], 500);
-        }
-    }
-
-    /**
-     * @OA\Get(
-     *     path="/api/developer-web/announcements/public/{id}",
-     *     summary="Obtener detalles de un anuncio público",
-     *     tags={"Announcements"},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         description="ID del anuncio",
-     *         required=true,
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Detalles del anuncio público",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="data", ref="#/components/schemas/Announcement")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Anuncio no encontrado"
-     *     )
-     * )
-     */
+    
     public function publicShow(int $id): JsonResponse
     {
         try {
@@ -306,46 +104,113 @@ class AnnouncementApiController
     }
 
     /**
-     * @OA\Post(
-     *     path="/api/developer-web/announcements",
-     *     summary="Crear un nuevo anuncio",
-     *     tags={"Announcements"},
-     *     security={{"sanctum":{}}},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"title", "content", "display_type", "target_page", "status", "start_date", "end_date"},
-     *             @OA\Property(property="title", type="string", maxLength=255),
-     *             @OA\Property(property="content", type="string", minLength=10),
-     *             @OA\Property(property="image_url", type="string", format="url", maxLength=500, nullable=true),
-     *             @OA\Property(property="display_type", type="string", enum={"banner", "modal", "popup", "notification"}),
-     *             @OA\Property(property="target_page", type="string", maxLength=100),
-     *             @OA\Property(property="link_url", type="string", format="url", maxLength=500, nullable=true),
-     *             @OA\Property(property="button_text", type="string", maxLength=100, nullable=true),
-     *             @OA\Property(property="status", type="string", enum={"draft", "published", "archived"}),
-     *             @OA\Property(property="start_date", type="string", format="date-time"),
-     *             @OA\Property(property="end_date", type="string", format="date-time")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=201,
-     *         description="Anuncio creado exitosamente",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="data", ref="#/components/schemas/Announcement"),
-     *             @OA\Property(property="message", type="string", example="Anuncio creado exitosamente")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=422,
-     *         description="Error de validación"
-     *     )
-     * )
+     * Listar anuncios (PROTEGIDO)
+     */
+    public function index(Request $request): JsonResponse
+    {
+        try {
+            // Obtener usuario autenticado desde el middleware
+            $user = $request->user();
+            
+            $filters = [
+                'status' => $request->get('status'),
+                'target_page' => $request->get('target_page'),
+                'display_type' => $request->get('display_type'),
+            ];
+
+            $perPage = $request->get('per_page', 15);
+
+            $announcements = $this->announcementService->getAllAnnouncements($perPage, $filters);
+
+            // Log de acceso
+            Log::info('Usuario accedió a listado de anuncios', [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'filters' => $filters
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'data' => $announcements
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('API Error listing announcements', [
+                'user_id' => $request->user()->id ?? 'unknown',
+                'error' => $e->getMessage(),
+                'filters' => $filters ?? []
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener los anuncios',
+                'error' => config('app.debug') ? $e->getMessage() : null
+            ], 500);
+        }
+    }
+
+    /**
+     * Obtener anuncio específico (PROTEGIDO)
+     */
+    public function show(Request $request, int $id): JsonResponse
+    {
+        try {
+            $user = $request->user();
+            
+            $announcement = $this->announcementService->getAnnouncementById($id);
+
+            if (!$announcement) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Anuncio no encontrado'
+                ], 404);
+            }
+
+            Log::info('Usuario accedió a anuncio específico', [
+                'user_id' => $user->id,
+                'announcement_id' => $id
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'data' => $announcement
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('API Error showing announcement', [
+                'user_id' => $request->user()->id ?? 'unknown',
+                'id' => $id,
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener el anuncio',
+                'error' => config('app.debug') ? $e->getMessage() : null
+            ], 500);
+        }
+    }
+
+    /**
+     * Crear nuevo anuncio (PROTEGIDO)
      */
     public function store(StoreAnnouncementApiRequest $request): JsonResponse
     {
         try {
-            $announcement = $this->announcementService->createAnnouncement($request->validated());
+            $user = $request->user();
+            
+            // Pasar el ID del usuario autenticado al servicio
+            $announcement = $this->announcementService->createAnnouncement(
+                $request->validated(), 
+                $user->id
+            );
+
+            // Log de creación
+            Log::info('Usuario creó nuevo anuncio', [
+                'user_id' => $user->id,
+                'announcement_id' => $announcement->id,
+                'title' => $announcement->title
+            ]);
 
             return response()->json([
                 'success' => true,
@@ -355,6 +220,7 @@ class AnnouncementApiController
 
         } catch (\Exception $e) {
             Log::error('API Error creating announcement', [
+                'user_id' => $request->user()->id ?? 'unknown',
                 'data' => $request->all(),
                 'error' => $e->getMessage()
             ]);
@@ -368,53 +234,21 @@ class AnnouncementApiController
     }
 
     /**
-     * @OA\Put(
-     *     path="/api/developer-web/announcements/{id}",
-     *     summary="Actualizar un anuncio",
-     *     tags={"Announcements"},
-     *     security={{"sanctum":{}}},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         description="ID del anuncio",
-     *         required=true,
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             @OA\Property(property="title", type="string", maxLength=255),
-     *             @OA\Property(property="content", type="string", minLength=10),
-     *             @OA\Property(property="image_url", type="string", format="url", maxLength=500, nullable=true),
-     *             @OA\Property(property="display_type", type="string", enum={"banner", "modal", "popup", "notification"}),
-     *             @OA\Property(property="target_page", type="string", maxLength=100),
-     *             @OA\Property(property="link_url", type="string", format="url", maxLength=500, nullable=true),
-     *             @OA\Property(property="button_text", type="string", maxLength=100, nullable=true),
-     *             @OA\Property(property="status", type="string", enum={"draft", "published", "archived"}),
-     *             @OA\Property(property="start_date", type="string", format="date-time"),
-     *             @OA\Property(property="end_date", type="string", format="date-time")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Anuncio actualizado exitosamente",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Anuncio actualizado exitosamente")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Anuncio no encontrado"
-     *     )
-     * )
+     * Actualizar anuncio (PROTEGIDO)
      */
     public function update(UpdateAnnouncementApiRequest $request, int $id): JsonResponse
     {
         try {
+            $user = $request->user();
+            
             $success = $this->announcementService->updateAnnouncement($id, $request->validated());
 
             if ($success) {
+                Log::info('Usuario actualizó anuncio', [
+                    'user_id' => $user->id,
+                    'announcement_id' => $id
+                ]);
+
                 return response()->json([
                     'success' => true,
                     'message' => 'Anuncio actualizado exitosamente'
@@ -428,6 +262,7 @@ class AnnouncementApiController
 
         } catch (\Exception $e) {
             Log::error('API Error updating announcement', [
+                'user_id' => $request->user()->id ?? 'unknown',
                 'id' => $id,
                 'error' => $e->getMessage()
             ]);
@@ -441,38 +276,21 @@ class AnnouncementApiController
     }
 
     /**
-     * @OA\Delete(
-     *     path="/api/developer-web/announcements/{id}",
-     *     summary="Eliminar un anuncio",
-     *     tags={"Announcements"},
-     *     security={{"sanctum":{}}},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         description="ID del anuncio",
-     *         required=true,
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Anuncio eliminado exitosamente",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Anuncio eliminado exitosamente")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Anuncio no encontrado"
-     *     )
-     * )
+     * Eliminar anuncio (PROTEGIDO)
      */
-    public function destroy(int $id): JsonResponse
+    public function destroy(Request $request, int $id): JsonResponse
     {
         try {
+            $user = $request->user();
+            
             $success = $this->announcementService->deleteAnnouncement($id);
 
             if ($success) {
+                Log::info('Usuario eliminó anuncio', [
+                    'user_id' => $user->id,
+                    'announcement_id' => $id
+                ]);
+
                 return response()->json([
                     'success' => true,
                     'message' => 'Anuncio eliminado exitosamente'
@@ -486,6 +304,7 @@ class AnnouncementApiController
 
         } catch (\Exception $e) {
             Log::error('API Error deleting announcement', [
+                'user_id' => $request->user()->id ?? 'unknown',
                 'id' => $id,
                 'error' => $e->getMessage()
             ]);
@@ -499,36 +318,22 @@ class AnnouncementApiController
     }
 
     /**
-     * @OA\Get(
-     *     path="/api/developer-web/announcements/stats/summary",
-     *     summary="Obtener estadísticas de anuncios",
-     *     tags={"Announcements"},
-     *     security={{"sanctum":{}}},
-     *     @OA\Response(
-     *         response=200,
-     *         description="Estadísticas obtenidas exitosamente",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="total", type="integer", example=25),
-     *                 @OA\Property(property="draft", type="integer", example=5),
-     *                 @OA\Property(property="published", type="integer", example=15),
-     *                 @OA\Property(property="archived", type="integer", example=5),
-     *                 @OA\Property(property="total_views", type="integer", example=12500),
-     *                 @OA\Property(property="active_count", type="integer", example=8)
-     *             )
-     *         )
-     *     )
-     * )
+     * Obtener estadísticas (PROTEGIDO)
      */
-    public function getStats(): JsonResponse
+    public function getStats(Request $request): JsonResponse
     {
         try {
+            $user = $request->user();
+            
             $statusCounts = $this->announcementService->getStatusCounts();
             $activeAnnouncements = $this->announcementService->getActiveAnnouncements();
             
             $total = array_sum($statusCounts);
             $totalViews = \App\Domains\DeveloperWeb\Models\Announcement::sum('views');
+
+            Log::info('Usuario accedió a estadísticas de anuncios', [
+                'user_id' => $user->id
+            ]);
 
             return response()->json([
                 'success' => true,
@@ -544,6 +349,7 @@ class AnnouncementApiController
 
         } catch (\Exception $e) {
             Log::error('API Error getting announcement stats', [
+                'user_id' => $request->user()->id ?? 'unknown',
                 'error' => $e->getMessage()
             ]);
 
@@ -556,36 +362,13 @@ class AnnouncementApiController
     }
 
     /**
-     * @OA\Post(
-     *     path="/api/developer-web/announcements/{id}/reset-views",
-     *     summary="Resetear contador de vistas de un anuncio",
-     *     tags={"Announcements"},
-     *     security={{"sanctum":{}}},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         description="ID del anuncio",
-     *         required=true,
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Vistas reseteadas exitosamente",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Vistas reseteadas a 0"),
-     *             @OA\Property(property="views", type="integer", example=0)
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Anuncio no encontrado"
-     *     )
-     * )
+     * Resetear vistas (PROTEGIDO)
      */
-    public function resetViews(int $id): JsonResponse
+    public function resetViews(Request $request, int $id): JsonResponse
     {
         try {
+            $user = $request->user();
+            
             $announcement = $this->announcementService->getAnnouncementById($id);
 
             if (!$announcement) {
@@ -597,6 +380,11 @@ class AnnouncementApiController
 
             $announcement->update(['views' => 0]);
 
+            Log::info('Usuario reseteó vistas de anuncio', [
+                'user_id' => $user->id,
+                'announcement_id' => $id
+            ]);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Vistas reseteadas a 0',
@@ -605,6 +393,7 @@ class AnnouncementApiController
 
         } catch (\Exception $e) {
             Log::error('API Error resetting announcement views', [
+                'user_id' => $request->user()->id ?? 'unknown',
                 'id' => $id,
                 'error' => $e->getMessage()
             ]);
