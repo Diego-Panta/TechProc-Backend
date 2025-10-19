@@ -394,7 +394,7 @@ class AdminController extends Controller
     public function approveRegistrationRequest(Request $request, $requestId)
     {
         $validator = Validator::make($request->all(), [
-            'role' => 'required|in:admin,lms,seg,infra,web,data',
+            'role' => 'required|in:admin,lms,seg,infra,web,data,support',
             'status' => 'required|in:active,inactive,banned'
         ]);
 
