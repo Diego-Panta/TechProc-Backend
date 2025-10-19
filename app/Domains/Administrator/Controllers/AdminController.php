@@ -653,8 +653,9 @@ class AdminController extends Controller
             'position_id' => 'required|exists:positions,id',
             'department_id' => 'required|exists:departments,id',
             'hire_date' => 'required|date',
-            'employment_status' => 'required|in:active,inactive,terminated',
-            'salary' => 'nullable|numeric|min:0'
+            'employment_status' => 'required|in:Active,Inactive,Terminated',
+            'salary' => 'nullable|numeric|min:0',
+            'speciality' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
@@ -669,6 +670,12 @@ class AdminController extends Controller
         }
 
         try {
+
+            $data = $request->all();
+            if (isset($data['employment_status'])) {
+                $data['employment_status'] = ucfirst($data['employment_status']);
+            }
+            
             $employee = Employee::create($request->all());
 
             return response()->json([
