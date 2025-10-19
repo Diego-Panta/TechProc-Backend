@@ -4,6 +4,7 @@ namespace App\Domains\Administrator\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Domains\DataAnalyst\Models\JobVacancy;
 
 class Department extends Model
 {

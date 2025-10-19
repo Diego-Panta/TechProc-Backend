@@ -24,6 +24,10 @@ require base_path('app/Domains/SupportTechnical/routes.php');
 // Incluir rutas del dominio LMS
 require base_path('app/Domains/Lms/routes.php');
 
+require base_path('app/Domains/DeveloperWeb/api.php');
+
+require base_path('app/Domains/DataAnalyst/api.php');
+
 // Ruta protegida de ejemplo - CON MIDDLEWARE CORRECTO
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return response()->json([

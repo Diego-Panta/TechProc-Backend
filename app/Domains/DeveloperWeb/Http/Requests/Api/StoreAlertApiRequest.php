@@ -10,7 +10,7 @@ class StoreAlertApiRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true; // Temporalmente sin autenticación
+        return true; // El middleware se encarga de la autorización
     }
 
     public function rules(): array
@@ -24,7 +24,7 @@ class StoreAlertApiRequest extends FormRequest
             'start_date' => 'required|date|after_or_equal:today',
             'end_date' => 'required|date|after:start_date',
             'priority' => 'required|integer|min:1|max:5',
-            'created_by' => 'nullable|integer|exists:users,id',
+            // 'created_by' se elimina porque ahora se obtiene del usuario autenticado
         ];
     }
 

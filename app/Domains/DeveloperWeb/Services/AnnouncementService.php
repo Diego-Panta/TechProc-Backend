@@ -29,15 +29,10 @@ class AnnouncementService
         return $this->announcementRepository->findById($id);
     }
 
-    public function createAnnouncement(array $data): Announcement
+    public function createAnnouncement(array $data, int $userId): Announcement
     {
-        // Obtener el ID del usuario autenticado o usar uno por defecto
-        $createdBy = $this->getCurrentUserId();
-
-        // Si no hay usuario autenticado, buscar un usuario admin o crear uno temporal
-        if (!$createdBy) {
-            $createdBy = $this->getDefaultUserId();
-        }
+        // Usar el ID del usuario autenticado pasado desde el controlador
+        $createdBy = $userId;
 
         $validatedData = [
             'id_announcement' => $this->announcementRepository->getNextAnnouncementId(),
@@ -52,7 +47,7 @@ class AnnouncementService
             'start_date' => $data['start_date'],
             'end_date' => $data['end_date'],
             'views' => 0,
-            'created_by' => $createdBy,
+            'created_by' => $createdBy, // Usar el ID del usuario autenticado
             'created_date' => now(),
         ];
 
@@ -113,71 +108,6 @@ class AnnouncementService
         return $this->announcementRepository->getAllPaginated(10, $filters)->items();
     }
 
-    /**
-     * Obtener el ID del usuario actualmente autenticado
-     */
-    private function getCurrentUserId(): ?int
-    {
-        // Temporalmente devolvemos null hasta que tengas autenticación
-        return null;
-
-        // Cuando tengas autenticación, descomenta esto:
-        // return auth()->id();
-    }
-
-    /**
-     * Obtener un ID de usuario por defecto
-     */
-    private function getDefaultUserId(): int
-    {
-        try {
-            // Buscar cualquier usuario existente
-            $user = User::first();
-
-            if ($user) {
-                return $user->id;
-            }
-
-            // Si no hay usuarios, crear uno temporal
-            return $this->createTemporaryUser();
-        } catch (\Exception $e) {
-            Log::error('Error al obtener usuario por defecto', [
-                'error' => $e->getMessage()
-            ]);
-
-            // En caso de error, usar un valor que pase la validación de la base de datos
-            // Esto requiere que tengas al menos un usuario en la base de datos
-            throw new \Exception('No hay usuarios disponibles en el sistema. Por favor, crea al menos un usuario primero.');
-        }
-    }
-
-    /**
-     * Crear un usuario temporal para desarrollo
-     */
-    private function createTemporaryUser(): int
-    {
-        try {
-            $user = User::create([
-                'first_name' => 'System',
-                'last_name' => 'User',
-                'full_name' => 'System User',
-                'email' => 'system@incadev.com',
-                'password' => bcrypt('temporary_password'),
-                'role' => json_encode(['admin']),
-                'status' => 'active',
-            ]);
-
-            Log::info('Usuario temporal creado para announcements', ['user_id' => $user->id]);
-
-            return $user->id;
-        } catch (\Exception $e) {
-            Log::error('Error al crear usuario temporal', [
-                'error' => $e->getMessage()
-            ]);
-
-            throw new \Exception('No se pudo crear un usuario temporal. Error: ' . $e->getMessage());
-        }
-    }
 
     public function getActiveCount(): int
     {
