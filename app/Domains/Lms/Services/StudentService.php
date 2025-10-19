@@ -4,7 +4,10 @@ namespace App\Domains\Lms\Services;
 
 use App\Domains\Lms\Models\Student;
 use App\Domains\Lms\Repositories\StudentRepositoryInterface;
+use App\Domains\Administrator\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 
 class StudentService
 {
@@ -27,16 +30,38 @@ class StudentService
 
     public function createStudent(array $data): Student
     {
-        $data['status'] = $data['status'] ?? 'activo';
-        
-        $student = $this->repository->create($data);
+        return DB::transaction(function () use ($data) {
+            // Crear el usuario primero con los datos del estudiante
+            $user = User::create([
+                'first_name' => $data['first_name'],
+                'last_name' => $data['last_name'],
+                'full_name' => $data['first_name'] . ' ' . $data['last_name'],
+                'email' => $data['email'],
+                'password' => Hash::make($data['password']),
+                'phone_number' => $data['phone'] ?? null,
+                'document' => $data['document_number'],
+                'dni' => $data['document_number'],
+                'role' => ['student'], // Rol de estudiante
+                'status' => $data['status'] ?? 'active',
+                'timezone' => 'America/Lima',
+            ]);
 
-        if (!$student->student_id) {
-            $student->student_id = $student->id;
-            $student->save();
-        }
+            // Preparar los datos del estudiante sin el password
+            $studentData = $data;
+            unset($studentData['password']); // Eliminar password ya que no se guarda en la tabla students
+            $studentData['user_id'] = $user->id; // Asignar el user_id recién creado
+            $studentData['status'] = $data['status'] ?? 'active';
 
-        return $student->fresh(['company']);
+            // Crear el estudiante
+            $student = $this->repository->create($studentData);
+
+            if (!$student->student_id) {
+                $student->student_id = $student->id;
+                $student->save();
+            }
+
+            return $student->fresh(['company', 'user']);
+        });
     }
 
     public function updateStudent(int $studentId, array $data): Student
