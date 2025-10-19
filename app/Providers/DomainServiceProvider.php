@@ -19,6 +19,8 @@ use App\Domains\Lms\Repositories\CategoryRepositoryInterface;
 use App\Domains\Lms\Repositories\CategoryRepository;
 use App\Domains\Lms\Repositories\EnrollmentRepositoryInterface;
 use App\Domains\Lms\Repositories\EnrollmentRepository;
+use App\Domains\Lms\Repositories\CompanyRepositoryInterface;
+use App\Domains\Lms\Repositories\CompanyRepository;
 
 // SupportTechnical Repositories
 use App\Domains\SupportTechnical\Repositories\TicketRepositoryInterface;
@@ -36,6 +38,7 @@ class DomainServiceProvider extends ServiceProvider
         $this->app->bind(InstructorRepositoryInterface::class, InstructorRepository::class);
         $this->app->bind(CategoryRepositoryInterface::class, CategoryRepository::class);
         $this->app->bind(EnrollmentRepositoryInterface::class, EnrollmentRepository::class);
+        $this->app->bind(CompanyRepositoryInterface::class, CompanyRepository::class);
 
         // Registrar bindings de SupportTechnical
         $this->app->bind(TicketRepositoryInterface::class, TicketRepository::class);
