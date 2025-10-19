@@ -8,7 +8,7 @@ use App\Domains\SupportTechnical\Http\Controllers\TicketTrackingController;
 // TODO: Agregar middleware de autenticación cuando esté disponible
 // Route::middleware(['auth:api'])->group(function () {
 
-Route::prefix('api/tickets')->group(function () {
+Route::prefix('tickets')->group(function () {
     
     // Estadísticas (debe ir antes de las rutas con parámetros)
     Route::get('/stats', [TicketController::class, 'stats']);
