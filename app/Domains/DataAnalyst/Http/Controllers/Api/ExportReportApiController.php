@@ -4,8 +4,10 @@ namespace App\Domains\DataAnalyst\Http\Controllers\Api;
 
 use App\Domains\DataAnalyst\Services\ExportReportService;
 use App\Domains\DataAnalyst\Http\Requests\Api\ExportReportRequest;
+use App\Domains\DataAnalyst\Models\ExportedReport;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
@@ -14,135 +16,7 @@ class ExportReportApiController
     public function __construct(
         private ExportReportService $exportReportService
     ) {}
-
-    /**
-     * @OA\Post(
-     *     path="/api/data-analyst/export/generate",
-     *     summary="Generar y descargar reporte",
-     *     tags={"DataAnalyst - Export Reports"},
-     *     security={{"sanctum":{}}},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"report_type","format"},
-     *             @OA\Property(property="report_type", type="string", enum={"students","courses","attendance","grades","financial","tickets","security","dashboard"}, description="Tipo de reporte a generar"),
-     *             @OA\Property(property="format", type="string", enum={"excel","pdf"}, description="Formato del reporte"),
-     *             @OA\Property(property="report_title", type="string", maxLength=255, description="Título personalizado del reporte"),
-     *             @OA\Property(property="start_date", type="string", format="date", description="Fecha de inicio para filtrar datos"),
-     *             @OA\Property(property="end_date", type="string", format="date", description="Fecha de fin para filtrar datos"),
-     *             @OA\Property(property="filters", type="object", 
-     *                 @OA\Property(property="company_id", type="integer", description="ID de empresa para filtrar"),
-     *                 @OA\Property(property="academic_period_id", type="integer", description="ID de período académico"),
-     *                 @OA\Property(property="status", type="string", description="Estado para filtrar (solo estudiantes y tickets)"),
-     *                 @OA\Property(property="start_date", type="string", format="date"),
-     *                 @OA\Property(property="end_date", type="string", format="date")
-     *             ),
-     *             @OA\Property(property="include_charts", type="boolean", description="Incluir gráficos en PDF"),
-     *             @OA\Property(property="include_raw_data", type="boolean", description="Incluir datos crudos")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Reporte generado exitosamente",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Reporte generado exitosamente"),
-     *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="download_url", type="string", example="https://api.example.com/api/data-analyst/export/download/temp_token"),
-     *                 @OA\Property(property="file_name", type="string", example="students_report_2025-10-18_143022.xlsx"),
-     *                 @OA\Property(property="file_size", type="string", example="2.45 MB"),
-     *                 @OA\Property(property="expires_at", type="string", format="date-time", example="2025-10-18T16:30:22Z")
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=422,
-     *         description="Error de validación"
-     *     ),
-     *     @OA\Response(
-     *         response=500,
-     *         description="Error interno del servidor"
-     *     )
-     * )
-     */
-    public function generateReport(ExportReportRequest $request): JsonResponse
-    {
-        try {
-            Log::info('API Export Report Request', $request->validated());
-
-            $result = $this->exportReportService->generateAndDownloadReport($request->validated());
-
-            // Para API, retornamos información del archivo generado
-            return response()->json([
-                'success' => true,
-                'message' => 'Reporte generado exitosamente',
-                'data' => [
-                    'download_url' => $this->generateDownloadUrl($result),
-                    'file_name' => $this->extractFileName($result),
-                    'file_size' => 'N/A', // No tenemos info de tamaño en descarga directa
-                    'expires_at' => now()->addMinutes(30)->toISOString() // Token temporal de 30 min
-                ]
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('API Error generating report', [
-                'request' => $request->all(),
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Error al generar el reporte',
-                'error' => config('app.debug') ? $e->getMessage() : null
-            ], 500);
-        }
-    }
-
-    /**
-     * @OA\Get(
-     *     path="/api/data-analyst/export/filter-options/{reportType}",
-     *     summary="Obtener opciones de filtro por tipo de reporte",
-     *     tags={"DataAnalyst - Export Reports"},
-     *     security={{"sanctum":{}}},
-     *     @OA\Parameter(
-     *         name="reportType",
-     *         in="path",
-     *         required=true,
-     *         description="Tipo de reporte",
-     *         @OA\Schema(type="string", enum={"students","courses","attendance","grades","financial","tickets","security","dashboard"})
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Opciones de filtro obtenidas exitosamente",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="statuses", type="array", 
-     *                     @OA\Items(type="string", example="active"),
-     *                     description="Opciones de estado (solo para estudiantes y tickets)"
-     *                 ),
-     *                 @OA\Property(property="companies", type="array",
-     *                     @OA\Items(
-     *                         @OA\Property(property="id", type="integer", example=1),
-     *                         @OA\Property(property="name", type="string", example="Tech Solutions SAC")
-     *                     )
-     *                 ),
-     *                 @OA\Property(property="academic_periods", type="array",
-     *                     @OA\Items(
-     *                         @OA\Property(property="id", type="integer", example=1),
-     *                         @OA\Property(property="name", type="string", example="2025-I")
-     *                     )
-     *                 )
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Tipo de reporte no válido"
-     *     )
-     * )
-     */
+    
     public function getFilterOptions(string $reportType): JsonResponse
     {
         try {
@@ -176,32 +50,7 @@ class ExportReportApiController
         }
     }
 
-    /**
-     * @OA\Get(
-     *     path="/api/data-analyst/export/report-types",
-     *     summary="Obtener tipos de reporte disponibles",
-     *     tags={"DataAnalyst - Export Reports"},
-     *     security={{"sanctum":{}}},
-     *     @OA\Response(
-     *         response=200,
-     *         description="Tipos de reporte obtenidos exitosamente",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="data", type="array",
-     *                 @OA\Items(
-     *                     @OA\Property(property="key", type="string", example="students"),
-     *                     @OA\Property(property="name", type="string", example="Estudiantes"),
-     *                     @OA\Property(property="description", type="string", example="Reporte completo de estudiantes matriculados"),
-     *                     @OA\Property(property="icon", type="string", example="users"),
-     *                     @OA\Property(property="available_filters", type="array",
-     *                         @OA\Items(type="string", example="status")
-     *                     )
-     *                 )
-     *             )
-     *         )
-     *     )
-     * )
-     */
+    
     public function getReportTypes(): JsonResponse
     {
         try {
@@ -237,41 +86,7 @@ class ExportReportApiController
         }
     }
 
-    /**
-     * @OA\Post(
-     *     path="/api/data-analyst/export/preview",
-     *     summary="Vista previa de datos del reporte",
-     *     tags={"DataAnalyst - Export Reports"},
-     *     security={{"sanctum":{}}},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"report_type"},
-     *             @OA\Property(property="report_type", type="string", enum={"students","courses","attendance","grades","financial","tickets","security","dashboard"}),
-     *             @OA\Property(property="start_date", type="string", format="date"),
-     *             @OA\Property(property="end_date", type="string", format="date"),
-     *             @OA\Property(property="filters", type="object")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Vista previa generada exitosamente",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="preview_data", type="array",
-     *                     @OA\Items(type="object")
-     *                 ),
-     *                 @OA\Property(property="total_records", type="integer", example=150),
-     *                 @OA\Property(property="columns", type="array",
-     *                     @OA\Items(type="string", example="nombre")
-     *                 ),
-     *                 @OA\Property(property="metadata", type="object")
-     *             )
-     *         )
-     *     )
-     * )
-     */
+    
     public function previewReport(ExportReportRequest $request): JsonResponse
     {
         try {
@@ -307,9 +122,6 @@ class ExportReportApiController
         }
     }
 
-    /**
-     * Métodos auxiliares privados
-     */
     
     private function generateDownloadUrl($result): string
     {
@@ -341,5 +153,222 @@ class ExportReportApiController
             'dashboard' => ['dates'],
             default => []
         };
+    }
+
+    public function generateReport(ExportReportRequest $request): JsonResponse
+    {
+        try {
+            $result = $this->exportReportService->generateAndSaveReport($request->validated());
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Reporte generado y guardado exitosamente',
+                'data' => [
+                    'report' => $this->formatReportResponse($result['report']),
+                    'download_url' => $result['download_url']
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('API Error generating report', [
+                'request' => $request->all(),
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al generar el reporte',
+                'error' => config('app.debug') ? $e->getMessage() : null
+            ], 500);
+        }
+    }
+
+    /**
+     * Listar reportes del usuario
+     */
+    public function listReports(Request $request): JsonResponse
+    {
+        try {
+            $filters = $request->only(['report_type', 'format', 'search']);
+            $perPage = $request->get('per_page', 15);
+            $userId = $this->getAuthenticatedUserId();
+
+            $reports = $this->exportReportService->getUserReports($userId, $filters, $perPage);
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'reports' => $reports->map(function ($report) {
+                        return $this->formatReportResponse($report);
+                    }),
+                    'pagination' => [
+                        'current_page' => $reports->currentPage(),
+                        'last_page' => $reports->lastPage(),
+                        'per_page' => $reports->perPage(),
+                        'total' => $reports->total(),
+                    ]
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('API Error listing reports', [
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener la lista de reportes'
+            ], 500);
+        }
+    }
+
+    /**
+     * Descargar reporte por token
+     */
+    public function downloadReport(string $token)
+    {
+        try {
+            $report = $this->exportReportService->getReportByToken($token);
+
+            if (!$report) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Reporte no encontrado o expirado'
+                ], 404);
+            }
+
+            return $this->exportReportService->downloadReport($report);
+
+        } catch (\Exception $e) {
+            Log::error('API Error downloading report', [
+                'token' => $token,
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al descargar el reporte'
+            ], 500);
+        }
+    }
+
+    /**
+     * Obtener estadísticas de reportes
+     */
+    public function getStats(): JsonResponse
+    {
+        try {
+            $userId = $this->getAuthenticatedUserId();
+            $stats = $this->exportReportService->getReportStats($userId);
+
+            return response()->json([
+                'success' => true,
+                'data' => $stats
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('API Error getting report stats', [
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener las estadísticas'
+            ], 500);
+        }
+    }
+
+    /**
+     * Eliminar reporte
+     */
+    public function deleteReport(string $token): JsonResponse
+    {
+        try {
+            $report = $this->exportReportService->getReportByToken($token);
+
+            if (!$report) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Reporte no encontrado'
+                ], 404);
+            }
+
+            // Verificar que el usuario es el propietario del reporte
+            if ($report->generated_by !== $this->getAuthenticatedUserId()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No tienes permisos para eliminar este reporte'
+                ], 403);
+            }
+
+            $this->exportReportService->deleteReport($report);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Reporte eliminado exitosamente'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('API Error deleting report', [
+                'token' => $token,
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al eliminar el reporte'
+            ], 500);
+        }
+    }
+
+    /**
+     * Formatear respuesta del reporte para API
+     */
+    private function formatReportResponse(ExportedReport $report): array
+    {
+        return [
+            'id' => $report->id,
+            'report_type' => $report->report_type,
+            'report_type_name' => $report->report_type_name,
+            'format' => $report->format,
+            'file_name' => $report->file_name,
+            'report_title' => $report->report_title,
+            'description' => $report->description,
+            'file_size' => $report->formatted_file_size,
+            'record_count' => $report->record_count,
+            'filters' => $report->filters,
+            'generated_by' => [
+                'id' => $report->generated_by,
+                'name' => $report->generatedBy->name ?? 'Usuario del Sistema'
+            ],
+            'download_url' => $report->getDownloadUrl(),
+            'created_at' => $report->created_at->toISOString(),
+            'expires_at' => $report->expires_at?->toISOString(),
+            'is_expired' => $report->isExpired(),
+            'icon' => $report->report_icon
+        ];
+    }
+
+    /**
+     * Obtener ID del usuario autenticado de forma segura
+     */
+    private function getAuthenticatedUserId(): int
+    {
+        // Primero intentar obtener el usuario del request (viene del middleware)
+        if (request()->has('authenticated_user')) {
+            $user = request()->get('authenticated_user');
+            if ($user && isset($user->id)) {
+                return $user->id;
+            }
+        }
+
+        // Si no está en el request, intentar con Auth
+        if (Auth::check()) {
+            return Auth::id();
+        }
+
+        // Si no hay usuario autenticado, usar usuario por defecto
+        $defaultUser = \App\Domains\AuthenticationSessions\Models\User::first();
+        return $defaultUser ? $defaultUser->id : 1;
     }
 }

@@ -187,20 +187,27 @@ Route::prefix('api/data-analyst')->name('api.data-analyst.')->group(function () 
 
     // API Routes for DataAnalyst Export module
     Route::prefix('export')->name('export.')->group(function () {
-
-        // Protected endpoints (descomentar cuando tengas autenticación)
+    
         Route::middleware([DataAnalystMiddleware::class])->group(function () {
-
-            // Generar y descargar reporte
+            
+            // Generar y guardar reporte
             Route::post('/generate', [ExportReportApiController::class, 'generateReport'])->name('generate');
-
-            // Obtener opciones de filtro por tipo de reporte
+            
+            // Listar reportes del usuario
+            Route::get('/reports', [ExportReportApiController::class, 'listReports'])->name('reports.list');
+            
+            // Obtener estadísticas
+            Route::get('/reports/stats', [ExportReportApiController::class, 'getStats'])->name('reports.stats');
+            
+            // Eliminar reporte
+            Route::delete('/reports/{token}', [ExportReportApiController::class, 'deleteReport'])->name('reports.delete');
+            
+            // Descargar reporte (ruta pública con token)
+            Route::get('/download/{token}', [ExportReportApiController::class, 'downloadReport'])->name('download');
+            
+            // Rutas existentes
             Route::get('/filter-options/{reportType}', [ExportReportApiController::class, 'getFilterOptions'])->name('filter-options');
-
-            // Obtener tipos de reporte disponibles
             Route::get('/report-types', [ExportReportApiController::class, 'getReportTypes'])->name('report-types');
-
-            // Vista previa de datos del reporte
             Route::post('/preview', [ExportReportApiController::class, 'previewReport'])->name('preview');
         });
     });
