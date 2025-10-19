@@ -4,7 +4,7 @@ namespace App\Domains\DataAnalyst\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-
+use App\Domains\Lms\Models\Enrollment;
 class Invoice extends Model
 {
     use HasFactory;

@@ -5,6 +5,8 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use App\Domains\DeveloperWeb\Repositories\ContactFormRepository;
 use App\Domains\DeveloperWeb\Services\ContactFormService;
+use App\Domains\DataAnalyst\Repositories\StudentReportRepository;
+use App\Domains\DataAnalyst\Services\StudentReportService;
 
 class DomainServiceProvider extends ServiceProvider
 {
@@ -20,6 +22,17 @@ class DomainServiceProvider extends ServiceProvider
                 $app->make(ContactFormRepository::class)
             );
         });
+
+        // Registrar bindings para DataAnalyst
+        /*$this->app->bind(StudentReportRepository::class, function ($app) {
+            return new StudentReportRepository();
+        });
+
+        $this->app->bind(StudentReportService::class, function ($app) {
+            return new StudentReportService(
+                $app->make(StudentReportRepository::class)
+            );
+        });*/
     }
     
     public function boot()

@@ -4,6 +4,7 @@ namespace App\Domains\SupportTechnical\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Domains\Administrator\Models\Employee;
 
 class Escalation extends Model
 {

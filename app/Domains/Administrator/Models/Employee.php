@@ -4,6 +4,10 @@ namespace App\Domains\Administrator\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Domains\SupportTechnical\Models\Ticket;
+use App\Domains\SupportTechnical\Models\Escalation;
+use App\Domains\SupportSecurity\Models\Incident;
+use App\Domains\SupportInfrastructure\Models\License;
 
 class Employee extends Model
 {
