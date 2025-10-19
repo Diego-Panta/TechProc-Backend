@@ -183,7 +183,7 @@ class AuthController extends Controller
             'email' => 'required|email|unique:users',
             'password' => 'required|string|min:6',
             'phone_number' => 'nullable|string|max:20',
-            'role' => 'required|in:admin,lms,seg,infra,web,data',
+            'role' => 'required|in:admin,lms,seg,infra,web,data,support',
             'reason' => 'required|string|max:500',
             // Datos del empleado
             'position_id' => 'required|integer|exists:positions,id',
