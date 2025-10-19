@@ -16,13 +16,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'firebase.jwt' => \App\Domains\AuthenticationSessions\Middleware\FirebaseJwtMiddleware::class,
             'admin' => \App\Domains\Administrator\Middleware\AdminMiddleware::class,
         ]);
-        // Excluir rutas API de la verificación CSRF
+        
         $middleware->validateCsrfTokens(except: [
-        'api/auth/*',
-        ]);
-
-        $middleware->validateCsrfTokens([
             'api/*',
+            'api/auth/*'
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
