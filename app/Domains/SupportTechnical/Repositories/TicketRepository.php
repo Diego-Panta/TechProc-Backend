@@ -29,8 +29,8 @@ class TicketRepository implements TicketRepositoryInterface
             $query->where('user_id', $filters['user_id']);
         }
 
-        if (isset($filters['technician_id'])) {
-            $query->where('technician_id', $filters['technician_id']);
+        if (isset($filters['assigned_technician'])) {
+            $query->where('assigned_technician', $filters['assigned_technician']);
         }
 
         if (isset($filters['search'])) {
