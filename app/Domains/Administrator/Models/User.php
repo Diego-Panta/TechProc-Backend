@@ -132,4 +132,79 @@ class User extends Authenticatable
     {
         return $this->hasMany(GradeChange::class, 'user_id');
     }
+
+    /**
+     * Verificar si el usuario está activo
+     */
+    public function isActive()
+    {
+        return $this->status === 'active';
+    }
+
+    /**
+     * Verificar si el usuario es administrador
+     */
+    public function isAdmin()
+    {
+        $roles = is_array($this->role) ? $this->role : [$this->role];
+        return in_array('admin', $roles);
+    }
+
+    /**
+     * Verificar si el usuario tiene un rol específico
+     */
+    public function hasRole($role)
+    {
+        $roles = is_array($this->role) ? $this->role : [$this->role];
+        return in_array($role, $roles);
+    }
+
+    /**
+     * Verificar si el usuario tiene alguno de los roles especificados
+     */
+    public function hasAnyRole(array $roles)
+    {
+        $userRoles = is_array($this->role) ? $this->role : [$this->role];
+        return !empty(array_intersect($userRoles, $roles));
+    }
+
+    /**
+     * Obtener el nombre completo del usuario
+     */
+    public function getFullNameAttribute()
+    {
+        return $this->first_name . ' ' . $this->last_name;
+    }
+
+    /**
+     * Scope para usuarios activos
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'active');
+    }
+
+    /**
+     * Scope para usuarios inactivos
+     */
+    public function scopeInactive($query)
+    {
+        return $query->where('status', 'inactive');
+    }
+
+    /**
+     * Scope para usuarios baneados
+     */
+    public function scopeBanned($query)
+    {
+        return $query->where('status', 'banned');
+    }
+
+    /**
+     * Scope para filtrar por rol
+     */
+    public function scopeWithRole($query, $role)
+    {
+        return $query->whereJsonContains('role', $role);
+    }
 }

@@ -13,8 +13,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            //
             'firebase.jwt' => \App\Domains\AuthenticationSessions\Middleware\FirebaseJwtMiddleware::class,
+            'admin' => \App\Domains\Administrator\Middleware\AdminMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

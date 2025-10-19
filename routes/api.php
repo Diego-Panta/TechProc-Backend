@@ -15,6 +15,9 @@ Route::get('/health', function () {
 // Incluir rutas del dominio AuthenticationSessions
 require app_path('Domains/AuthenticationSessions/routes.php');
 
+// Incluir rutas del dominio Administrator
+require app_path('Domains/Administrator/routes.php');
+
 // Ruta protegida de ejemplo - CON MIDDLEWARE CORRECTO
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return response()->json([
