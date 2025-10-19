@@ -12,6 +12,7 @@ class Position extends Model
     protected $table = 'positions';
     protected $primaryKey = 'id';
 
+    // Deshabilitar timestamps automáticos
     public $timestamps = false;
 
     protected $fillable = [

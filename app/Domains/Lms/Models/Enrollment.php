@@ -22,7 +22,10 @@ class Enrollment extends Model
         'enrollment_type',
         'enrollment_date',
         'status',
+<<<<<<< HEAD
         'created_at',
+=======
+>>>>>>> 8a7a4e09f73c188c87f63e811616322463c07950
     ];
 
     protected $casts = [

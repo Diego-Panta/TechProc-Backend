@@ -6,6 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use App\Domains\AuthenticationSessions\Models\ActiveSession;
+use App\Domains\Lms\Models\Student;
+use App\Domains\Lms\Models\Instructor;
+use App\Domains\Lms\Models\GroupParticipant;
+use App\Domains\SupportTechnical\Models\Ticket;
+use App\Domains\Lms\Models\GradeChange;
 
 class User extends Authenticatable
 {

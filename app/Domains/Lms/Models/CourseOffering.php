@@ -34,6 +34,9 @@ class CourseOffering extends Model
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
+    ];
+
+    protected $casts = [
         'created_at' => 'datetime',
     ];
 

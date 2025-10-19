@@ -18,6 +18,12 @@ require app_path('Domains/AuthenticationSessions/routes.php');
 // Incluir rutas del dominio Administrator
 require app_path('Domains/Administrator/routes.php');
 
+// Incluir rutas del dominio Soporte Técnico
+require base_path('app/Domains/SupportTechnical/routes.php');
+
+// Incluir rutas del dominio LMS
+require base_path('app/Domains/Lms/routes.php');
+
 // Ruta protegida de ejemplo - CON MIDDLEWARE CORRECTO
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return response()->json([
