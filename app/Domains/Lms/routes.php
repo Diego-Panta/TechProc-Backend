@@ -34,6 +34,10 @@ Route::prefix('api/lms')->group(function () {
     
     // Categorías de Cursos
     Route::get('/categories', [CategoryController::class, 'index']);
+    Route::get('/categories/{category_id}', [CategoryController::class, 'show']);
+    Route::post('/categories', [CategoryController::class, 'store']);
+    Route::put('/categories/{category_id}', [CategoryController::class, 'update']);
+    Route::delete('/categories/{category_id}', [CategoryController::class, 'destroy']);
     
     // Matrículas (Enrollments)
     Route::get('/enrollments', [EnrollmentController::class, 'index']);
