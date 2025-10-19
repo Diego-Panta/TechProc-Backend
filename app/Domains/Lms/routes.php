@@ -11,7 +11,7 @@ use App\Domains\Lms\Http\Controllers\CompanyController;
 // TODO: Agregar middleware de autenticación cuando esté disponible
 // Route::middleware(['auth:api'])->group(function () {
 
-Route::prefix('api/lms')->group(function () {
+Route::prefix('lms')->group(function () {
     
     // Gestión de Cursos
     Route::get('/courses', [CourseController::class, 'index']);

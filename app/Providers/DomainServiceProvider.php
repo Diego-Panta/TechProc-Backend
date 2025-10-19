@@ -69,29 +69,7 @@ class DomainServiceProvider extends ServiceProvider
     
     public function boot()
     {
-        $modules = [
-            'Administrator',
-            'DataAnalyst',
-            'DeveloperWeb',
-            'LMS',
-            'SupportInfrastructure',
-            'SupportSecurity',
-            'SupportTechnical',
-            'AuthenticationSessions'
-        ];
-
-        foreach ($modules as $module) {
-            // Cargar rutas web
-            $webPath = base_path("app/Domains/{$module}/routes.php");
-            if (file_exists($webPath)) {
-                require $webPath;
-            }
-
-            // Cargar rutas API
-            $apiPath = base_path("app/Domains/{$module}/api.php");
-            if (file_exists($apiPath)) {
-                require $apiPath;
-            }
-        }
+        // Las rutas se cargan desde routes/api.php y routes/web.php
+        // No es necesario cargarlas aquí para evitar duplicación
     }
 }
