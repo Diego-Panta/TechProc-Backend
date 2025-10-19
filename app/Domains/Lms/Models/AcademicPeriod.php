@@ -11,9 +11,9 @@ class AcademicPeriod extends Model
 
     protected $table = 'academic_periods';
     protected $primaryKey = 'id';
-    
-    // Deshabilitar timestamps automáticos
-    public $timestamps = false;
+
+    // La tabla solo tiene created_at, no tiene updated_at
+    const UPDATED_AT = null;
 
     protected $fillable = [
         'academic_period_id',
@@ -21,7 +21,6 @@ class AcademicPeriod extends Model
         'start_date',
         'end_date',
         'status',
-        'created_at',
     ];
 
     protected $casts = [
@@ -29,14 +28,4 @@ class AcademicPeriod extends Model
         'end_date' => 'date',
         'created_at' => 'datetime',
     ];
-
-    public function courseOfferings()
-    {
-        return $this->hasMany(CourseOffering::class, 'academic_period_id');
-    }
-
-    public function enrollments()
-    {
-        return $this->hasMany(Enrollment::class, 'academic_period_id');
-    }
 }
