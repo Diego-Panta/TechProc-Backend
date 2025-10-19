@@ -7,6 +7,7 @@ use App\Domains\Lms\Http\Controllers\InstructorController;
 use App\Domains\Lms\Http\Controllers\CategoryController;
 use App\Domains\Lms\Http\Controllers\EnrollmentController;
 use App\Domains\Lms\Http\Controllers\CompanyController;
+use App\Domains\Lms\Http\Controllers\AcademicPeriodController;
 
 // TODO: Agregar middleware de autenticación cuando esté disponible
 // Route::middleware(['auth:api'])->group(function () {
@@ -49,7 +50,14 @@ Route::prefix('lms')->group(function () {
     Route::post('/companies', [CompanyController::class, 'store']);
     Route::put('/companies/{company_id}', [CompanyController::class, 'update']);
     Route::delete('/companies/{company_id}', [CompanyController::class, 'destroy']);
-    
+
+    // Gestión de Periodos Académicos
+    Route::get('/academic-periods', [AcademicPeriodController::class, 'index']);
+    Route::get('/academic-periods/{academic_period_id}', [AcademicPeriodController::class, 'show']);
+    Route::post('/academic-periods', [AcademicPeriodController::class, 'store']);
+    Route::put('/academic-periods/{academic_period_id}', [AcademicPeriodController::class, 'update']);
+    Route::delete('/academic-periods/{academic_period_id}', [AcademicPeriodController::class, 'destroy']);
+
 });
 
 // });
