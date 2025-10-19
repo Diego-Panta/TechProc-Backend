@@ -3,7 +3,8 @@
     "allow": [
       "Bash(tree -L 3 /mnt/c/Users/anton/Documents/GitHub/TechProc-Backend/app)",
       "Read(//usr/**)",
-      "Bash(php artisan route:list --path=api/lms/categories)"
+      "Bash(php artisan route:list --path=api/lms/categories)",
+      "Bash(php artisan route:list --path=api/tickets)"
     ],
     "deny": [],
     "ask": []
