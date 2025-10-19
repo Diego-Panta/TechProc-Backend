@@ -147,7 +147,7 @@ class AdminMiddleware
     {
         // Verificar si el rol contiene 'admin'
         $roles = is_array($user->role) ? $user->role : [$user->role];
-        return in_array('admin', $roles);
+        return in_array('admin', $roles) || in_array('support', $roles);
     }
 
     /**
