@@ -92,4 +92,9 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->status === 'active';
     }
+
+    public function employee()
+    {
+        return $this->hasOne(\App\Domains\Administrator\Models\Employee::class, 'user_id');
+    }
 }

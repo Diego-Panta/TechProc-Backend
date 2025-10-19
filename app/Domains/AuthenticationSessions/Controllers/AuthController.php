@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 
@@ -85,7 +86,10 @@ class AuthController extends Controller
             'last_connection' => now()
         ]);
 
-        return response()->json([
+        // Cargar datos del empleado si existe
+        $user->load(['employee.position', 'employee.department']);
+
+        $response = [
             'success' => true,
             'data' => [
                 'user' => [
@@ -103,7 +107,31 @@ class AuthController extends Controller
                     'expires_at' => now()->addHours(2)->toISOString()
                 ]
             ]
-        ], 200);
+        ];
+
+        // Agregar datos del empleado si existe
+        if ($user->employee) {
+            $response['data']['employee'] = [
+                'id' => $user->employee->id,
+                'employee_id' => $user->employee->employee_id,
+                'hire_date' => $user->employee->hire_date,
+                'position' => $user->employee->position ? [
+                    'id' => $user->employee->position->id,
+                    'position_name' => $user->employee->position->position_name,
+                    'department_id' => $user->employee->position->department_id
+                ] : null,
+                'department' => $user->employee->department ? [
+                    'id' => $user->employee->department->id,
+                    'department_name' => $user->employee->department->department_name
+                ] : null,
+                'employment_status' => $user->employee->employment_status,
+                'schedule' => $user->employee->schedule,
+                'speciality' => $user->employee->speciality,
+                'salary' => $user->employee->salary
+            ];
+        }
+
+        return response()->json($response, 200);
     }
 
     /**
@@ -156,7 +184,15 @@ class AuthController extends Controller
             'password' => 'required|string|min:6',
             'phone_number' => 'nullable|string|max:20',
             'role' => 'required|in:admin,lms,seg,infra,web,data',
-            'reason' => 'required|string|max:500'
+            'reason' => 'required|string|max:500',
+            // Datos del empleado
+            'position_id' => 'required|integer|exists:positions,id',
+            'department_id' => 'required|integer|exists:departments,id',
+            'hire_date' => 'nullable|date',
+            'employment_status' => 'nullable|in:Active,Inactive,Terminated',
+            'schedule' => 'nullable|string',
+            'speciality' => 'nullable|string|max:255',
+            'salary' => 'nullable|numeric|min:0'
         ]);
 
         if ($validator->fails()) {
@@ -170,23 +206,57 @@ class AuthController extends Controller
             ], 422);
         }
 
-        $user = User::create([
-            'first_name' => $request->first_name,
-            'last_name' => $request->last_name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'phone_number' => $request->phone_number,
-            'role' => [$request->role],
-            'status' => 'inactive'
-        ]);
+        try {
+            // Iniciar transacción para asegurar integridad de datos
+            DB::beginTransaction();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Solicitud de registro enviada. Será revisada por un administrador.',
-            'data' => [
-                'request_id' => $user->id
-            ]
-        ], 201);
+            // Crear usuario
+            $user = User::create([
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'phone_number' => $request->phone_number,
+                'role' => [$request->role],
+                'status' => 'inactive'
+            ]);
+
+            // Crear empleado asociado
+            $employee = \App\Domains\Administrator\Models\Employee::create([
+                'user_id' => $user->id,
+                'position_id' => $request->position_id,
+                'department_id' => $request->department_id,
+                'hire_date' => $request->hire_date ?? now(),
+                'employment_status' => $request->employment_status ?? 'Active',
+                'schedule' => $request->schedule,
+                'speciality' => $request->speciality,
+                'salary' => $request->salary
+            ]);
+
+            // Confirmar transacción
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Solicitud de registro enviada. Será revisada por un administrador.',
+                'data' => [
+                    'request_id' => $user->id,
+                    'employee_id' => $employee->id
+                ]
+            ], 201);
+
+        } catch (\Exception $e) {
+            // Revertir transacción en caso de error
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'error' => [
+                    'code' => 'REGISTRATION_ERROR',
+                    'message' => 'Error al crear el registro: ' . $e->getMessage()
+                ]
+            ], 500);
+        }
     }
 
     /**

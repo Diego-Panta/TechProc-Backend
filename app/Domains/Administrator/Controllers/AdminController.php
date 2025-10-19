@@ -303,25 +303,35 @@ class AdminController extends Controller
                 ], 404);
             }
 
-            /* Verificar si el usuario tiene relaciones que impidan la eliminación
-            $hasRelations = $this->adminService->userHasRelations($user);
+            // Iniciar transacción para asegurar integridad
+            DB::beginTransaction();
 
-            if ($hasRelations) {
+            try {
+                // Eliminar empleado asociado si existe
+                $employee = Employee::where('user_id', $userId)->first();
+                if ($employee) {
+                    $employee->delete();
+                }
+
+                // Eliminar sesiones activas
+                DB::table('active_sessions')->where('user_id', $userId)->delete();
+
+                // Eliminar el usuario
+                $user->delete();
+
+                // Confirmar transacción
+                DB::commit();
+
                 return response()->json([
-                    'success' => false,
-                    'error' => [
-                        'code' => 'USER_HAS_RELATIONS',
-                        'message' => 'No se puede eliminar el usuario porque tiene datos relacionados'
-                    ]
-                ], 400);
-            }
-            */
-            $user->delete();
+                    'success' => true,
+                    'message' => 'Usuario y datos relacionados eliminados exitosamente'
+                ], 200);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Usuario eliminado exitosamente'
-            ], 200);
+            } catch (\Exception $e) {
+                // Revertir transacción en caso de error
+                DB::rollBack();
+                throw $e;
+            }
 
         } catch (\Exception $e) {
             return response()->json([
