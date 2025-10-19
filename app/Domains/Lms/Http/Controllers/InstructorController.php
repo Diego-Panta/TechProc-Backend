@@ -45,9 +45,12 @@ class InstructorController extends Controller
 
     /**
      * Store a newly created instructor.
-     * 
+     *
      * @authenticated
      * POST /api/lms/instructors
+     *
+     * Crea automáticamente un usuario con los datos proporcionados.
+     * El usuario se crea con rol "instructor" y las credenciales permiten hacer login.
      */
     public function store(CreateInstructorRequest $request): JsonResponse
     {
@@ -55,10 +58,14 @@ class InstructorController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Instructor creado exitosamente',
+            'message' => 'Instructor y usuario creados exitosamente',
             'data' => [
                 'id' => $instructor->id,
                 'instructor_id' => $instructor->instructor_id,
+                'user_id' => $instructor->user_id,
+                'email' => $instructor->user->email ?? null,
+                'full_name' => $instructor->user->full_name ?? null,
+                'status' => $instructor->status,
             ],
         ], 201);
     }
