@@ -32,7 +32,6 @@ class AlertApiController
                 'success' => true,
                 'data' => $alerts
             ]);
-
         } catch (\Exception $e) {
             Log::error('API Error listing public alerts', [
                 'error' => $e->getMessage()
@@ -58,7 +57,6 @@ class AlertApiController
                 'success' => true,
                 'data' => $alerts
             ]);
-
         } catch (\Exception $e) {
             Log::error('API Error listing high priority alerts', [
                 'error' => $e->getMessage()
@@ -89,9 +87,11 @@ class AlertApiController
 
             // Verificar que la alerta esté activa
             $now = now();
-            if ($alert->status !== 'active' || 
-                $alert->start_date > $now || 
-                $alert->end_date < $now) {
+            if (
+                $alert->status !== 'active' ||
+                $alert->start_date > $now ||
+                $alert->end_date < $now
+            ) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Alerta no disponible'
@@ -102,7 +102,6 @@ class AlertApiController
                 'success' => true,
                 'data' => $alert
             ]);
-
         } catch (\Exception $e) {
             Log::error('API Error showing public alert', [
                 'id' => $id,
@@ -125,7 +124,7 @@ class AlertApiController
         try {
             // Obtener usuario autenticado desde el middleware
             $user = $request->user();
-            
+
             $filters = [
                 'status' => $request->get('status'),
                 'type' => $request->get('type'),
@@ -147,7 +146,6 @@ class AlertApiController
                 'success' => true,
                 'data' => $alerts
             ]);
-
         } catch (\Exception $e) {
             Log::error('API Error listing alerts', [
                 'user_id' => $request->user()->id ?? 'unknown',
@@ -170,7 +168,7 @@ class AlertApiController
     {
         try {
             $user = $request->user();
-            
+
             $alert = $this->alertService->getAlertById($id);
 
             if (!$alert) {
@@ -189,7 +187,6 @@ class AlertApiController
                 'success' => true,
                 'data' => $alert
             ]);
-
         } catch (\Exception $e) {
             Log::error('API Error showing alert', [
                 'user_id' => $request->user()->id ?? 'unknown',
@@ -212,10 +209,10 @@ class AlertApiController
     {
         try {
             $user = $request->user();
-            
+
             // Pasar el ID del usuario autenticado al servicio
             $alert = $this->alertService->createAlert(
-                $request->validated(), 
+                $request->validated(),
                 $user->id
             );
 
@@ -231,7 +228,6 @@ class AlertApiController
                 'data' => $alert,
                 'message' => 'Alerta creada exitosamente'
             ], 201);
-
         } catch (\Exception $e) {
             Log::error('API Error creating alert', [
                 'user_id' => $request->user()->id ?? 'unknown',
@@ -254,10 +250,22 @@ class AlertApiController
     {
         try {
             $user = $request->user();
-            
+
+            $alert = $this->alertService->getAlertById($id);
+
+            if (!$alert) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Alerta no encontrada'
+                ], 404);
+            }
+
             $success = $this->alertService->updateAlert($id, $request->validated());
 
             if ($success) {
+                // Recargar la alerta actualizada
+                $updatedAlert = $this->alertService->getAlertById($id);
+
                 Log::info('Usuario actualizó alerta', [
                     'user_id' => $user->id,
                     'alert_id' => $id
@@ -265,6 +273,7 @@ class AlertApiController
 
                 return response()->json([
                     'success' => true,
+                    'data' => $updatedAlert,
                     'message' => 'Alerta actualizada exitosamente'
                 ]);
             }
@@ -273,12 +282,12 @@ class AlertApiController
                 'success' => false,
                 'message' => 'No se pudo actualizar la alerta'
             ], 400);
-
         } catch (\Exception $e) {
             Log::error('API Error updating alert', [
                 'user_id' => $request->user()->id ?? 'unknown',
                 'id' => $id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'data' => $request->all()
             ]);
 
             return response()->json([
@@ -296,7 +305,7 @@ class AlertApiController
     {
         try {
             $user = $request->user();
-            
+
             $success = $this->alertService->deleteAlert($id);
 
             if ($success) {
@@ -315,7 +324,6 @@ class AlertApiController
                 'success' => false,
                 'message' => 'No se pudo eliminar la alerta'
             ], 404);
-
         } catch (\Exception $e) {
             Log::error('API Error deleting alert', [
                 'user_id' => $request->user()->id ?? 'unknown',
@@ -338,12 +346,12 @@ class AlertApiController
     {
         try {
             $user = $request->user();
-            
+
             $statusCounts = $this->alertService->getStatusCounts();
             $typeCounts = $this->alertService->getTypeCounts();
             $activeAlerts = $this->alertService->getActiveAlerts();
             $highPriorityAlerts = $this->alertService->getHighPriorityAlerts();
-            
+
             $total = array_sum($statusCounts);
 
             Log::info('Usuario accedió a estadísticas de alertas', [
@@ -365,7 +373,6 @@ class AlertApiController
                     'active_count' => $activeAlerts->count(),
                 ]
             ]);
-
         } catch (\Exception $e) {
             Log::error('API Error getting alert stats', [
                 'user_id' => $request->user()->id ?? 'unknown',

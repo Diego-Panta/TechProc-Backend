@@ -12,7 +12,7 @@ use App\Domains\DeveloperWeb\Middleware\DeveloperWebMiddleware;
 use Illuminate\Support\Facades\Route;
 
 // API Routes for DeveloperWeb module
-Route::prefix('api/developer-web')->name('api.developer-web.')->group(function () {
+Route::prefix('developer-web')->name('api.developer-web.')->group(function () {
 
     // Dashboard Statistics API
     Route::prefix('dashboard')->name('dashboard.')->group(function () {
