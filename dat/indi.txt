@@ -1,0 +1,292 @@
+=======================================================
+DOCUMENTACIÓN API - COURSE OFFERINGS (Ofertas de Cursos)
+=======================================================
+
+BASE URL: http://127.0.0.1:8000/api/lms/course-offerings
+
+=======================================================
+1. LISTAR TODAS LAS OFERTAS DE CURSOS
+=======================================================
+Método: GET
+URL: http://127.0.0.1:8000/api/lms/course-offerings
+
+Headers:
+Content-Type: application/json
+Accept: application/json
+
+Respuesta exitosa (200):
+{
+    "success": true,
+    "data": [
+        {
+            "id": 1,
+            "course_offering_id": null,
+            "course_id": 1,
+            "course": {
+                "id": 1,
+                "name": "Introducción a Laravel",
+                "code": "LAR101"
+            },
+            "academic_period_id": 1,
+            "academic_period": {
+                "id": 1,
+                "name": "2024-1",
+                "start_date": "2024-03-01T00:00:00Z",
+                "end_date": "2024-07-31T00:00:00Z"
+            },
+            "instructor_id": 1,
+            "instructor": {
+                "id": 1,
+                "first_name": "Juan",
+                "last_name": "Pérez",
+                "email": "juan.perez@example.com"
+            },
+            "schedule": "Lunes y Miércoles 10:00-12:00",
+            "delivery_method": "regular",
+            "created_at": "2024-01-15T10:30:00Z"
+        }
+    ]
+}
+
+=======================================================
+2. OBTENER UNA OFERTA DE CURSO POR ID
+=======================================================
+Método: GET
+URL: http://127.0.0.1:8000/api/lms/course-offerings/{course_offering_id}
+Ejemplo: http://127.0.0.1:8000/api/lms/course-offerings/1
+
+Headers:
+Content-Type: application/json
+Accept: application/json
+
+Respuesta exitosa (200):
+{
+    "success": true,
+    "data": {
+        "id": 1,
+        "course_offering_id": null,
+        "course_id": 1,
+        "course": {
+            "id": 1,
+            "name": "Introducción a Laravel",
+            "code": "LAR101"
+        },
+        "academic_period_id": 1,
+        "academic_period": {
+            "id": 1,
+            "name": "2024-1",
+            "start_date": "2024-03-01T00:00:00Z",
+            "end_date": "2024-07-31T00:00:00Z"
+        },
+        "instructor_id": 1,
+        "instructor": {
+            "id": 1,
+            "first_name": "Juan",
+            "last_name": "Pérez",
+            "email": "juan.perez@example.com"
+        },
+        "schedule": "Lunes y Miércoles 10:00-12:00",
+        "delivery_method": "regular",
+        "created_at": "2024-01-15T10:30:00Z"
+    }
+}
+
+Respuesta error (404):
+{
+    "success": false,
+    "message": "Oferta de curso no encontrada"
+}
+
+=======================================================
+3. CREAR UNA NUEVA OFERTA DE CURSO
+=======================================================
+Método: POST
+URL: http://127.0.0.1:8000/api/lms/course-offerings
+
+Headers:
+Content-Type: application/json
+Accept: application/json
+
+Body (JSON):
+{
+    "course_id": 1,
+    "academic_period_id": 1,
+    "instructor_id": 1,
+    "schedule": "Lunes y Miércoles 10:00-12:00",
+    "delivery_method": "regular"
+}
+
+Campos:
+- course_id (requerido, integer): ID del curso
+- academic_period_id (requerido, integer): ID del período académico
+- instructor_id (opcional, integer): ID del instructor
+- schedule (opcional, string): Horario de la oferta
+- delivery_method (opcional, string, max 50): Método de entrega
+- course_offering_id (opcional, integer): ID de oferta relacionada
+
+Respuesta exitosa (201):
+{
+    "success": true,
+    "message": "Oferta de curso creada exitosamente",
+    "data": {
+        "id": 1,
+        "course_offering_id": null,
+        "course_id": 1,
+        "academic_period_id": 1,
+        "instructor_id": 1,
+        "schedule": "Lunes y Miércoles 10:00-12:00",
+        "delivery_method": "regular",
+        "created_at": "2024-01-15T10:30:00Z"
+    }
+}
+
+Respuesta error de validación (422):
+{
+    "message": "The given data was invalid.",
+    "errors": {
+        "course_id": [
+            "El ID del curso es obligatorio"
+        ]
+    }
+}
+
+=======================================================
+4. ACTUALIZAR UNA OFERTA DE CURSO
+=======================================================
+Método: PUT
+URL: http://127.0.0.1:8000/api/lms/course-offerings/{course_offering_id}
+Ejemplo: http://127.0.0.1:8000/api/lms/course-offerings/1
+
+Headers:
+Content-Type: application/json
+Accept: application/json
+
+Body (JSON) - Todos los campos son opcionales:
+{
+    "course_id": 2,
+    "academic_period_id": 1,
+    "instructor_id": 2,
+    "schedule": "Martes y Jueves 14:00-16:00",
+    "delivery_method": "online"
+}
+
+Campos (todos opcionales):
+- course_id (integer): ID del curso
+- academic_period_id (integer): ID del período académico
+- instructor_id (integer): ID del instructor
+- schedule (string): Horario de la oferta
+- delivery_method (string, max 50): Método de entrega
+- course_offering_id (integer): ID de oferta relacionada
+
+Respuesta exitosa (200):
+{
+    "success": true,
+    "message": "Oferta de curso actualizada exitosamente",
+    "data": {
+        "id": 1,
+        "course_offering_id": null,
+        "course_id": 2,
+        "academic_period_id": 1,
+        "instructor_id": 2,
+        "schedule": "Martes y Jueves 14:00-16:00",
+        "delivery_method": "online",
+        "created_at": "2024-01-15T10:30:00Z"
+    }
+}
+
+Respuesta error (404):
+{
+    "success": false,
+    "message": "Oferta de curso no encontrada"
+}
+
+=======================================================
+5. ELIMINAR UNA OFERTA DE CURSO
+=======================================================
+Método: DELETE
+URL: http://127.0.0.1:8000/api/lms/course-offerings/{course_offering_id}
+Ejemplo: http://127.0.0.1:8000/api/lms/course-offerings/1
+
+Headers:
+Content-Type: application/json
+Accept: application/json
+
+Respuesta exitosa (200):
+{
+    "success": true,
+    "message": "Oferta de curso eliminada exitosamente"
+}
+
+Respuesta error (404):
+{
+    "success": false,
+    "message": "Oferta de curso no encontrada"
+}
+
+=======================================================
+NOTAS IMPORTANTES
+=======================================================
+
+1. Todas las rutas requieren los headers:
+   - Content-Type: application/json
+   - Accept: application/json
+
+2. Los IDs de curso, período académico e instructor deben existir en sus respectivas tablas.
+
+3. El campo 'delivery_method' puede ser: 'regular', 'online', 'hybrid', etc.
+
+4. El formato de fechas en las respuestas es ISO 8601 (UTC).
+
+5. Antes de probar, asegúrate de:
+   - Tener registros en la tabla 'courses'
+   - Tener registros en la tabla 'academic_periods'
+   - Tener registros en la tabla 'instructors' (opcional)
+
+6. Para limpiar la caché de Laravel después de crear estos archivos:
+   php artisan optimize:clear
+
+7. Las relaciones incluidas en las respuestas:
+   - course: Información del curso relacionado
+   - academicPeriod: Información del período académico
+   - instructor: Información del instructor (si existe)
+
+=======================================================
+EJEMPLOS DE USO EN POSTMAN
+=======================================================
+
+## Colección de ejemplos:
+
+### Ejemplo 1: Crear oferta básica
+POST http://127.0.0.1:8000/api/lms/course-offerings
+{
+    "course_id": 1,
+    "academic_period_id": 1,
+    "delivery_method": "regular"
+}
+
+### Ejemplo 2: Crear oferta completa
+POST http://127.0.0.1:8000/api/lms/course-offerings
+{
+    "course_id": 1,
+    "academic_period_id": 1,
+    "instructor_id": 1,
+    "schedule": "Lunes y Miércoles 10:00-12:00",
+    "delivery_method": "regular"
+}
+
+### Ejemplo 3: Actualizar solo el horario
+PUT http://127.0.0.1:8000/api/lms/course-offerings/1
+{
+    "schedule": "Viernes 16:00-20:00"
+}
+
+### Ejemplo 4: Cambiar a modalidad online
+PUT http://127.0.0.1:8000/api/lms/course-offerings/1
+{
+    "delivery_method": "online",
+    "schedule": "Asíncrono - Plataforma disponible 24/7"
+}
+
+=======================================================
+FIN DE LA DOCUMENTACIÓN
+=======================================================

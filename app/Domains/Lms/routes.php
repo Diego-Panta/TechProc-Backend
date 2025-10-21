@@ -8,6 +8,7 @@ use App\Domains\Lms\Http\Controllers\CategoryController;
 use App\Domains\Lms\Http\Controllers\EnrollmentController;
 use App\Domains\Lms\Http\Controllers\CompanyController;
 use App\Domains\Lms\Http\Controllers\AcademicPeriodController;
+use App\Domains\Lms\Http\Controllers\CourseOfferingController;
 
 // TODO: Agregar middleware de autenticación cuando esté disponible
 // Route::middleware(['auth:api'])->group(function () {
@@ -57,6 +58,13 @@ Route::prefix('lms')->group(function () {
     Route::post('/academic-periods', [AcademicPeriodController::class, 'store']);
     Route::put('/academic-periods/{academic_period_id}', [AcademicPeriodController::class, 'update']);
     Route::delete('/academic-periods/{academic_period_id}', [AcademicPeriodController::class, 'destroy']);
+
+    // Gestión de Ofertas de Cursos (Course Offerings)
+    Route::get('/course-offerings', [CourseOfferingController::class, 'index']);
+    Route::get('/course-offerings/{course_offering_id}', [CourseOfferingController::class, 'show']);
+    Route::post('/course-offerings', [CourseOfferingController::class, 'store']);
+    Route::put('/course-offerings/{course_offering_id}', [CourseOfferingController::class, 'update']);
+    Route::delete('/course-offerings/{course_offering_id}', [CourseOfferingController::class, 'destroy']);
 
 });
 
