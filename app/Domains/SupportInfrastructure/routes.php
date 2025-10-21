@@ -13,7 +13,7 @@ use App\Domains\SupportInfrastructure\Controllers\{
     EmployeeController
 };
 
-Route::prefix('api/infraestructura')->group(function () { 
+Route::prefix('infraestructura')->group(function () { 
     Route::apiResource('softwares',SoftwareController::class);
     Route::apiResource('licenses',LicenseController::class);
     Route::apiResource('employees',EmployeeController::class);

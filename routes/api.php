@@ -12,6 +12,9 @@ Route::get('/health', function () {
     ]);
 });
 
+//Incluir rutas del dominio Infraestructura
+require app_path('Domains/SupportInfrastructure/routes.php');
+
 // Incluir rutas del dominio AuthenticationSessions
 require app_path('Domains/AuthenticationSessions/routes.php');
 
