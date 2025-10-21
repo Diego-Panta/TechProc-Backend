@@ -15,7 +15,7 @@ use App\Domains\DataAnalyst\Middleware\DataAnalystMiddleware;
 use Illuminate\Support\Facades\Route;
 
 // API Routes for DataAnalyst module
-Route::prefix('api/data-analyst')->name('api.data-analyst.')->group(function () {
+Route::prefix('data-analyst')->name('api.data-analyst.')->group(function () {
 
     // Student Reports API
     Route::prefix('students')->name('students.')->group(function () {
