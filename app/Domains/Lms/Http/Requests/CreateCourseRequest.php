@@ -23,10 +23,11 @@ class CreateCourseRequest extends FormRequest
     {
         return [
             'title' => 'required|string|max:255',
+            'name' => 'nullable|string|max:200',
             'description' => 'required|string',
             'level' => 'required|in:basic,intermediate,advanced',
-            'course_image' => 'nullable|string|max:500',
-            'video_url' => 'nullable|string|max:500',
+            'course_image' => 'nullable|string|max:255',
+            'video_url' => 'nullable|string|max:255',
             'duration' => 'required|numeric|min:0',
             'sessions' => 'required|integer|min:1',
             'selling_price' => 'required|numeric|min:0',
@@ -34,11 +35,10 @@ class CreateCourseRequest extends FormRequest
             'prerequisites' => 'nullable|string',
             'certificate_name' => 'nullable|boolean',
             'certificate_issuer' => 'nullable|string|max:255',
+            'bestseller' => 'nullable|boolean',
+            'featured' => 'nullable|boolean',
+            'highest_rated' => 'nullable|boolean',
             'status' => 'nullable|boolean',
-            'category_ids' => 'nullable|array',
-            'category_ids.*' => 'integer|exists:categories,id',
-            'instructor_ids' => 'nullable|array',
-            'instructor_ids.*' => 'integer|exists:instructors,id',
         ];
     }
 
@@ -59,8 +59,7 @@ class CreateCourseRequest extends FormRequest
             'sessions.required' => 'El número de sesiones es obligatorio',
             'sessions.integer' => 'El número de sesiones debe ser un número entero',
             'selling_price.required' => 'El precio de venta es obligatorio',
-            'category_ids.*.exists' => 'Una o más categorías no existen',
-            'instructor_ids.*.exists' => 'Uno o más instructores no existen',
+            'selling_price.numeric' => 'El precio de venta debe ser un número',
         ];
     }
 }

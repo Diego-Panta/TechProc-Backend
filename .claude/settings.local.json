@@ -5,7 +5,8 @@
       "Read(//usr/**)",
       "Bash(php artisan route:list --path=api/lms/categories)",
       "Bash(php artisan route:list --path=api/tickets)",
-      "Bash(tree -L 3 /mnt/c/Users/anton/Documents/GitHub/TechProc-Backend/app/Domains/Lms)"
+      "Bash(tree -L 3 /mnt/c/Users/anton/Documents/GitHub/TechProc-Backend/app/Domains/Lms)",
+      "Bash(php artisan:*)"
     ],
     "deny": [],
     "ask": []

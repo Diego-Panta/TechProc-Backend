@@ -25,15 +25,11 @@ class CourseRepository implements CourseRepositoryInterface
             $query->where('status', $filters['status']);
         }
 
-        // Búsqueda por título
+        // Búsqueda por título o nombre
         if (isset($filters['search'])) {
-            $query->where('title', 'LIKE', "%{$filters['search']}%");
-        }
-
-        // Filtro por categoría
-        if (isset($filters['category_id'])) {
-            $query->whereHas('categories', function ($q) use ($filters) {
-                $q->where('categories.id', $filters['category_id']);
+            $query->where(function ($q) use ($filters) {
+                $q->where('title', 'LIKE', "%{$filters['search']}%")
+                  ->orWhere('name', 'LIKE', "%{$filters['search']}%");
             });
         }
 
@@ -41,12 +37,11 @@ class CourseRepository implements CourseRepositoryInterface
     }
 
     /**
-     * Find a course by ID with relationships
+     * Find a course by ID
      */
     public function findById(int $courseId): ?Course
     {
-        return Course::with(['categories', 'instructors.user', 'courseContents'])
-            ->where('course_id', $courseId)
+        return Course::where('course_id', $courseId)
             ->orWhere('id', $courseId)
             ->first();
     }
@@ -81,23 +76,7 @@ class CourseRepository implements CourseRepositoryInterface
         $course = Course::where('course_id', $courseId)
             ->orWhere('id', $courseId)
             ->firstOrFail();
-        
+
         return $course->delete();
-    }
-
-    /**
-     * Sync course categories
-     */
-    public function syncCategories(Course $course, array $categoryIds): void
-    {
-        $course->categories()->sync($categoryIds);
-    }
-
-    /**
-     * Sync course instructors
-     */
-    public function syncInstructors(Course $course, array $instructorIds): void
-    {
-        $course->instructors()->sync($instructorIds);
     }
 }

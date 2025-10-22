@@ -32,19 +32,13 @@ class CourseService
     }
 
     /**
-     * Create a new course with categories and instructors
+     * Create a new course
      */
     public function createCourse(array $data): Course
     {
-        // Extraer relaciones antes de crear
-        $categoryIds = $data['category_ids'] ?? [];
-        $instructorIds = $data['instructor_ids'] ?? [];
-        
-        unset($data['category_ids'], $data['instructor_ids']);
-
         // Establecer valores por defecto
-        $data['status'] = $data['status'] ?? 'activo';
-        
+        $data['status'] = $data['status'] ?? true;
+
         // Crear el curso
         $course = $this->repository->create($data);
 
@@ -54,16 +48,7 @@ class CourseService
             $course->save();
         }
 
-        // Sincronizar relaciones
-        if (!empty($categoryIds)) {
-            $this->repository->syncCategories($course, $categoryIds);
-        }
-
-        if (!empty($instructorIds)) {
-            $this->repository->syncInstructors($course, $instructorIds);
-        }
-
-        return $course->fresh(['categories', 'instructors']);
+        return $course->fresh();
     }
 
     /**
@@ -71,44 +56,22 @@ class CourseService
      */
     public function updateCourse(int $courseId, array $data): Course
     {
-        // Extraer relaciones antes de actualizar
-        $categoryIds = $data['category_ids'] ?? null;
-        $instructorIds = $data['instructor_ids'] ?? null;
-        
-        unset($data['category_ids'], $data['instructor_ids']);
-
         // Actualizar el curso
         $course = $this->repository->update($courseId, $data);
 
-        // Sincronizar relaciones si se proporcionaron
-        if ($categoryIds !== null) {
-            $this->repository->syncCategories($course, $categoryIds);
-        }
-
-        if ($instructorIds !== null) {
-            $this->repository->syncInstructors($course, $instructorIds);
-        }
-
-        return $course->fresh(['categories', 'instructors']);
+        return $course->fresh();
     }
 
     /**
-     * Delete a course and its relationships
+     * Delete a course
      */
     public function deleteCourse(int $courseId): bool
     {
         $course = $this->repository->findById($courseId);
-        
+
         if (!$course) {
             return false;
         }
-
-        // Eliminar relaciones
-        $this->repository->syncCategories($course, []);
-        $this->repository->syncInstructors($course, []);
-        
-        // Eliminar contenidos del curso
-        $course->courseContents()->delete();
 
         // Eliminar el curso
         return $this->repository->delete($courseId);

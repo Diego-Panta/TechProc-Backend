@@ -1,44 +1,387 @@
+¡Por supuesto! Aquí te doy el formato completo para probar todos los endpoints en Postman:
 
-Al momento de obtener los cursos offerings
-al hacer una petición GET a http://127.0.0.1:8000/api/lms/course-offerings
+  ---
+  📬 1. GET - Listar Todos los Cursos
 
-y me devuelve esto:
-{
-    "success": true,
-    "data": [
-        {
-            "id": 2,
-            "course_offering_id": null,
-            "course_id": 2,
-            "course": {
-                "id": 2,
-                "name": null,
-                "code": null
-            },
-            "academic_period_id": 1,
-            "academic_period": {
-                "id": 1,
-                "name": "2026-II",
-                "start_date": "2026-12-21T00:00:00+00:00",
-                "end_date": "2027-08-21T00:00:00+00:00"
-            },
-            "instructor_id": 2,
-            "instructor": {
-                "id": 2,
-                "first_name": null,
-                "last_name": null,
-                "email": null
-            },
-            "schedule": "Lunes a Sabado 11AM - 8PM",
-            "delivery_method": "online",
-            "created_at": "2025-10-21T11:50:53-05:00"
-        }
-    ]
-}
-veo muchos problemas pero veamos uno a uno.
-Primero con los datos del instructor, el first_name y last_name es null, cuando en la bd si hay valor.
-Dejame explicarte como sería:
-En la tabla de instructores hay un foraneo haciendo refeencia al users, es allí donde se guardan lo datos del first_name y last_name incluído el email, por favor consideralo y corrigelo ahora si es posible.
+  Request
 
+  GET http://localhost:8000/api/lms/courses
 
-tmbien ten en cuenta que en el archivo bd_ica_dev (1).sql está el script que genera la bd que trabaja este proyecto.
+  Query Parameters (Opcionales):
+
+  limit: 20
+  level: basic
+  status: true
+  search: Laravel
+
+  Ejemplo completo:
+
+  GET http://localhost:8000/api/lms/courses?limit=10&level=intermediate&search=PHP
+
+  Response (200 OK)
+
+  {
+      "success": true,
+      "data": {
+          "data": [
+              {
+                  "id": 1,
+                  "course_id": 1,
+                  "title": "Curso de Laravel Avanzado",
+                  "name": "Laravel Advanced",
+                  "description": "Aprende Laravel desde cero hasta nivel avanzado",
+                  "level": "advanced",
+                  "course_image": "https://example.com/images/laravel.jpg",
+                  "duration": 120.50,
+                  "sessions": 30,
+                  "selling_price": 299.99,
+                  "discount_price": 199.99,
+                  "status": true,
+                  "bestseller": true,
+                  "featured": false,
+                  "highest_rated": true,
+                  "created_at": "2025-01-15T10:30:00Z"
+              },
+              {
+                  "id": 2,
+                  "course_id": 2,
+                  "title": "PHP para Principiantes",
+                  "name": "PHP Basics",
+                  "description": "Curso introductorio de PHP",
+                  "level": "basic",
+                  "course_image": "https://example.com/images/php.jpg",
+                  "duration": 60.00,
+                  "sessions": 15,
+                  "selling_price": 99.99,
+                  "discount_price": null,
+                  "status": true,
+                  "bestseller": false,
+                  "featured": true,
+                  "highest_rated": false,
+                  "created_at": "2025-01-10T08:00:00Z"
+              }
+          ],
+          "current_page": 1,
+          "per_page": 10,
+          "total": 2,
+          "last_page": 1
+      }
+  }
+
+  ---
+  📬 2. GET - Obtener un Curso Específico
+
+  Request
+
+  GET http://localhost:8000/api/lms/courses/{course_id}
+
+  Ejemplo:
+
+  GET http://localhost:8000/api/lms/courses/1
+
+  Response (200 OK)
+
+  {
+      "success": true,
+      "data": {
+          "id": 1,
+          "course_id": 1,
+          "title": "Curso de Laravel Avanzado",
+          "name": "Laravel Advanced",
+          "description": "Aprende Laravel desde cero hasta nivel avanzado. Incluye proyectos reales, patrones de diseño, testing y       
+  deployment.",
+          "level": "advanced",
+          "course_image": "https://example.com/images/laravel.jpg",
+          "video_url": "https://youtube.com/watch?v=example",
+          "duration": 120.50,
+          "sessions": 30,
+          "selling_price": 299.99,
+          "discount_price": 199.99,
+          "prerequisites": "Conocimientos básicos de PHP y programación orientada a objetos",
+          "certificate_name": true,
+          "certificate_issuer": "Tech Academy",
+          "bestseller": true,
+          "featured": false,
+          "highest_rated": true,
+          "status": true,
+          "created_at": "2025-01-15T10:30:00Z",
+          "updated_at": "2025-01-20T14:45:00Z"
+      }
+  }
+
+  Response (404 Not Found)
+
+  {
+      "success": false,
+      "message": "Curso no encontrado"
+  }
+
+  ---
+  📬 3. POST - Crear un Nuevo Curso
+
+  Request
+
+  POST http://localhost:8000/api/lms/courses
+  Content-Type: application/json
+
+  Body (JSON) - Campos Requeridos:
+
+  {
+      "title": "Curso de Vue.js 3",
+      "description": "Aprende Vue.js 3 con Composition API y TypeScript",
+      "level": "intermediate",
+      "duration": 80.00,
+      "sessions": 20,
+      "selling_price": 199.99
+  }
+
+  Body (JSON) - Ejemplo Completo con Campos Opcionales:
+
+  {
+      "title": "Curso de Vue.js 3 Completo",
+      "name": "Vue 3 Masterclass",
+      "description": "Aprende Vue.js 3 con Composition API, TypeScript, Pinia y Vite. Crea aplicaciones modernas y escalables.",
+      "level": "intermediate",
+      "course_image": "https://example.com/images/vue.jpg",
+      "video_url": "https://youtube.com/watch?v=preview-vue",
+      "duration": 80.00,
+      "sessions": 20,
+      "selling_price": 199.99,
+      "discount_price": 149.99,
+      "prerequisites": "HTML, CSS, JavaScript básico",
+      "certificate_name": true,
+      "certificate_issuer": "Tech Academy",
+      "bestseller": false,
+      "featured": true,
+      "highest_rated": false,
+      "status": true
+  }
+
+  Response (201 Created)
+
+  {
+      "success": true,
+      "message": "Curso creado exitosamente",
+      "data": {
+          "id": 3,
+          "course_id": 3
+      }
+  }
+
+  Response (422 Unprocessable Entity) - Error de Validación
+
+  {
+      "message": "The given data was invalid.",
+      "errors": {
+          "title": [
+              "El título del curso es obligatorio"
+          ],
+          "description": [
+              "La descripción del curso es obligatoria"
+          ],
+          "level": [
+              "El nivel del curso es obligatorio"
+          ],
+          "duration": [
+              "La duración del curso es obligatoria"
+          ],
+          "sessions": [
+              "El número de sesiones es obligatorio"
+          ],
+          "selling_price": [
+              "El precio de venta es obligatorio"
+          ]
+      }
+  }
+
+  ---
+  📬 4. PUT - Actualizar un Curso
+
+  Request
+
+  PUT http://localhost:8000/api/lms/courses/{course_id}
+  Content-Type: application/json
+
+  Ejemplo:
+
+  PUT http://localhost:8000/api/lms/courses/3
+
+  Body (JSON) - Actualización Parcial:
+
+  {
+      "selling_price": 179.99,
+      "discount_price": 129.99,
+      "featured": true,
+      "bestseller": true
+  }
+
+  Body (JSON) - Actualización Completa:
+
+  {
+      "title": "Curso de Vue.js 3 - Edición 2025",
+      "name": "Vue 3 Masterclass 2025",
+      "description": "Versión actualizada con las últimas características de Vue.js 3.4",
+      "level": "advanced",
+      "course_image": "https://example.com/images/vue-2025.jpg",
+      "video_url": "https://youtube.com/watch?v=preview-vue-2025",
+      "duration": 100.00,
+      "sessions": 25,
+      "selling_price": 249.99,
+      "discount_price": 199.99,
+      "prerequisites": "JavaScript ES6+, conocimientos básicos de Vue.js 2",
+      "certificate_name": true,
+      "certificate_issuer": "Tech Academy Pro",
+      "bestseller": true,
+      "featured": true,
+      "highest_rated": true,
+      "status": true
+  }
+
+  Response (200 OK)
+
+  {
+      "success": true,
+      "message": "Curso actualizado exitosamente"
+  }
+
+  Response (404 Not Found)
+
+  {
+      "success": false,
+      "message": "Curso no encontrado"
+  }
+
+  Response (422 Unprocessable Entity) - Error de Validación
+
+  {
+      "message": "The given data was invalid.",
+      "errors": {
+          "level": [
+              "El nivel debe ser: basic, intermediate o advanced"
+          ],
+          "selling_price": [
+              "El precio de venta debe ser un número"
+          ]
+      }
+  }
+
+  ---
+  📬 5. DELETE - Eliminar un Curso
+
+  Request
+
+  DELETE http://localhost:8000/api/lms/courses/{course_id}
+
+  Ejemplo:
+
+  DELETE http://localhost:8000/api/lms/courses/3
+
+  Response (200 OK)
+
+  {
+      "success": true,
+      "message": "Curso eliminado exitosamente"
+  }
+
+  Response (404 Not Found)
+
+  {
+      "success": false,
+      "message": "Curso no encontrado"
+  }
+
+  ---
+  🔧 Configuración en Postman
+
+  Variables de Entorno (opcional):
+
+  Crea un Environment en Postman con:
+  base_url: http://localhost:8000/api
+
+  Luego usa:
+  GET {{base_url}}/lms/courses
+  POST {{base_url}}/lms/courses
+
+  Headers Comunes:
+
+  Content-Type: application/json
+  Accept: application/json
+
+  ---
+  📊 Tabla de Validaciones
+
+  | Campo              | Tipo    | Requerido                       | Valores Permitidos            | Longitud Máxima |
+  |--------------------|---------|---------------------------------|-------------------------------|-----------------|
+  | title              | string  | ✅ Sí (POST) / ⚠️ Opcional (PUT) | -                             | 255             |
+  | name               | string  | ❌ No                            | -                             | 200             |
+  | description        | text    | ✅ Sí (POST) / ⚠️ Opcional (PUT) | -                             | -               |
+  | level              | string  | ✅ Sí (POST) / ⚠️ Opcional (PUT) | basic, intermediate, advanced | -               |
+  | course_image       | string  | ❌ No                            | URL válida                    | 255             |
+  | video_url          | string  | ❌ No                            | URL válida                    | 255             |
+  | duration           | numeric | ✅ Sí (POST) / ⚠️ Opcional (PUT) | >= 0                          | -               |
+  | sessions           | integer | ✅ Sí (POST) / ⚠️ Opcional (PUT) | >= 1                          | -               |
+  | selling_price      | numeric | ✅ Sí (POST) / ⚠️ Opcional (PUT) | >= 0                          | -               |
+  | discount_price     | numeric | ❌ No                            | >= 0                          | -               |
+  | prerequisites      | text    | ❌ No                            | -                             | -               |
+  | certificate_name   | boolean | ❌ No                            | true, false                   | -               |
+  | certificate_issuer | string  | ❌ No                            | -                             | 255             |
+  | bestseller         | boolean | ❌ No                            | true, false                   | -               |
+  | featured           | boolean | ❌ No                            | true, false                   | -               |
+  | highest_rated      | boolean | ❌ No                            | true, false                   | -               |
+  | status             | boolean | ❌ No                            | true, false                   | -               |
+
+  ---
+  🎯 Casos de Prueba Sugeridos
+
+  Test 1: Crear curso mínimo
+
+  {
+      "title": "Test Course",
+      "description": "Test description",
+      "level": "basic",
+      "duration": 10,
+      "sessions": 5,
+      "selling_price": 50
+  }
+
+  Test 2: Crear curso completo
+
+  {
+      "title": "Complete Test Course",
+      "name": "CTC",
+      "description": "Complete test description",
+      "level": "advanced",
+      "course_image": "https://example.com/test.jpg",
+      "video_url": "https://youtube.com/test",
+      "duration": 100.5,
+      "sessions": 20,
+      "selling_price": 299.99,
+      "discount_price": 199.99,
+      "prerequisites": "Basic knowledge",
+      "certificate_name": true,
+      "certificate_issuer": "Test Academy",
+      "bestseller": true,
+      "featured": true,
+      "highest_rated": true,
+      "status": true
+  }
+
+  Test 3: Error de validación (campos vacíos)
+
+  {}
+
+  Test 4: Error de validación (level inválido)
+
+  {
+      "title": "Test",
+      "description": "Test",
+      "level": "expert",
+      "duration": 10,
+      "sessions": 5,
+      "selling_price": 50
+  }
+
+  ¡Con esto ya puedes probar completamente tu API de cursos en Postman! 🚀
+
+● How is Claude doing this session? (optional)
+  1: Bad    2: Fine   3: Good   0: Dismiss

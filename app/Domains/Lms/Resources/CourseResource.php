@@ -18,6 +18,7 @@ class CourseResource extends JsonResource
             'id' => $this->id,
             'course_id' => $this->course_id,
             'title' => $this->title,
+            'name' => $this->name,
             'description' => $this->description,
             'level' => $this->level,
             'course_image' => $this->course_image,
@@ -28,6 +29,7 @@ class CourseResource extends JsonResource
             'status' => (bool) $this->status,
             'bestseller' => (bool) $this->bestseller,
             'featured' => (bool) $this->featured,
+            'highest_rated' => (bool) $this->highest_rated,
             'created_at' => $this->created_at?->toIso8601String(),
         ];
     }

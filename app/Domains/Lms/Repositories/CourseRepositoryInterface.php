@@ -14,7 +14,7 @@ interface CourseRepositoryInterface
     public function getAll(array $filters = [], int $perPage = 20): LengthAwarePaginator;
 
     /**
-     * Find a course by ID with relationships
+     * Find a course by ID
      */
     public function findById(int $courseId): ?Course;
 
@@ -32,14 +32,4 @@ interface CourseRepositoryInterface
      * Delete a course
      */
     public function delete(int $courseId): bool;
-
-    /**
-     * Sync course categories
-     */
-    public function syncCategories(Course $course, array $categoryIds): void;
-
-    /**
-     * Sync course instructors
-     */
-    public function syncInstructors(Course $course, array $instructorIds): void;
 }
