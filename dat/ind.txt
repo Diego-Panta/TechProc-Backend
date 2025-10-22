@@ -1,22 +1,36 @@
-¡Por supuesto! Aquí te doy el formato completo para probar todos los endpoints en Postman:
+● Perfecto! Ahora voy a crear la documentación completa de Postman para el CRUD de course_contents:
 
   ---
-  📬 1. GET - Listar Todos los Cursos
+  📚 CRUD de Course Contents - Documentación para Postman
+
+  Endpoints Disponibles:
+
+  | Método | Endpoint                              | Descripción                     |
+  |--------|---------------------------------------|---------------------------------|
+  | GET    | /api/lms/course-contents              | Listar todos los contenidos     |
+  | GET    | /api/lms/course-contents/{content_id} | Obtener un contenido específico |
+  | POST   | /api/lms/course-contents              | Crear un nuevo contenido        |
+  | PUT    | /api/lms/course-contents/{content_id} | Actualizar un contenido         |
+  | DELETE | /api/lms/course-contents/{content_id} | Eliminar un contenido           |
+
+  ---
+  📬 1. GET - Listar Todos los Contenidos
 
   Request
 
-  GET http://localhost:8000/api/lms/courses
+  GET http://localhost:8000/api/lms/course-contents
 
   Query Parameters (Opcionales):
 
   limit: 20
-  level: basic
-  status: true
-  search: Laravel
+  course_id: 1
+  type: video
+  session: 1
+  search: introducción
 
   Ejemplo completo:
 
-  GET http://localhost:8000/api/lms/courses?limit=10&level=intermediate&search=PHP
+  GET http://localhost:8000/api/lms/course-contents?course_id=1&type=video&limit=10
 
   Response (200 OK)
 
@@ -27,38 +41,32 @@
               {
                   "id": 1,
                   "course_id": 1,
-                  "title": "Curso de Laravel Avanzado",
-                  "name": "Laravel Advanced",
-                  "description": "Aprende Laravel desde cero hasta nivel avanzado",
-                  "level": "advanced",
-                  "course_image": "https://example.com/images/laravel.jpg",
-                  "duration": 120.50,
-                  "sessions": 30,
-                  "selling_price": 299.99,
-                  "discount_price": 199.99,
-                  "status": true,
-                  "bestseller": true,
-                  "featured": false,
-                  "highest_rated": true,
+                  "course": {
+                      "id": 1,
+                      "course_id": 1,
+                      "title": "Curso de Laravel Avanzado"
+                  },
+                  "session": 1,
+                  "type": "video",
+                  "title": "Introducción a Laravel",
+                  "content": "En esta sesión aprenderás los fundamentos de Laravel...",
+                  "order_number": 1,
                   "created_at": "2025-01-15T10:30:00Z"
               },
               {
                   "id": 2,
-                  "course_id": 2,
-                  "title": "PHP para Principiantes",
-                  "name": "PHP Basics",
-                  "description": "Curso introductorio de PHP",
-                  "level": "basic",
-                  "course_image": "https://example.com/images/php.jpg",
-                  "duration": 60.00,
-                  "sessions": 15,
-                  "selling_price": 99.99,
-                  "discount_price": null,
-                  "status": true,
-                  "bestseller": false,
-                  "featured": true,
-                  "highest_rated": false,
-                  "created_at": "2025-01-10T08:00:00Z"
+                  "course_id": 1,
+                  "course": {
+                      "id": 1,
+                      "course_id": 1,
+                      "title": "Curso de Laravel Avanzado"
+                  },
+                  "session": 1,
+                  "type": "document",
+                  "title": "Material de apoyo - Sesión 1",
+                  "content": "Documentación complementaria...",
+                  "order_number": 2,
+                  "created_at": "2025-01-15T11:00:00Z"
               }
           ],
           "current_page": 1,
@@ -69,15 +77,15 @@
   }
 
   ---
-  📬 2. GET - Obtener un Curso Específico
+  📬 2. GET - Obtener un Contenido Específico
 
   Request
 
-  GET http://localhost:8000/api/lms/courses/{course_id}
+  GET http://localhost:8000/api/lms/course-contents/{content_id}
 
   Ejemplo:
 
-  GET http://localhost:8000/api/lms/courses/1
+  GET http://localhost:8000/api/lms/course-contents/1
 
   Response (200 OK)
 
@@ -86,26 +94,18 @@
       "data": {
           "id": 1,
           "course_id": 1,
-          "title": "Curso de Laravel Avanzado",
-          "name": "Laravel Advanced",
-          "description": "Aprende Laravel desde cero hasta nivel avanzado. Incluye proyectos reales, patrones de diseño, testing y       
-  deployment.",
-          "level": "advanced",
-          "course_image": "https://example.com/images/laravel.jpg",
-          "video_url": "https://youtube.com/watch?v=example",
-          "duration": 120.50,
-          "sessions": 30,
-          "selling_price": 299.99,
-          "discount_price": 199.99,
-          "prerequisites": "Conocimientos básicos de PHP y programación orientada a objetos",
-          "certificate_name": true,
-          "certificate_issuer": "Tech Academy",
-          "bestseller": true,
-          "featured": false,
-          "highest_rated": true,
-          "status": true,
-          "created_at": "2025-01-15T10:30:00Z",
-          "updated_at": "2025-01-20T14:45:00Z"
+          "course": {
+              "id": 1,
+              "course_id": 1,
+              "title": "Curso de Laravel Avanzado"
+          },
+          "session": 1,
+          "type": "video",
+          "title": "Introducción a Laravel",
+          "content": "En esta sesión aprenderás los fundamentos de Laravel. Cubriremos la instalación, configuración inicial,
+  estructura de directorios y el patrón MVC.",
+          "order_number": 1,
+          "created_at": "2025-01-15T10:30:00Z"
       }
   }
 
@@ -113,58 +113,42 @@
 
   {
       "success": false,
-      "message": "Curso no encontrado"
+      "message": "Contenido no encontrado"
   }
 
   ---
-  📬 3. POST - Crear un Nuevo Curso
+  📬 3. POST - Crear un Nuevo Contenido
 
   Request
 
-  POST http://localhost:8000/api/lms/courses
+  POST http://localhost:8000/api/lms/course-contents
   Content-Type: application/json
 
-  Body (JSON) - Campos Requeridos:
+  Body (JSON) - Mínimo Requerido:
 
   {
-      "title": "Curso de Vue.js 3",
-      "description": "Aprende Vue.js 3 con Composition API y TypeScript",
-      "level": "intermediate",
-      "duration": 80.00,
-      "sessions": 20,
-      "selling_price": 199.99
+      "course_id": 1
   }
 
-  Body (JSON) - Ejemplo Completo con Campos Opcionales:
+  Body (JSON) - Ejemplo Completo:
 
   {
-      "title": "Curso de Vue.js 3 Completo",
-      "name": "Vue 3 Masterclass",
-      "description": "Aprende Vue.js 3 con Composition API, TypeScript, Pinia y Vite. Crea aplicaciones modernas y escalables.",
-      "level": "intermediate",
-      "course_image": "https://example.com/images/vue.jpg",
-      "video_url": "https://youtube.com/watch?v=preview-vue",
-      "duration": 80.00,
-      "sessions": 20,
-      "selling_price": 199.99,
-      "discount_price": 149.99,
-      "prerequisites": "HTML, CSS, JavaScript básico",
-      "certificate_name": true,
-      "certificate_issuer": "Tech Academy",
-      "bestseller": false,
-      "featured": true,
-      "highest_rated": false,
-      "status": true
+      "course_id": 1,
+      "session": 2,
+      "type": "video",
+      "title": "Routing en Laravel",
+      "content": "Aprende a crear rutas en Laravel. En esta lección veremos rutas básicas, rutas con parámetros, grupos de rutas y       
+  middleware.",
+      "order_number": 3
   }
 
   Response (201 Created)
 
   {
       "success": true,
-      "message": "Curso creado exitosamente",
+      "message": "Contenido creado exitosamente",
       "data": {
-          "id": 3,
-          "course_id": 3
+          "id": 3
       }
   }
 
@@ -173,82 +157,66 @@
   {
       "message": "The given data was invalid.",
       "errors": {
-          "title": [
-              "El título del curso es obligatorio"
-          ],
-          "description": [
-              "La descripción del curso es obligatoria"
-          ],
-          "level": [
-              "El nivel del curso es obligatorio"
-          ],
-          "duration": [
-              "La duración del curso es obligatoria"
-          ],
-          "sessions": [
-              "El número de sesiones es obligatorio"
-          ],
-          "selling_price": [
-              "El precio de venta es obligatorio"
+          "course_id": [
+              "El ID del curso es obligatorio"
+          ]
+      }
+  }
+
+  Response (422) - Curso no existe
+
+  {
+      "message": "The given data was invalid.",
+      "errors": {
+          "course_id": [
+              "El curso especificado no existe"
           ]
       }
   }
 
   ---
-  📬 4. PUT - Actualizar un Curso
+  📬 4. PUT - Actualizar un Contenido
 
   Request
 
-  PUT http://localhost:8000/api/lms/courses/{course_id}
+  PUT http://localhost:8000/api/lms/course-contents/{content_id}
   Content-Type: application/json
 
   Ejemplo:
 
-  PUT http://localhost:8000/api/lms/courses/3
+  PUT http://localhost:8000/api/lms/course-contents/3
 
   Body (JSON) - Actualización Parcial:
 
   {
-      "selling_price": 179.99,
-      "discount_price": 129.99,
-      "featured": true,
-      "bestseller": true
+      "title": "Routing Avanzado en Laravel",
+      "order_number": 4
   }
 
   Body (JSON) - Actualización Completa:
 
   {
-      "title": "Curso de Vue.js 3 - Edición 2025",
-      "name": "Vue 3 Masterclass 2025",
-      "description": "Versión actualizada con las últimas características de Vue.js 3.4",
-      "level": "advanced",
-      "course_image": "https://example.com/images/vue-2025.jpg",
-      "video_url": "https://youtube.com/watch?v=preview-vue-2025",
-      "duration": 100.00,
-      "sessions": 25,
-      "selling_price": 249.99,
-      "discount_price": 199.99,
-      "prerequisites": "JavaScript ES6+, conocimientos básicos de Vue.js 2",
-      "certificate_name": true,
-      "certificate_issuer": "Tech Academy Pro",
-      "bestseller": true,
-      "featured": true,
-      "highest_rated": true,
-      "status": true
+      "course_id": 1,
+      "session": 2,
+      "type": "video",
+      "title": "Routing Avanzado en Laravel 11",
+      "content": "Versión actualizada del contenido sobre routing. Incluye las nuevas características de Laravel 11 para manejo de       
+  rutas.",
+      "order_number": 4
   }
 
   Response (200 OK)
 
   {
       "success": true,
-      "message": "Curso actualizado exitosamente"
+      "message": "Contenido actualizado exitosamente"
   }
 
   Response (404 Not Found)
 
   {
       "success": false,
-      "message": "Curso no encontrado"
+      "message": "Contenido no encontrado"
   }
 
   Response (422 Unprocessable Entity) - Error de Validación
@@ -256,132 +224,672 @@
   {
       "message": "The given data was invalid.",
       "errors": {
-          "level": [
-              "El nivel debe ser: basic, intermediate o advanced"
+          "course_id": [
+              "El curso especificado no existe"
           ],
-          "selling_price": [
-              "El precio de venta debe ser un número"
+          "session": [
+              "El número de sesión debe ser al menos 1"
           ]
       }
   }
 
   ---
-  📬 5. DELETE - Eliminar un Curso
+  📬 5. DELETE - Eliminar un Contenido
 
   Request
 
-  DELETE http://localhost:8000/api/lms/courses/{course_id}
+  DELETE http://localhost:8000/api/lms/course-contents/{content_id}
 
   Ejemplo:
 
-  DELETE http://localhost:8000/api/lms/courses/3
+  DELETE http://localhost:8000/api/lms/course-contents/3
 
   Response (200 OK)
 
   {
       "success": true,
-      "message": "Curso eliminado exitosamente"
+      "message": "Contenido eliminado exitosamente"
   }
 
   Response (404 Not Found)
 
   {
       "success": false,
-      "message": "Curso no encontrado"
+      "message": "Contenido no encontrado"
   }
-
-  ---
-  🔧 Configuración en Postman
-
-  Variables de Entorno (opcional):
-
-  Crea un Environment en Postman con:
-  base_url: http://localhost:8000/api
-
-  Luego usa:
-  GET {{base_url}}/lms/courses
-  POST {{base_url}}/lms/courses
-
-  Headers Comunes:
-
-  Content-Type: application/json
-  Accept: application/json
 
   ---
   📊 Tabla de Validaciones
 
-  | Campo              | Tipo    | Requerido                       | Valores Permitidos            | Longitud Máxima |
-  |--------------------|---------|---------------------------------|-------------------------------|-----------------|
-  | title              | string  | ✅ Sí (POST) / ⚠️ Opcional (PUT) | -                             | 255             |
-  | name               | string  | ❌ No                            | -                             | 200             |
-  | description        | text    | ✅ Sí (POST) / ⚠️ Opcional (PUT) | -                             | -               |
-  | level              | string  | ✅ Sí (POST) / ⚠️ Opcional (PUT) | basic, intermediate, advanced | -               |
-  | course_image       | string  | ❌ No                            | URL válida                    | 255             |
-  | video_url          | string  | ❌ No                            | URL válida                    | 255             |
-  | duration           | numeric | ✅ Sí (POST) / ⚠️ Opcional (PUT) | >= 0                          | -               |
-  | sessions           | integer | ✅ Sí (POST) / ⚠️ Opcional (PUT) | >= 1                          | -               |
-  | selling_price      | numeric | ✅ Sí (POST) / ⚠️ Opcional (PUT) | >= 0                          | -               |
-  | discount_price     | numeric | ❌ No                            | >= 0                          | -               |
-  | prerequisites      | text    | ❌ No                            | -                             | -               |
-  | certificate_name   | boolean | ❌ No                            | true, false                   | -               |
-  | certificate_issuer | string  | ❌ No                            | -                             | 255             |
-  | bestseller         | boolean | ❌ No                            | true, false                   | -               |
-  | featured           | boolean | ❌ No                            | true, false                   | -               |
-  | highest_rated      | boolean | ❌ No                            | true, false                   | -               |
-  | status             | boolean | ❌ No                            | true, false                   | -               |
+  | Campo        | Tipo    | Requerido                       | Validaciones                  | Longitud Máxima |
+  |--------------|---------|---------------------------------|-------------------------------|-----------------|
+  | course_id    | integer | ✅ Sí (POST) / ⚠️ Opcional (PUT) | Debe existir en tabla courses | -               |
+  | session      | integer | ❌ No                            | >= 1                          | -               |
+  | type         | string  | ❌ No                            | -                             | 50              |
+  | title        | string  | ❌ No                            | -                             | 255             |
+  | content      | text    | ❌ No                            | -                             | -               |
+  | order_number | integer | ❌ No                            | >= 0                          | -               |
 
   ---
   🎯 Casos de Prueba Sugeridos
 
-  Test 1: Crear curso mínimo
+  Test 1: Crear contenido mínimo (solo course_id)
 
   {
-      "title": "Test Course",
-      "description": "Test description",
-      "level": "basic",
-      "duration": 10,
-      "sessions": 5,
-      "selling_price": 50
+      "course_id": 1
   }
 
-  Test 2: Crear curso completo
+  Test 2: Crear contenido de tipo video
 
   {
-      "title": "Complete Test Course",
-      "name": "CTC",
-      "description": "Complete test description",
-      "level": "advanced",
-      "course_image": "https://example.com/test.jpg",
-      "video_url": "https://youtube.com/test",
-      "duration": 100.5,
-      "sessions": 20,
-      "selling_price": 299.99,
-      "discount_price": 199.99,
-      "prerequisites": "Basic knowledge",
-      "certificate_name": true,
-      "certificate_issuer": "Test Academy",
-      "bestseller": true,
-      "featured": true,
-      "highest_rated": true,
-      "status": true
+      "course_id": 1,
+      "session": 1,
+      "type": "video",
+      "title": "Introducción al curso",
+      "content": "Video de bienvenida al curso",
+      "order_number": 1
   }
 
-  Test 3: Error de validación (campos vacíos)
-
-  {}
-
-  Test 4: Error de validación (level inválido)
+  Test 3: Crear contenido de tipo documento
 
   {
-      "title": "Test",
-      "description": "Test",
-      "level": "expert",
-      "duration": 10,
-      "sessions": 5,
-      "selling_price": 50
+      "course_id": 1,
+      "session": 1,
+      "type": "document",
+      "title": "Syllabus del curso",
+      "content": "Contenido del syllabus completo...",
+      "order_number": 2
   }
 
-  ¡Con esto ya puedes probar completamente tu API de cursos en Postman! 🚀
+  Test 4: Crear contenido de tipo quiz
+
+  {
+      "course_id": 1,
+      "session": 2,
+      "type": "quiz",
+      "title": "Evaluación Sesión 2",
+      "content": "Preguntas de evaluación en formato JSON...",
+      "order_number": 10
+  }
+
+  Test 5: Error - course_id inexistente
+
+  {
+      "course_id": 99999,
+      "title": "Test Content"
+  }
+
+  Test 6: Listar contenidos de un curso específico
+
+  GET /api/lms/course-contents?course_id=1
+
+  Test 7: Listar contenidos de una sesión específica
+
+  GET /api/lms/course-contents?course_id=1&session=1
+
+  Test 8: Buscar contenidos por título
+
+  GET /api/lms/course-contents?search=introducción
+
+  ---
+  💡 Tipos de Contenido Sugeridos
+
+  Aunque el campo type acepta cualquier string de hasta 50 caracteres, aquí hay algunos tipos comunes:
+
+  - video - Contenido en video
+  - document - Documento o PDF
+  - quiz - Evaluación o cuestionario
+  - assignment - Tarea o asignación
+  - reading - Lectura o artículo
+  - exercise - Ejercicio práctico
+  - project - Proyecto
+  - discussion - Foro o discusión
+  - live_session - Sesión en vivo
+  - resource - Recurso adicional
+
+  ---
+  ¡El CRUD de course_contents está completamente implementado y listo para usar! 🚀
+
+> dame el formato para probarlo en postamn 
+
+● ¡Por supuesto! Aquí te doy el formato completo paso a paso para probar en Postman:
+
+  ---
+  🚀 Guía Completa para Probar en Postman
+
+  Configuración Inicial en Postman
+
+  1. Crear una Colección
+
+  1. Abre Postman
+  2. Click en "New" → "Collection"
+  3. Nombre: LMS API - Course Contents
+  4. Guarda
+
+  2. Configurar Variables de Entorno (Opcional pero recomendado)
+
+  1. Click en "Environments" (icono de ojo arriba a la derecha)
+  2. Click en "Add" para crear un nuevo environment
+  3. Nombre: LMS Local
+  4. Agrega estas variables:
+
+  | Variable | Initial Value                 | Current Value                 |
+  |----------|-------------------------------|-------------------------------|
+  | base_url | http://localhost:8000/api/lms | http://localhost:8000/api/lms |
+
+  5. Guarda y selecciona este environment
+
+  ---
+  📬 Endpoint 1: GET - Listar Todos los Contenidos
+
+  Configuración en Postman:
+
+  Method: GET
+
+  URL:
+  {{base_url}}/course-contents
+
+  O si no usas variables:
+  http://localhost:8000/api/lms/course-contents
+
+  Headers:
+  Accept: application/json
+  Content-Type: application/json
+
+  Query Params (Tab "Params"):
+
+  | Key       | Value | Description                       |
+  |-----------|-------|-----------------------------------|
+  | limit     | 10    | (Opcional) Cantidad de resultados |
+  | course_id | 1     | (Opcional) Filtrar por curso      |
+  | type      | video | (Opcional) Filtrar por tipo       |
+  | session   | 1     | (Opcional) Filtrar por sesión     |
+  | search    | intro | (Opcional) Buscar por título      |
+
+  Body: Ninguno (es GET)
+
+  Ejemplo de Response Esperado:
+  {
+      "success": true,
+      "data": {
+          "data": [
+              {
+                  "id": 1,
+                  "course_id": 1,
+                  "course": {
+                      "id": 1,
+                      "course_id": 1,
+                      "title": "Curso de Laravel Avanzado"
+                  },
+                  "session": 1,
+                  "type": "video",
+                  "title": "Introducción a Laravel",
+                  "content": "Contenido del video...",
+                  "order_number": 1,
+                  "created_at": "2025-01-15T10:30:00Z"
+              }
+          ],
+          "current_page": 1,
+          "per_page": 10,
+          "total": 1,
+          "last_page": 1
+      }
+  }
+
+  ---
+  📬 Endpoint 2: GET - Obtener Contenido Específico
+
+  Configuración en Postman:
+
+  Method: GET
+
+  URL:
+  {{base_url}}/course-contents/1
+
+  O sin variables:
+  http://localhost:8000/api/lms/course-contents/1
+
+  Headers:
+  Accept: application/json
+  Content-Type: application/json
+
+  Body: Ninguno
+
+  Ejemplo de Response Esperado:
+  {
+      "success": true,
+      "data": {
+          "id": 1,
+          "course_id": 1,
+          "course": {
+              "id": 1,
+              "course_id": 1,
+              "title": "Curso de Laravel Avanzado"
+          },
+          "session": 1,
+          "type": "video",
+          "title": "Introducción a Laravel",
+          "content": "En esta sesión aprenderás...",
+          "order_number": 1,
+          "created_at": "2025-01-15T10:30:00Z"
+      }
+  }
+
+  ---
+  📬 Endpoint 3: POST - Crear Nuevo Contenido
+
+  Configuración en Postman:
+
+  Method: POST
+
+  URL:
+  {{base_url}}/course-contents
+
+  O sin variables:
+  http://localhost:8000/api/lms/course-contents
+
+  Headers:
+  Accept: application/json
+  Content-Type: application/json
+
+  Body (Tab "Body" → selecciona "raw" → selecciona "JSON"):
+
+  Opción 1: Contenido Mínimo
+
+  {
+      "course_id": 1
+  }
+
+  Opción 2: Contenido Completo
+
+  {
+      "course_id": 1,
+      "session": 1,
+      "type": "video",
+      "title": "Introducción a Laravel",
+      "content": "En esta sesión aprenderás los fundamentos de Laravel. Cubriremos instalación, configuración inicial, estructura de     
+  directorios y el patrón MVC.",
+      "order_number": 1
+  }
+
+  Opción 3: Contenido de Documento
+
+  {
+      "course_id": 1,
+      "session": 1,
+      "type": "document",
+      "title": "Material de Apoyo - Sesión 1",
+      "content": "Documentación complementaria sobre los conceptos vistos en la sesión 1. Incluye enlaces a recursos externos y
+  ejercicios prácticos.",
+      "order_number": 2
+  }
+
+  Opción 4: Quiz/Evaluación
+
+  {
+      "course_id": 1,
+      "session": 2,
+      "type": "quiz",
+      "title": "Evaluación Sesión 2",
+      "content": "{\"questions\": [{\"question\": \"¿Qué es Laravel?\", \"options\": [\"Framework\", \"Lenguaje\", \"Base de
+  datos\"], \"correct\": 0}]}",
+      "order_number": 10
+  }
+
+  Ejemplo de Response Esperado (201 Created):
+  {
+      "success": true,
+      "message": "Contenido creado exitosamente",
+      "data": {
+          "id": 5
+      }
+  }
+
+  Ejemplo de Error (422 Unprocessable Entity):
+  {
+      "message": "The given data was invalid.",
+      "errors": {
+          "course_id": [
+              "El ID del curso es obligatorio"
+          ]
+      }
+  }
+
+  ---
+  📬 Endpoint 4: PUT - Actualizar Contenido
+
+  Configuración en Postman:
+
+  Method: PUT
+
+  URL:
+  {{base_url}}/course-contents/1
+
+  O sin variables:
+  http://localhost:8000/api/lms/course-contents/1
+
+  Headers:
+  Accept: application/json
+  Content-Type: application/json
+
+  Body (Tab "Body" → selecciona "raw" → selecciona "JSON"):
+
+  Opción 1: Actualización Parcial (solo algunos campos)
+
+  {
+      "title": "Introducción a Laravel 11",
+      "order_number": 5
+  }
+
+  Opción 2: Actualización de Contenido
+
+  {
+      "content": "Contenido actualizado con información más reciente sobre Laravel 11 y sus nuevas características.",
+      "type": "video"
+  }
+
+  Opción 3: Actualización Completa
+
+  {
+      "course_id": 1,
+      "session": 1,
+      "type": "video",
+      "title": "Introducción Actualizada a Laravel 11",
+      "content": "Versión actualizada de la introducción. Ahora incluye las características de Laravel 11, mejores prácticas
+  actualizadas y ejemplos modernos.",
+      "order_number": 1
+  }
+
+  Ejemplo de Response Esperado (200 OK):
+  {
+      "success": true,
+      "message": "Contenido actualizado exitosamente"
+  }
+
+  Ejemplo de Error (404 Not Found):
+  {
+      "success": false,
+      "message": "Contenido no encontrado"
+  }
+
+  ---
+  📬 Endpoint 5: DELETE - Eliminar Contenido
+
+  Configuración en Postman:
+
+  Method: DELETE
+
+  URL:
+  {{base_url}}/course-contents/1
+
+  O sin variables:
+  http://localhost:8000/api/lms/course-contents/1
+
+  Headers:
+  Accept: application/json
+  Content-Type: application/json
+
+  Body: Ninguno
+
+  Ejemplo de Response Esperado (200 OK):
+  {
+      "success": true,
+      "message": "Contenido eliminado exitosamente"
+  }
+
+  Ejemplo de Error (404 Not Found):
+  {
+      "success": false,
+      "message": "Contenido no encontrado"
+  }
+
+  ---
+  🧪 Flujo de Prueba Completo
+
+  Paso 1: Crear un Contenido
+
+  POST /api/lms/course-contents
+  Body:
+  {
+      "course_id": 1,
+      "session": 1,
+      "type": "video",
+      "title": "Test Content",
+      "content": "This is a test content",
+      "order_number": 1
+  }
+
+  📝 Anota el id que te devuelve (ejemplo: id: 5)
+
+  ---
+  Paso 2: Listar Todos (verificar que se creó)
+
+  GET /api/lms/course-contents
+
+  Deberías ver tu contenido en la lista.
+
+  ---
+  Paso 3: Obtener el Contenido Específico
+
+  GET /api/lms/course-contents/5
+
+  Reemplaza 5 con el ID que anotaste.
+
+  ---
+  Paso 4: Actualizar el Contenido
+
+  PUT /api/lms/course-contents/5
+  Body:
+  {
+      "title": "Test Content - UPDATED",
+      "order_number": 10
+  }
+
+  ---
+  Paso 5: Verificar la Actualización
+
+  GET /api/lms/course-contents/5
+
+  Deberías ver los cambios reflejados.
+
+  ---
+  Paso 6: Eliminar el Contenido
+
+  DELETE /api/lms/course-contents/5
+
+  ---
+  Paso 7: Verificar la Eliminación
+
+  GET /api/lms/course-contents/5
+
+  Deberías recibir un error 404.
+
+  ---
+  🎨 Screenshots de Configuración en Postman
+
+  Configuración de Headers:
+
+  Key: Accept
+  Value: application/json
+
+  Key: Content-Type
+  Value: application/json
+
+  Configuración de Body (POST/PUT):
+
+  1. Selecciona la pestaña "Body"
+  2. Selecciona "raw"
+  3. En el dropdown de la derecha, selecciona "JSON"
+  4. Pega el JSON en el área de texto
+
+  ---
+  ⚠️ Troubleshooting Común
+
+  Error: 404 Not Found en todas las rutas
+
+  - Verifica que Laravel esté corriendo: php artisan serve
+  - Verifica la URL base: debe ser http://localhost:8000 (o el puerto que uses)
+
+  Error: 500 Internal Server Error
+
+  - Revisa los logs de Laravel: storage/logs/laravel.log
+  - Verifica que el binding del repositorio esté registrado en DomainServiceProvider
+
+  Error: course_id does not exist
+
+  - Primero crea un curso usando el endpoint de courses
+  - Usa el id del curso creado en course_id
+
+  Error: The given data was invalid
+
+  - Revisa que estés enviando JSON válido
+  - Verifica que los tipos de datos sean correctos (integers como números, no strings)
+  - Asegúrate de tener el header Content-Type: application/json
+
+  ---
+  📦 Colección de Postman Completa
+
+  Puedes importar esta colección JSON directamente en Postman:
+
+  {
+    "info": {
+      "name": "LMS - Course Contents CRUD",
+      "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+      {
+        "name": "Get All Course Contents",
+        "request": {
+          "method": "GET",
+          "header": [
+            {
+              "key": "Accept",
+              "value": "application/json"
+            }
+          ],
+          "url": {
+            "raw": "{{base_url}}/course-contents?limit=10",
+            "host": ["{{base_url}}"],
+            "path": ["course-contents"],
+            "query": [
+              {
+                "key": "limit",
+                "value": "10"
+              },
+              {
+                "key": "course_id",
+                "value": "1",
+                "disabled": true
+              }
+            ]
+          }
+        }
+      },
+      {
+        "name": "Get Course Content by ID",
+        "request": {
+          "method": "GET",
+          "header": [
+            {
+              "key": "Accept",
+              "value": "application/json"
+            }
+          ],
+          "url": {
+            "raw": "{{base_url}}/course-contents/1",
+            "host": ["{{base_url}}"],
+            "path": ["course-contents", "1"]
+          }
+        }
+      },
+      {
+        "name": "Create Course Content",
+        "request": {
+          "method": "POST",
+          "header": [
+            {
+              "key": "Accept",
+              "value": "application/json"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": {
+            "mode": "raw",
+            "raw": "{\n    \"course_id\": 1,\n    \"session\": 1,\n    \"type\": \"video\",\n    \"title\": \"Introducción a
+  Laravel\",\n    \"content\": \"En esta sesión aprenderás...\",\n    \"order_number\": 1\n}"
+          },
+          "url": {
+            "raw": "{{base_url}}/course-contents",
+            "host": ["{{base_url}}"],
+            "path": ["course-contents"]
+          }
+        }
+      },
+      {
+        "name": "Update Course Content",
+        "request": {
+          "method": "PUT",
+          "header": [
+            {
+              "key": "Accept",
+              "value": "application/json"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": {
+            "mode": "raw",
+            "raw": "{\n    \"title\": \"Introducción a Laravel - UPDATED\",\n    \"order_number\": 5\n}"
+          },
+          "url": {
+            "raw": "{{base_url}}/course-contents/1",
+            "host": ["{{base_url}}"],
+            "path": ["course-contents", "1"]
+          }
+        }
+      },
+      {
+        "name": "Delete Course Content",
+        "request": {
+          "method": "DELETE",
+          "header": [
+            {
+              "key": "Accept",
+              "value": "application/json"
+            }
+          ],
+          "url": {
+            "raw": "{{base_url}}/course-contents/1",
+            "host": ["{{base_url}}"],
+            "path": ["course-contents", "1"]
+          }
+        }
+      }
+    ],
+    "variable": [
+      {
+        "key": "base_url",
+        "value": "http://localhost:8000/api/lms"
+      }
+    ]
+  }
+
+  Para importar:
+  1. Copia el JSON completo
+  2. En Postman: Click en "Import" (arriba a la izquierda)
+  3. Selecciona "Raw text"
+  4. Pega el JSON
+  5. Click en "Import"
+
+  ---
+  ¡Con esta guía ya puedes probar completamente el CRUD de Course Contents en Postman! 🎉
 
 ● How is Claude doing this session? (optional)
   1: Bad    2: Fine   3: Good   0: Dismiss
+
+───────────────────────────────────────

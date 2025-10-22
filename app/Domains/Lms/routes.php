@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Domains\Lms\Http\Controllers\CourseController;
+use App\Domains\Lms\Http\Controllers\CourseContentController;
 use App\Domains\Lms\Http\Controllers\StudentController;
 use App\Domains\Lms\Http\Controllers\InstructorController;
 use App\Domains\Lms\Http\Controllers\CategoryController;
@@ -21,7 +22,14 @@ Route::prefix('lms')->group(function () {
     Route::post('/courses', [CourseController::class, 'store']);
     Route::put('/courses/{course_id}', [CourseController::class, 'update']);
     Route::delete('/courses/{course_id}', [CourseController::class, 'destroy']);
-    
+
+    // Gestión de Contenidos de Cursos
+    Route::get('/course-contents', [CourseContentController::class, 'index']);
+    Route::get('/course-contents/{content_id}', [CourseContentController::class, 'show']);
+    Route::post('/course-contents', [CourseContentController::class, 'store']);
+    Route::put('/course-contents/{content_id}', [CourseContentController::class, 'update']);
+    Route::delete('/course-contents/{content_id}', [CourseContentController::class, 'destroy']);
+
     // Gestión de Estudiantes
     Route::get('/students', [StudentController::class, 'index']);
     Route::get('/students/{student_id}', [StudentController::class, 'show']);
