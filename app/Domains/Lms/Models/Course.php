@@ -47,38 +47,13 @@ class Course extends Model
     ];
 
     // Relaciones
-    public function courseInstructors()
-    {
-        return $this->hasMany(CourseInstructor::class, 'course_id');
-    }
-
     public function courseOfferings()
     {
         return $this->hasMany(CourseOffering::class, 'course_id');
     }
 
-    public function courseCategories()
-    {
-        return $this->hasMany(CourseCategory::class, 'course_id');
-    }
-
-    public function courseContents()
-    {
-        return $this->hasMany(CourseContent::class, 'course_id');
-    }
-
     public function groups()
     {
         return $this->hasMany(Group::class, 'course_id');
-    }
-
-    public function instructors()
-    {
-        return $this->belongsToMany(Instructor::class, 'course_instructors', 'course_id', 'instructor_id');
-    }
-
-    public function categories()
-    {
-        return $this->belongsToMany(Category::class, 'course_categories', 'course_id', 'category_id');
     }
 }

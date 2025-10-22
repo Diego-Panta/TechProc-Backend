@@ -18,6 +18,7 @@ class CourseDetailResource extends JsonResource
             'id' => $this->id,
             'course_id' => $this->course_id,
             'title' => $this->title,
+            'name' => $this->name,
             'description' => $this->description,
             'level' => $this->level,
             'course_image' => $this->course_image,
@@ -33,36 +34,6 @@ class CourseDetailResource extends JsonResource
             'featured' => (bool) $this->featured,
             'highest_rated' => (bool) $this->highest_rated,
             'status' => (bool) $this->status,
-            'categories' => $this->whenLoaded('categories', function () {
-                return $this->categories->map(function ($category) {
-                    return [
-                        'category_id' => $category->category_id,
-                        'name' => $category->name,
-                        'slug' => $category->slug,
-                    ];
-                });
-            }),
-            'instructors' => $this->whenLoaded('instructors', function () {
-                return $this->instructors->map(function ($instructor) {
-                    return [
-                        'instructor_id' => $instructor->instructor_id,
-                        'user_id' => $instructor->user_id,
-                        'name' => $instructor->user?->first_name . ' ' . $instructor->user?->last_name,
-                        'expertise_area' => $instructor->expertise_area,
-                    ];
-                });
-            }),
-            'contents' => $this->whenLoaded('courseContents', function () {
-                return $this->courseContents->map(function ($content) {
-                    return [
-                        'id' => $content->id,
-                        'session' => $content->session,
-                        'type' => $content->type,
-                        'title' => $content->title,
-                        'order_number' => $content->order_number,
-                    ];
-                });
-            }),
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
         ];
