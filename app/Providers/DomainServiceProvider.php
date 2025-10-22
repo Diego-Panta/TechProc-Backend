@@ -11,6 +11,8 @@ use App\Domains\DataAnalyst\Services\StudentReportService;
 // LMS Repositories
 use App\Domains\Lms\Repositories\CourseRepositoryInterface;
 use App\Domains\Lms\Repositories\CourseRepository;
+use App\Domains\Lms\Repositories\CourseContentRepositoryInterface;
+use App\Domains\Lms\Repositories\CourseContentRepository;
 use App\Domains\Lms\Repositories\StudentRepositoryInterface;
 use App\Domains\Lms\Repositories\StudentRepository;
 use App\Domains\Lms\Repositories\InstructorRepositoryInterface;
@@ -38,6 +40,7 @@ class DomainServiceProvider extends ServiceProvider
     {
         // Registrar bindings de LMS
         $this->app->bind(CourseRepositoryInterface::class, CourseRepository::class);
+        $this->app->bind(CourseContentRepositoryInterface::class, CourseContentRepository::class);
         $this->app->bind(StudentRepositoryInterface::class, StudentRepository::class);
         $this->app->bind(InstructorRepositoryInterface::class, InstructorRepository::class);
         $this->app->bind(CategoryRepositoryInterface::class, CategoryRepository::class);

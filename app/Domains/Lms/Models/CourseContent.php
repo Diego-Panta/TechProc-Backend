@@ -12,6 +12,9 @@ class CourseContent extends Model
     protected $table = 'course_contents';
     protected $primaryKey = 'id';
 
+    // Deshabilitar updated_at porque la tabla no lo tiene
+    public const UPDATED_AT = null;
+
     protected $fillable = [
         'course_id',
         'session',

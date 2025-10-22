@@ -56,4 +56,9 @@ class Course extends Model
     {
         return $this->hasMany(Group::class, 'course_id');
     }
+
+    public function courseContents()
+    {
+        return $this->hasMany(CourseContent::class, 'course_id');
+    }
 }
