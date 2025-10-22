@@ -6,12 +6,13 @@ namespace App\Domains\DeveloperWeb\Http\Requests\Api;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Contracts\Validation\Validator;
+use App\Domains\DeveloperWeb\Enums\FaqCategory;
 
 class UpdateFaqApiRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true; // Temporalmente sin autenticación
+        return true;
     }
 
     public function rules(): array
@@ -19,8 +20,7 @@ class UpdateFaqApiRequest extends FormRequest
         return [
             'question' => 'sometimes|string|max:1000',
             'answer' => 'sometimes|string|max:5000',
-            'category' => 'sometimes|string|max:100|nullable',
-            'new_category' => 'sometimes|string|max:100|nullable',
+            'category' => 'sometimes|string|in:' . implode(',', FaqCategory::values()),
             'keywords' => 'sometimes|array',
             'keywords.*' => 'string|max:50',
             'active' => 'sometimes|boolean',
@@ -30,6 +30,7 @@ class UpdateFaqApiRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'category.in' => 'La categoría seleccionada no es válida. Categorías permitidas: ' . implode(', ', FaqCategory::values()),
             'keywords.array' => 'Las palabras clave deben ser un array válido',
         ];
     }
@@ -53,17 +54,10 @@ class UpdateFaqApiRequest extends FormRequest
             }
         }
 
-        // Si se proporciona nueva categoría, usar esa
-        if ($this->has('new_category') && !empty($this->new_category)) {
+        // Si se proporciona categoría pero está vacía, usar la por defecto
+        if ($this->has('category') && empty($this->category)) {
             $this->merge([
-                'category' => $this->new_category
-            ]);
-        }
-
-        // Si no se proporciona ninguna categoría, mantener la existente
-        if (!$this->has('category') && !$this->has('new_category')) {
-            $this->merge([
-                'category' => null // Esto permitirá que se mantenga la categoría actual
+                'category' => FaqCategory::getDefault()->value
             ]);
         }
     }

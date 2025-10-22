@@ -17,7 +17,7 @@ class GeminiChatbotService
     {
         $this->chatbotRepository = $chatbotRepository;
         $this->apiKey = config('services.gemini.api_key');
-        
+
         if (empty($this->apiKey)) {
             throw new \Exception('Gemini API Key no configurada');
         }
@@ -26,8 +26,15 @@ class GeminiChatbotService
     public function startConversation(): array
     {
         try {
+            $config = app(ChatbotConfigService::class)->getConfig();
+
+            // Verificar si el chatbot está habilitado
+            if (!$config['enabled']) {
+                throw new \Exception('El chatbot está desactivado temporalmente. Por favor, intente más tarde.');
+            }
+
             Log::info('Creando nueva conversación...');
-            
+
             $conversation = $this->chatbotRepository->createConversation([
                 'started_date' => now(),
             ]);
@@ -36,7 +43,7 @@ class GeminiChatbotService
 
             return [
                 'conversation_id' => $conversation->id,
-                'welcome_message' => '¡Hola! Soy tu asistente virtual de Incadev. ¿En qué puedo ayudarte hoy?'
+                'welcome_message' => $config['greeting_message'] // Usar mensaje configurado
             ];
         } catch (\Exception $e) {
             Log::error('Error al crear conversación: ' . $e->getMessage());
@@ -50,6 +57,13 @@ class GeminiChatbotService
         try {
             Log::info('Procesando mensaje para conversación: ' . $conversationId);
 
+            $config = app(ChatbotConfigService::class)->getConfig();
+
+            //  Verificar si el chatbot está habilitado
+            if (!$config['enabled']) {
+                throw new \Exception('El chatbot está desactivado temporalmente. Por favor, intente más tarde.');
+            }
+
             // Guardar mensaje del usuario
             $userMessage = $this->chatbotRepository->addMessage([
                 'conversation_id' => $conversationId,
@@ -61,10 +75,12 @@ class GeminiChatbotService
 
             // Primero buscar en FAQs
             $faqMatch = $this->chatbotRepository->findMatchingFaq($message);
-            
+
             if ($faqMatch) {
                 Log::info('FAQ encontrada: ' . $faqMatch->id);
-                return $this->handleFaqResponse($faqMatch, $conversationId);
+                $response = $this->handleFaqResponse($faqMatch, $conversationId);
+                $response['response_delay'] = $config['response_delay'];
+                return $response;
             }
 
             Log::info('No se encontró FAQ, usando Gemini...');
@@ -85,14 +101,18 @@ class GeminiChatbotService
                 'response' => $geminiResponse['response'],
                 'source' => 'gemini',
                 'conversation_id' => $conversationId,
+                'response_delay' => $config['response_delay'] // Frontend maneja el delay
             ];
         } catch (\Exception $e) {
             Log::error('Error al procesar mensaje: ' . $e->getMessage());
             Log::error('Trace: ' . $e->getTraceAsString());
-            
-            // Respuesta de fallback
-            $fallbackResponse = 'Lo siento, estoy teniendo dificultades técnicas. Por favor, intenta nuevamente.';
-            
+
+            // Usar mensaje de fallback de la configuración
+            $config = app(ChatbotConfigService::class)->getConfig();
+            $fallbackResponse = $e->getMessage() === 'El chatbot está desactivado temporalmente. Por favor, intente más tarde.'
+                ? $e->getMessage()
+                : $config['fallback_message'];
+
             $this->chatbotRepository->addMessage([
                 'conversation_id' => $conversationId,
                 'sender' => 'bot',
@@ -103,6 +123,7 @@ class GeminiChatbotService
                 'response' => $fallbackResponse,
                 'source' => 'fallback',
                 'conversation_id' => $conversationId,
+                'response_delay' => 0 // Sin delay en errores
             ];
         }
     }
@@ -168,14 +189,14 @@ class GeminiChatbotService
 
             if ($response->successful()) {
                 $data = $response->json();
-                
+
                 Log::debug('Respuesta completa de Gemini:', $data);
 
                 if (isset($data['candidates'][0]['content']['parts'][0]['text'])) {
                     $generatedText = $data['candidates'][0]['content']['parts'][0]['text'];
-                    
+
                     Log::info('Texto generado por Gemini: ' . $generatedText);
-                    
+
                     return [
                         'response' => trim($generatedText),
                         'success' => true
@@ -197,13 +218,12 @@ class GeminiChatbotService
             // Intentar parsear el error de Google
             $errorData = json_decode($errorBody, true);
             $errorMessage = $errorData['error']['message'] ?? $errorBody;
-            
+
             throw new \Exception('Error en API: ' . $response->status() . ' - ' . $errorMessage);
-            
         } catch (\Exception $e) {
             Log::error('Gemini API Error: ' . $e->getMessage());
             Log::error('Trace: ' . $e->getTraceAsString());
-            
+
             return [
                 'response' => 'Lo siento, estoy teniendo dificultades técnicas en este momento. Por favor, intenta nuevamente más tarde.',
                 'success' => false

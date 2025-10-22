@@ -6,6 +6,7 @@ namespace App\Domains\DeveloperWeb\Repositories;
 use App\Domains\DeveloperWeb\Models\ChatbotConversation;
 use App\Domains\DeveloperWeb\Models\ChatbotMessage;
 use App\Domains\DeveloperWeb\Models\ChatbotFaq;
+use App\Domains\DeveloperWeb\Enums\FaqCategory;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
@@ -17,9 +18,11 @@ class ChatbotRepository
 
         // Aplicar filtros
         if (!empty($filters['category'])) {
-            $query->where('category', $filters['category']);
+            // Validar que la categoría sea válida
+            if (FaqCategory::isValid($filters['category'])) {
+                $query->where('category', $filters['category']);
+            }
         }
-
         if (isset($filters['active'])) {
             $query->where('active', $filters['active']);
         }
@@ -88,12 +91,13 @@ class ChatbotRepository
 
     public function getCategories(): array
     {
-        return ChatbotFaq::select('category')
-            ->distinct()
-            ->whereNotNull('category')
-            ->orderBy('category')
-            ->pluck('category')
-            ->toArray();
+        // Ahora devolvemos las categorías del enum
+        return FaqCategory::values();
+    }
+
+    public function getCategoriesWithLabels(): array
+    {
+        return FaqCategory::labels();
     }
 
     public function getActiveFaqs()

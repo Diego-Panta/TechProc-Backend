@@ -4,6 +4,7 @@ namespace App\Domains\DeveloperWeb\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Domains\DeveloperWeb\Enums\FaqCategory;
 
 class ChatbotFaq extends Model
 {
@@ -33,10 +34,30 @@ class ChatbotFaq extends Model
         'usage_count' => 'integer',
         'created_date' => 'datetime',
         'updated_date' => 'datetime',
+        'category' => FaqCategory::class, // Cast al enum
     ];
 
     public function messages()
     {
         return $this->hasMany(ChatbotMessage::class, 'faq_matched');
+    }
+
+    /**
+     * Scope para filtrar por categoría
+     */
+    public function scopeByCategory($query, ?FaqCategory $category)
+    {
+        if ($category) {
+            return $query->where('category', $category->value);
+        }
+        return $query;
+    }
+
+    /**
+     * Scope para FAQs activas
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('active', true);
     }
 }

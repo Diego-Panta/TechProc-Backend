@@ -103,7 +103,7 @@ class DashboardApiController
         
         return [
             'total' => array_sum($statusCounts),
-            'active' => $activeCount,
+            'published' => $activeCount,
             'total_views' => $totalViews
         ];
     }

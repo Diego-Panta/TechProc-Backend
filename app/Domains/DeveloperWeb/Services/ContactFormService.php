@@ -4,6 +4,7 @@ namespace App\Domains\DeveloperWeb\Services;
 
 use App\Domains\DeveloperWeb\Models\ContactForm;
 use App\Domains\DeveloperWeb\Repositories\ContactFormRepository;
+use App\Domains\DeveloperWeb\Enums\ContactFormStatus;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class ContactFormService
@@ -33,7 +34,7 @@ class ContactFormService
             'subject' => $data['subject'],
             'message' => $data['message'],
             'form_type' => $data['form_type'] ?? 'general',
-            'status' => 'pending',
+            'status' => ContactFormStatus::PENDING->value, // Usar enum
             'submission_date' => now(),
         ];
 
@@ -62,8 +63,15 @@ class ContactFormService
         return $this->contactFormRepository->respondToContact($contactForm, $response, $assignedTo);
     }
 
+    /**
+     * Obtener formularios por estado con validación
+     */
     public function getContactFormsByStatus(string $status, int $perPage = 15): LengthAwarePaginator
     {
+        if (!ContactFormStatus::isValid($status)) {
+            throw new \InvalidArgumentException("Estado no válido: {$status}");
+        }
+
         return $this->contactFormRepository->getByStatus($status, $perPage);
     }
 
@@ -111,6 +119,11 @@ class ContactFormService
             return false;
         }
 
+        // Validar que el estado sea válido
+        if (!ContactFormStatus::isValid($status)) {
+            throw new \InvalidArgumentException("Estado no válido: {$status}");
+        }
+
         return $this->contactFormRepository->update($contactForm, [
             'status' => $status
         ]);
@@ -119,7 +132,7 @@ class ContactFormService
     /**
      * Exportar formularios de contacto para CSV
      */
-    public function exportContactForms(array $filters = []): array
+    /*public function exportContactForms(array $filters = []): array
     {
         $contactForms = $this->contactFormRepository->getAllForExport($filters);
 
@@ -139,5 +152,27 @@ class ContactFormService
                 'assigned_to' => $contact->assignedTo ? $contact->assignedTo->user->full_name : 'No asignado'
             ];
         })->toArray();
+    }*/
+
+    /**
+     * Obtener estadísticas mejoradas
+     */
+    public function getEnhancedStats(): array
+    {
+        $counts = $this->contactFormRepository->getStatusCounts();
+        
+        // Calcular porcentajes
+        $total = $counts['total'];
+        $percentages = [];
+        
+        foreach (ContactFormStatus::values() as $status) {
+            $percentages[$status] = $total > 0 ? round(($counts[$status] / $total) * 100, 1) : 0;
+        }
+
+        return [
+            'counts' => $counts,
+            'percentages' => $percentages,
+            'status_labels' => ContactFormStatus::labels(),
+        ];
     }
 }

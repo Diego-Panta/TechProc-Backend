@@ -16,63 +16,6 @@ class ChatbotFaqApiController
         private ChatbotFaqService $faqService
     ) {}
 
-    /**
-     * @OA\Get(
-     *     path="/api/developer-web/chatbot/faqs",
-     *     summary="Listar FAQs (admin)",
-     *     tags={"Chatbot FAQs"},
-     *     security={{"sanctum":{}}},
-     *     @OA\Parameter(
-     *         name="category",
-     *         in="query",
-     *         description="Filtrar por categoría",
-     *         required=false,
-     *         @OA\Schema(type="string")
-     *     ),
-     *     @OA\Parameter(
-     *         name="active",
-     *         in="query",
-     *         description="Filtrar por estado activo",
-     *         required=false,
-     *         @OA\Schema(type="boolean")
-     *     ),
-     *     @OA\Parameter(
-     *         name="search",
-     *         in="query",
-     *         description="Buscar en preguntas y respuestas",
-     *         required=false,
-     *         @OA\Schema(type="string")
-     *     ),
-     *     @OA\Parameter(
-     *         name="page",
-     *         in="query",
-     *         description="Página para paginación",
-     *         required=false,
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\Parameter(
-     *         name="per_page",
-     *         in="query",
-     *         description="Elementos por página",
-     *         required=false,
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Lista de FAQs",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="data", type="array",
-     *                     @OA\Items(ref="#/components/schemas/ChatbotFaq")
-     *                 ),
-     *                 @OA\Property(property="links", type="object"),
-     *                 @OA\Property(property="meta", type="object")
-     *             )
-     *         )
-     *     )
-     * )
-     */
     public function index(Request $request): JsonResponse
     {
         try {
@@ -90,7 +33,6 @@ class ChatbotFaqApiController
                 'success' => true,
                 'data' => $faqs
             ]);
-
         } catch (\Exception $e) {
             Log::error('API Error listing FAQs', [
                 'error' => $e->getMessage(),
@@ -105,37 +47,6 @@ class ChatbotFaqApiController
         }
     }
 
-    /**
-     * @OA\Get(
-     *     path="/api/developer-web/chatbot/faqs/public",
-     *     summary="Listar FAQs públicas activas",
-     *     tags={"Chatbot FAQs"},
-     *     @OA\Parameter(
-     *         name="category",
-     *         in="query",
-     *         description="Filtrar por categoría",
-     *         required=false,
-     *         @OA\Schema(type="string")
-     *     ),
-     *     @OA\Parameter(
-     *         name="search",
-     *         in="query",
-     *         description="Buscar en preguntas y respuestas",
-     *         required=false,
-     *         @OA\Schema(type="string")
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Lista de FAQs públicas",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="data", type="array",
-     *                 @OA\Items(ref="#/components/schemas/ChatbotFaq")
-     *             )
-     *         )
-     *     )
-     * )
-     */
     public function publicIndex(Request $request): JsonResponse
     {
         try {
@@ -150,7 +61,6 @@ class ChatbotFaqApiController
                 'success' => true,
                 'data' => $faqs
             ]);
-
         } catch (\Exception $e) {
             Log::error('API Error listing public FAQs', [
                 'error' => $e->getMessage()
@@ -164,33 +74,6 @@ class ChatbotFaqApiController
         }
     }
 
-    /**
-     * @OA\Get(
-     *     path="/api/developer-web/chatbot/faqs/{id}",
-     *     summary="Obtener detalles de una FAQ",
-     *     tags={"Chatbot FAQs"},
-     *     security={{"sanctum":{}}},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         description="ID de la FAQ",
-     *         required=true,
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Detalles de la FAQ",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="data", ref="#/components/schemas/ChatbotFaq")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="FAQ no encontrada"
-     *     )
-     * )
-     */
     public function show(int $id): JsonResponse
     {
         try {
@@ -207,7 +90,6 @@ class ChatbotFaqApiController
                 'success' => true,
                 'data' => $faq
             ]);
-
         } catch (\Exception $e) {
             Log::error('API Error showing FAQ', [
                 'id' => $id,
@@ -222,32 +104,6 @@ class ChatbotFaqApiController
         }
     }
 
-    /**
-     * @OA\Get(
-     *     path="/api/developer-web/chatbot/faqs/public/{id}",
-     *     summary="Obtener detalles de una FAQ pública",
-     *     tags={"Chatbot FAQs"},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         description="ID de la FAQ",
-     *         required=true,
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Detalles de la FAQ pública",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="data", ref="#/components/schemas/ChatbotFaq")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="FAQ no encontrada"
-     *     )
-     * )
-     */
     public function publicShow(int $id): JsonResponse
     {
         try {
@@ -272,7 +128,6 @@ class ChatbotFaqApiController
                 'success' => true,
                 'data' => $faq
             ]);
-
         } catch (\Exception $e) {
             Log::error('API Error showing public FAQ', [
                 'id' => $id,
@@ -287,39 +142,6 @@ class ChatbotFaqApiController
         }
     }
 
-    /**
-     * @OA\Post(
-     *     path="/api/developer-web/chatbot/faqs",
-     *     summary="Crear una nueva FAQ",
-     *     tags={"Chatbot FAQs"},
-     *     security={{"sanctum":{}}},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"question", "answer", "category"},
-     *             @OA\Property(property="question", type="string", maxLength=1000),
-     *             @OA\Property(property="answer", type="string", maxLength=5000),
-     *             @OA\Property(property="category", type="string", maxLength=100),
-     *             @OA\Property(property="new_category", type="string", maxLength=100, nullable=true),
-     *             @OA\Property(property="keywords", type="array", @OA\Items(type="string", maxLength=50)),
-     *             @OA\Property(property="active", type="boolean", example=true)
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=201,
-     *         description="FAQ creada exitosamente",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="data", ref="#/components/schemas/ChatbotFaq"),
-     *             @OA\Property(property="message", type="string", example="FAQ creada exitosamente")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=422,
-     *         description="Error de validación"
-     *     )
-     * )
-     */
     public function store(StoreFaqApiRequest $request): JsonResponse
     {
         try {
@@ -330,7 +152,6 @@ class ChatbotFaqApiController
                 'data' => $faq,
                 'message' => 'FAQ creada exitosamente'
             ], 201);
-
         } catch (\Exception $e) {
             Log::error('API Error creating FAQ', [
                 'data' => $request->all(),
@@ -345,44 +166,6 @@ class ChatbotFaqApiController
         }
     }
 
-    /**
-     * @OA\Put(
-     *     path="/api/developer-web/chatbot/faqs/{id}",
-     *     summary="Actualizar una FAQ",
-     *     tags={"Chatbot FAQs"},
-     *     security={{"sanctum":{}}},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         description="ID de la FAQ",
-     *         required=true,
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             @OA\Property(property="question", type="string", maxLength=1000),
-     *             @OA\Property(property="answer", type="string", maxLength=5000),
-     *             @OA\Property(property="category", type="string", maxLength=100),
-     *             @OA\Property(property="new_category", type="string", maxLength=100, nullable=true),
-     *             @OA\Property(property="keywords", type="array", @OA\Items(type="string", maxLength=50)),
-     *             @OA\Property(property="active", type="boolean")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="FAQ actualizada exitosamente",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="FAQ actualizada exitosamente")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="FAQ no encontrada"
-     *     )
-     * )
-     */
     public function update(UpdateFaqApiRequest $request, int $id): JsonResponse
     {
         try {
@@ -399,7 +182,6 @@ class ChatbotFaqApiController
                 'success' => false,
                 'message' => 'No se pudo actualizar la FAQ'
             ], 400);
-
         } catch (\Exception $e) {
             Log::error('API Error updating FAQ', [
                 'id' => $id,
@@ -414,33 +196,7 @@ class ChatbotFaqApiController
         }
     }
 
-    /**
-     * @OA\Delete(
-     *     path="/api/developer-web/chatbot/faqs/{id}",
-     *     summary="Eliminar una FAQ",
-     *     tags={"Chatbot FAQs"},
-     *     security={{"sanctum":{}}},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         description="ID de la FAQ",
-     *         required=true,
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="FAQ eliminada exitosamente",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="FAQ eliminada exitosamente")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="FAQ no encontrada"
-     *     )
-     * )
-     */
+
     public function destroy(int $id): JsonResponse
     {
         try {
@@ -457,7 +213,6 @@ class ChatbotFaqApiController
                 'success' => false,
                 'message' => 'No se pudo eliminar la FAQ'
             ], 404);
-
         } catch (\Exception $e) {
             Log::error('API Error deleting FAQ', [
                 'id' => $id,
@@ -472,33 +227,16 @@ class ChatbotFaqApiController
         }
     }
 
-    /**
-     * @OA\Get(
-     *     path="/api/developer-web/chatbot/faqs/categories",
-     *     summary="Obtener lista de categorías de FAQs",
-     *     tags={"Chatbot FAQs"},
-     *     @OA\Response(
-     *         response=200,
-     *         description="Lista de categorías",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="data", type="array",
-     *                 @OA\Items(type="string", example="Atención al Cliente")
-     *             )
-     *         )
-     *     )
-     * )
-     */
+
     public function getCategories(): JsonResponse
     {
         try {
-            $categories = $this->faqService->getCategories();
+            $categories = $this->faqService->getCategoriesWithLabels();
 
             return response()->json([
                 'success' => true,
                 'data' => $categories
             ]);
-
         } catch (\Exception $e) {
             Log::error('API Error getting FAQ categories', [
                 'error' => $e->getMessage()
@@ -512,28 +250,7 @@ class ChatbotFaqApiController
         }
     }
 
-    /**
-     * @OA\Get(
-     *     path="/api/developer-web/chatbot/faqs/stats/summary",
-     *     summary="Obtener estadísticas de FAQs",
-     *     tags={"Chatbot FAQs"},
-     *     security={{"sanctum":{}}},
-     *     @OA\Response(
-     *         response=200,
-     *         description="Estadísticas obtenidas exitosamente",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="total", type="integer", example=50),
-     *                 @OA\Property(property="active", type="integer", example=45),
-     *                 @OA\Property(property="inactive", type="integer", example=5),
-     *                 @OA\Property(property="total_usage", type="integer", example=1250),
-     *                 @OA\Property(property="categories_count", type="integer", example=8)
-     *             )
-     *         )
-     *     )
-     * )
-     */
+
     public function getStats(): JsonResponse
     {
         try {
@@ -550,7 +267,6 @@ class ChatbotFaqApiController
                     'categories_count' => count($categories),
                 ]
             ]);
-
         } catch (\Exception $e) {
             Log::error('API Error getting FAQ stats', [
                 'error' => $e->getMessage()

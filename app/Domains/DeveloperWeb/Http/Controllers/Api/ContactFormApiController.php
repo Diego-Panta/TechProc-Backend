@@ -5,9 +5,11 @@ namespace App\Domains\DeveloperWeb\Http\Controllers\Api;
 use App\Domains\DeveloperWeb\Http\Requests\Api\RespondContactFormApiRequest;
 use App\Domains\DeveloperWeb\Http\Requests\Api\StoreContactFormApiRequest;
 use App\Domains\DeveloperWeb\Services\ContactFormService;
+use App\Domains\DeveloperWeb\Enums\ContactFormStatus;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 class ContactFormApiController
 {
@@ -120,7 +122,7 @@ class ContactFormApiController
     /**
      * Asignar formulario a mi usuario (PROTEGIDO)
      */
-    public function assignToMe(Request $request, int $id): JsonResponse
+     public function assignToMe(Request $request, int $id): JsonResponse
     {
         try {
             $user = $request->user();
@@ -142,19 +144,33 @@ class ContactFormApiController
                 ], 404);
             }
 
-            // Actualizar asignación
+            // Validar que no esté en estado final
+            if ($contactForm->isFinalized()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se puede asignar un formulario en estado final (' . $contactForm->getStatusLabel() . ')'
+                ], 400);
+            }
+
+            // Actualizar asignación y cambiar estado
             $success = $this->contactFormService->updateContactFormAssignment($id, $employee->id);
             
             if ($success) {
                 Log::info('Usuario asignó contacto a sí mismo', [
                     'user_id' => $user->id,
                     'employee_id' => $employee->id,
-                    'contact_form_id' => $id
+                    'contact_form_id' => $id,
+                    'new_status' => ContactFormStatus::IN_PROGRESS->value
                 ]);
 
                 return response()->json([
                     'success' => true,
-                    'message' => 'Formulario asignado correctamente a tu usuario.'
+                    'message' => 'Formulario asignado correctamente a tu usuario.',
+                    'data' => [
+                        'new_status' => ContactFormStatus::IN_PROGRESS->value,
+                        'status_label' => ContactFormStatus::IN_PROGRESS->label(),
+                        'assigned_to' => $employee->id
+                    ]
                 ]);
             }
 
@@ -167,7 +183,8 @@ class ContactFormApiController
             Log::error('API Error assigning contact form', [
                 'user_id' => $request->user()->id ?? 'unknown',
                 'id' => $id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
 
             return response()->json([
@@ -186,9 +203,21 @@ class ContactFormApiController
         try {
             $user = $request->user();
             
-            $validated = $request->validate([
-                'status' => 'required|in:pending,in_progress,responded,spam'
+            // Validación manual para mejor control de errores
+            $validator = Validator::make($request->all(), [
+                'status' => 'required|in:' . implode(',', ContactFormStatus::values())
             ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error de validación',
+                    'errors' => $validator->errors(),
+                    'valid_statuses' => ContactFormStatus::values()
+                ], 422);
+            }
+
+            $validated = $validator->validated();
 
             $contactForm = $this->contactFormService->getContactFormById($id);
             
@@ -199,18 +228,37 @@ class ContactFormApiController
                 ], 404);
             }
 
+            // Obtener el estado actual de forma segura
+            $currentStatus = $contactForm->getRawStatus();
+            
+            // Validar transiciones de estado
+            if ($contactForm->isFinalized() && $validated['status'] !== $currentStatus) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se puede modificar un formulario en estado final (' . $contactForm->getStatusLabel() . ')'
+                ], 400);
+            }
+
             $success = $this->contactFormService->updateContactFormStatus($id, $validated['status']);
             
             if ($success) {
                 Log::info('Usuario actualizó estado de contacto', [
                     'user_id' => $user->id,
                     'contact_form_id' => $id,
+                    'old_status' => $currentStatus,
                     'new_status' => $validated['status']
                 ]);
 
+                $newStatus = ContactFormStatus::tryFrom($validated['status']);
+
                 return response()->json([
                     'success' => true,
-                    'message' => 'Estado actualizado correctamente.'
+                    'message' => 'Estado actualizado correctamente.',
+                    'data' => [
+                        'new_status' => $validated['status'],
+                        'status_label' => $newStatus->label(),
+                        'contact_form_id' => $id
+                    ]
                 ]);
             }
 
@@ -223,66 +271,18 @@ class ContactFormApiController
             Log::error('API Error updating contact form status', [
                 'user_id' => $request->user()->id ?? 'unknown',
                 'id' => $id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Error al actualizar el estado',
+                'message' => 'Error interno del servidor al actualizar el estado',
                 'error' => config('app.debug') ? $e->getMessage() : null
             ], 500);
         }
     }
 
-    /**
-     * Exportar contact forms a CSV (PROTEGIDO)
-     */
-    public function exportToCsv(Request $request): JsonResponse
-    {
-        try {
-            $user = $request->user();
-            
-            $filters = [
-                'status' => $request->get('status', 'all'),
-                'form_type' => $request->get('form_type'),
-                'start_date' => $request->get('start_date'),
-                'end_date' => $request->get('end_date'),
-            ];
-
-            $data = $this->contactFormService->exportContactForms($filters);
-
-            Log::info('Usuario exportó contact forms a CSV', [
-                'user_id' => $user->id,
-                'filters' => $filters,
-                'record_count' => count($data)
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'data' => $data,
-                'export_info' => [
-                    'format' => 'csv',
-                    'record_count' => count($data),
-                    'generated_at' => now()->toISOString(),
-                    'generated_by' => $user->email
-                ]
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('API Error exporting contact forms', [
-                'user_id' => $request->user()->id ?? 'unknown',
-                'error' => $e->getMessage()
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Error al exportar los datos',
-                'error' => config('app.debug') ? $e->getMessage() : null
-            ], 500);
-        }
-    }
-
-    
     public function show(int $id): JsonResponse
     {
         try {
@@ -392,6 +392,83 @@ class ContactFormApiController
 
         } catch (\Exception $e) {
             Log::error('API Error getting contact form stats', [
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener las estadísticas',
+                'error' => config('app.debug') ? $e->getMessage() : null
+            ], 500);
+        }
+    }
+
+    /**
+     * Obtener opciones de estados (PROTEGIDO)
+     */
+    public function getStatusOptions(Request $request): JsonResponse
+    {
+        try {
+            // Verificar que el usuario esté autenticado (si es una ruta protegida)
+            $user = $request->user();
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No autorizado'
+                ], 401);
+            }
+
+            $statusOptions = [
+                'statuses' => ContactFormStatus::labels(),
+                'active_statuses' => [],
+                'final_statuses' => []
+            ];
+
+            // Obtener estados activos
+            foreach (ContactFormStatus::getActiveStatuses() as $activeStatus) {
+                $statusOptions['active_statuses'][$activeStatus] = ContactFormStatus::labels()[$activeStatus];
+            }
+
+            // Obtener estados finales
+            foreach (ContactFormStatus::getFinalStatuses() as $finalStatus) {
+                $statusOptions['final_statuses'][$finalStatus] = ContactFormStatus::labels()[$finalStatus];
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $statusOptions
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('API Error getting status options', [
+                'user_id' => $request->user()->id ?? 'unknown',
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener las opciones de estado',
+                'error' => config('app.debug') ? $e->getMessage() : null
+            ], 500);
+        }
+    }
+
+    /**
+     * Obtener estadísticas mejoradas (PROTEGIDO)
+     */
+    public function getEnhancedStats(): JsonResponse
+    {
+        try {
+            $stats = $this->contactFormService->getEnhancedStats();
+
+            return response()->json([
+                'success' => true,
+                'data' => $stats
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('API Error getting enhanced stats', [
                 'error' => $e->getMessage()
             ]);
 
