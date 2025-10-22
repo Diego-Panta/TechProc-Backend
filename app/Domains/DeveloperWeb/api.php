@@ -7,6 +7,7 @@ use App\Domains\DeveloperWeb\Http\Controllers\Api\NewsApiController;
 use App\Domains\DeveloperWeb\Http\Controllers\Api\ChatbotFaqApiController;
 use App\Domains\DeveloperWeb\Http\Controllers\Api\ChatbotApiController;
 use App\Domains\DeveloperWeb\Http\Controllers\Api\DashboardApiController;
+use App\Domains\DeveloperWeb\Http\Controllers\Api\ChatbotConfigController;
 
 use App\Domains\DeveloperWeb\Middleware\DeveloperWebMiddleware;
 use Illuminate\Support\Facades\Route;
@@ -32,16 +33,21 @@ Route::prefix('developer-web')->name('api.developer-web.')->group(function () {
 
         // Protected endpoints (requieren autenticación y rol web)
         Route::middleware([DeveloperWebMiddleware::class])->group(function () {
+
+            Route::get('/status-options', [ContactFormApiController::class, 'getStatusOptions'])->name('status-options');
+            Route::get('/stats/enhanced', [ContactFormApiController::class, 'getEnhancedStats'])->name('stats.enhanced');
+            
             Route::get('/', [ContactFormApiController::class, 'index'])->name('index');
             Route::get('/{id}', [ContactFormApiController::class, 'show'])->name('show');
             Route::post('/{id}/spam', [ContactFormApiController::class, 'markAsSpam'])->name('mark-spam');
             Route::post('/{id}/respond', [ContactFormApiController::class, 'respond'])->name('respond');
             Route::get('/stats/summary', [ContactFormApiController::class, 'getStats'])->name('stats');
+            
 
             // Nuevos endpoints para gestión avanzada
             Route::put('/{id}/assign', [ContactFormApiController::class, 'assignToMe'])->name('assign');
             Route::put('/{id}/status', [ContactFormApiController::class, 'updateStatus'])->name('update-status');
-            Route::get('/export/csv', [ContactFormApiController::class, 'exportToCsv'])->name('export.csv');
+            //Route::get('/export/csv', [ContactFormApiController::class, 'exportToCsv'])->name('export.csv');
         });
     });
 
@@ -132,6 +138,10 @@ Route::prefix('developer-web')->name('api.developer-web.')->group(function () {
 
         // Protected endpoints para analytics (requieren autenticación)
         Route::middleware([DeveloperWebMiddleware::class])->group(function () {
+            Route::get('/config', [ChatbotConfigController::class, 'getConfig'])->name('config.get');
+            Route::put('/config', [ChatbotConfigController::class, 'updateConfig'])->name('config.update');
+            Route::post('/config/reset', [ChatbotConfigController::class, 'resetConfig'])->name('config.reset');
+            Route::get('/config/health', [ChatbotConfigController::class, 'healthCheck'])->name('config.health');
             Route::get('/conversations', [ChatbotApiController::class, 'getConversations'])->name('conversations.index');
             Route::get('/conversations/{id}', [ChatbotApiController::class, 'getConversation'])->name('conversations.show');
             Route::get('/analytics/summary', [ChatbotApiController::class, 'getAnalytics'])->name('analytics.summary');

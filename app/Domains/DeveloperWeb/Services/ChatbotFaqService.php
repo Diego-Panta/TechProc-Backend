@@ -5,6 +5,7 @@ namespace App\Domains\DeveloperWeb\Services;
 
 use App\Domains\DeveloperWeb\Repositories\ChatbotRepository;
 use App\Domains\DeveloperWeb\Models\ChatbotFaq;
+use App\Domains\DeveloperWeb\Enums\FaqCategory;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class ChatbotFaqService
@@ -25,6 +26,9 @@ class ChatbotFaqService
 
     public function createFaq(array $data): ChatbotFaq
     {
+        // Validar y normalizar la categoría
+        $data = $this->validateAndNormalizeCategory($data);
+        
         // Limpiar y preparar datos
         $cleanData = $this->prepareFaqData($data);
         return $this->chatbotRepository->createFaq($cleanData);
@@ -37,6 +41,9 @@ class ChatbotFaqService
         if (!$faq) {
             return false;
         }
+
+        // Validar y normalizar la categoría
+        $data = $this->validateAndNormalizeCategory($data);
 
         // Limpiar y preparar datos
         $cleanData = $this->prepareFaqData($data);
@@ -63,6 +70,31 @@ class ChatbotFaqService
     public function getCategories(): array
     {
         return $this->chatbotRepository->getCategories();
+    }
+
+    public function getCategoriesWithLabels(): array
+    {
+        return $this->chatbotRepository->getCategoriesWithLabels();
+    }
+
+    /**
+     * Validar y normalizar la categoría
+     */
+    private function validateAndNormalizeCategory(array $data): array
+    {
+        if (isset($data['category'])) {
+            $category = $data['category'];
+            
+            // Si es una nueva categoría (no existe en el enum), usar la categoría por defecto
+            if (!FaqCategory::isValid($category)) {
+                $data['category'] = FaqCategory::getDefault()->value;
+            }
+        } else {
+            // Si no se proporciona categoría, usar la por defecto
+            $data['category'] = FaqCategory::getDefault()->value;
+        }
+
+        return $data;
     }
 
     public function getFaqsForPublic(array $filters = []): array

@@ -3,6 +3,7 @@
 namespace App\Domains\DeveloperWeb\Repositories;
 
 use App\Domains\DeveloperWeb\Models\ContactForm;
+use App\Domains\DeveloperWeb\Enums\ContactFormStatus;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
@@ -14,7 +15,10 @@ class ContactFormRepository
 
         // Aplicar filtros
         if (!empty($filters['status']) && $filters['status'] !== 'all') {
-            $query->where('status', $filters['status']);
+            // Validar que el estado sea válido
+            if (ContactFormStatus::isValid($filters['status'])) {
+                $query->where('status', $filters['status']);
+            }
         }
 
         if (!empty($filters['assigned_to'])) {
@@ -61,7 +65,7 @@ class ContactFormRepository
 
     public function markAsSpam(ContactForm $contactForm): bool
     {
-        return $contactForm->update(['status' => 'spam']);
+        return $contactForm->update(['status' => ContactFormStatus::SPAM->value]);
     }
 
     public function respondToContact(ContactForm $contactForm, string $response, ?int $assignedTo = null): bool
@@ -69,7 +73,7 @@ class ContactFormRepository
         $updateData = [
             'response' => $response,
             'response_date' => now(),
-            'status' => 'responded'
+            'status' => ContactFormStatus::RESPONDED->value
         ];
 
         if ($assignedTo) {
@@ -87,10 +91,40 @@ class ContactFormRepository
 
     public function getStats(): array
     {
-        return ContactForm::select('status', DB::raw('count(*) as count'))
+        $stats = ContactForm::select('status', DB::raw('count(*) as count'))
             ->groupBy('status')
             ->pluck('count', 'status')
             ->toArray();
+
+        // Asegurarse de que todos los estados estén presentes
+        $allStats = [];
+        foreach (ContactFormStatus::values() as $status) {
+            $allStats[$status] = $stats[$status] ?? 0;
+        }
+
+        return $allStats;
+    }
+
+    /**
+     * Obtener contadores de estados para dashboard
+     */
+    public function getStatusCounts(): array
+    {
+        $counts = ContactForm::select('status', DB::raw('count(*) as count'))
+            ->groupBy('status')
+            ->pluck('count', 'status')
+            ->toArray();
+
+        // Asegurar que todos los estados estén presentes
+        $result = [];
+        foreach (ContactFormStatus::values() as $status) {
+            $result[$status] = $counts[$status] ?? 0;
+        }
+
+        $result['total'] = array_sum($result);
+        $result['active'] = array_sum(array_intersect_key($result, array_flip(ContactFormStatus::getActiveStatuses())));
+
+        return $result;
     }
 
     // Nuevos métodos para obtener opciones de filtros
