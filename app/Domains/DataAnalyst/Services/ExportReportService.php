@@ -133,6 +133,23 @@ class ExportReportService
 
         $generatedBy = $this->getFirstUserName();
 
+        // Limitar datos para PDF si hay muchos registros
+        $data = $reportData['data'];
+        $totalRecords = $reportData['metadata']['total_records'] ?? 0;
+        $maxPdfRecords = 100; // Límite para PDF
+        
+        if ($data instanceof \Illuminate\Support\Collection && $data->count() > $maxPdfRecords) {
+            Log::info("Limitando registros para PDF", [
+                'total_records' => $data->count(),
+                'limited_to' => $maxPdfRecords
+            ]);
+            $data = $data->take($maxPdfRecords);
+            $reportData['metadata']['limited'] = true;
+            $reportData['metadata']['showing_records'] = $maxPdfRecords;
+        }
+
+        $reportData['data'] = $data;
+
         $pdf = Pdf::loadView('dataanalyst.export.templates.pdf', [
             'data' => $reportData,
             'title' => $title,
@@ -141,6 +158,9 @@ class ExportReportService
             'generatedAt' => Carbon::now(),
             'generatedBy' => $generatedBy
         ]);
+
+        // Configurar opciones del PDF
+        $pdf->setPaper('a4', 'landscape');
 
         // Guardar en storage
         Storage::put($filePath, $pdf->output());

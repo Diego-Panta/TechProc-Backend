@@ -28,6 +28,11 @@
         @if(isset($data['metadata']['total_records']))
         | <strong>Total registros:</strong> {{ $data['metadata']['total_records'] }}
         @endif
+        @if(isset($data['metadata']['limited']) && $data['metadata']['limited'])
+        <br><span style="color: #8b5400ff; font-size: 11px;">
+            Mostrando solo {{ $data['metadata']['showing_records'] ?? 100 }} registros de {{ $data['metadata']['total_records'] }}.
+        </span>
+        @endif
     </div>
     
     <!-- Manejo de errores -->
