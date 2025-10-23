@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ExportReportApiController
 {
@@ -225,7 +226,7 @@ class ExportReportApiController
     /**
      * Descargar reporte por token
      */
-    public function downloadReport(string $token)
+    public function downloadReport(string $token): StreamedResponse|JsonResponse
     {
         try {
             $report = $this->exportReportService->getReportByToken($token);
@@ -237,19 +238,69 @@ class ExportReportApiController
                 ], 404);
             }
 
-            return $this->exportReportService->downloadReport($report);
+            // Verificar que el archivo existe
+            if (!$report->fileExists()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'El archivo del reporte no existe'
+                ], 404);
+            }
+
+            // Verificar que no esté expirado
+            if ($report->isExpired()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'El reporte ha expirado'
+                ], 410);
+            }
+
+            // Obtener el storage path y MIME type
+            $filePath = $report->file_path;
+            $fileName = $report->file_name;
+            
+            // Determinar el MIME type basado en la extensión
+            $mimeType = $this->getMimeType($report->format);
+
+            Log::info("Descargando reporte", [
+                'token' => $token,
+                'file_path' => $filePath,
+                'file_name' => $fileName,
+                'mime_type' => $mimeType
+            ]);
+
+            // Crear respuesta de stream con headers explícitos
+            return Storage::download($filePath, $fileName, [
+                'Content-Type' => $mimeType,
+                'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+                'Cache-Control' => 'no-cache, no-store, must-revalidate',
+                'Pragma' => 'no-cache',
+                'Expires' => '0',
+            ]);
 
         } catch (\Exception $e) {
             Log::error('API Error downloading report', [
                 'token' => $token,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Error al descargar el reporte'
+                'message' => 'Error al descargar el reporte: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Obtener MIME type basado en el formato
+     */
+    private function getMimeType(string $format): string
+    {
+        return match($format) {
+            'pdf' => 'application/pdf',
+            'excel' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            default => 'application/octet-stream'
+        };
     }
 
     /**

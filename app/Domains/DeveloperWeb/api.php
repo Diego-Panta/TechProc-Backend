@@ -134,7 +134,7 @@ Route::prefix('developer-web')->name('api.developer-web.')->group(function () {
         Route::post('/conversation/start', [ChatbotApiController::class, 'startConversation'])->name('conversation.start');
         Route::post('/conversation/message', [ChatbotApiController::class, 'sendMessage'])->name('conversation.message');
         Route::post('/conversation/end', [ChatbotApiController::class, 'endConversation'])->name('conversation.end');
-        Route::get('/faqs/category/{category?}', [ChatbotApiController::class, 'getFaqsByCategory'])->name('faqs.by-category');
+        Route::get('/categories/faqs/{category?}', [ChatbotApiController::class, 'getFaqsByCategory'])->name('faqs.by-category');
 
         // Protected endpoints para analytics (requieren autenticación)
         Route::middleware([DeveloperWebMiddleware::class])->group(function () {
