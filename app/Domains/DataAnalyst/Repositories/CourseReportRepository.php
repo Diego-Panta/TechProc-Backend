@@ -3,10 +3,9 @@
 namespace App\Domains\DataAnalyst\Repositories;
 
 use App\Domains\Lms\Models\Course;
-use App\Domains\Lms\Models\Category;
-use App\Domains\Lms\Models\Enrollment;
 use App\Domains\Lms\Models\EnrollmentDetail;
 use App\Domains\Lms\Models\CourseOffering;
+use App\Domains\Lms\Models\CourseInstructor;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
@@ -14,8 +13,7 @@ class CourseReportRepository
 {
     public function getCoursesWithFilters(array $filters = [])
     {
-        $query = Course::with(['categories', 'instructors'])
-            ->select('courses.*')
+        $query = Course::select('courses.*') // Removido with() de instructores
             ->withCount(['courseOfferings', 'groups']);
 
         // Agregar conteo de matrículas mediante subquery
@@ -26,6 +24,13 @@ class CourseReportRepository
                 ->limit(1)
         ]);
 
+        // Agregar conteo de instructores mediante subquery
+        $query->addSelect([
+            'instructors_count' => CourseInstructor::select(DB::raw('COUNT(course_instructors.id)'))
+                ->whereColumn('course_instructors.course_id', 'courses.id')
+                ->limit(1)
+        ]);
+
         // Aplicar filtros
         if (!empty($filters['search'])) {
             $search = $filters['search'];
@@ -33,12 +38,6 @@ class CourseReportRepository
                 $q->where('courses.title', 'ILIKE', "%{$search}%")
                   ->orWhere('courses.name', 'ILIKE', "%{$search}%")
                   ->orWhere('courses.description', 'ILIKE', "%{$search}%");
-            });
-        }
-
-        if (!empty($filters['category_id'])) {
-            $query->whereHas('categories', function ($q) use ($filters) {
-                $q->where('categories.id', $filters['category_id']);
             });
         }
 
@@ -73,8 +72,7 @@ class CourseReportRepository
     public function getCourseDetail($courseId)
     {
         return Course::with([
-            'categories',
-            'instructors',
+            // Removido instructores y sus relaciones
             'courseOfferings',
             'courseOfferings.enrollmentDetails',
             'courseOfferings.enrollmentDetails.enrollment',
@@ -88,12 +86,6 @@ class CourseReportRepository
         $baseQuery = Course::query();
 
         // Filtros
-        if (!empty($filters['category_id'])) {
-            $baseQuery->whereHas('categories', function ($q) use ($filters) {
-                $q->where('categories.id', $filters['category_id']);
-            });
-        }
-
         if (!empty($filters['level'])) {
             $baseQuery->where('level', $filters['level']);
         }
@@ -113,10 +105,8 @@ class CourseReportRepository
 
         // Estadísticas por nivel
         $byLevel = Course::selectRaw('level, COUNT(*) as course_count')
-            ->when(!empty($filters['category_id']), function ($q) use ($filters) {
-                $q->whereHas('categories', function ($q) use ($filters) {
-                    $q->where('categories.id', $filters['category_id']);
-                });
+            ->when(!empty($filters['level']), function ($q) use ($filters) {
+                $q->where('level', $filters['level']);
             })
             ->when(!empty($filters['start_date']), function ($q) use ($filters) {
                 $q->whereDate('created_at', '>=', $filters['start_date']);
@@ -129,31 +119,7 @@ class CourseReportRepository
             ->pluck('course_count', 'level')
             ->toArray();
 
-        // Estadísticas por categoría
-        $byCategory = Category::withCount(['courses' => function ($query) use ($filters) {
-                if (!empty($filters['level'])) {
-                    $query->where('level', $filters['level']);
-                }
-                if (!empty($filters['start_date'])) {
-                    $query->whereDate('courses.created_at', '>=', $filters['start_date']);
-                }
-                if (!empty($filters['end_date'])) {
-                    $query->whereDate('courses.created_at', '<=', $filters['end_date']);
-                }
-            }])
-            ->when(!empty($filters['category_id']), function ($q) use ($filters) {
-                $q->where('id', $filters['category_id']);
-            })
-            ->get()
-            ->map(function ($category) {
-                return [
-                    'category_id' => $category->id,
-                    'category_name' => $category->name,
-                    'course_count' => $category->courses_count
-                ];
-            });
-
-        // Cursos más matriculados - Usando las relaciones correctas
+        // Cursos más matriculados
         $mostEnrolled = Course::select([
                 'courses.id as course_id',
                 'courses.title as course_title',
@@ -161,11 +127,6 @@ class CourseReportRepository
             ])
             ->leftJoin('course_offerings', 'courses.id', '=', 'course_offerings.course_id')
             ->leftJoin('enrollment_details', 'course_offerings.id', '=', 'enrollment_details.course_offering_id')
-            ->when(!empty($filters['category_id']), function ($q) use ($filters) {
-                $q->whereHas('categories', function ($q) use ($filters) {
-                    $q->where('categories.id', $filters['category_id']);
-                });
-            })
             ->when(!empty($filters['level']), function ($q) use ($filters) {
                 $q->where('courses.level', $filters['level']);
             })
@@ -191,11 +152,6 @@ class CourseReportRepository
             ->leftJoin('enrollments', 'enrollment_details.enrollment_id', '=', 'enrollments.id')
             ->leftJoin('invoices', 'enrollments.id', '=', 'invoices.enrollment_id')
             ->where('invoices.status', 'Paid')
-            ->when(!empty($filters['category_id']), function ($q) use ($filters) {
-                $q->whereHas('categories', function ($q) use ($filters) {
-                    $q->where('categories.id', $filters['category_id']);
-                });
-            })
             ->when(!empty($filters['level']), function ($q) use ($filters) {
                 $q->where('courses.level', $filters['level']);
             })
@@ -219,7 +175,6 @@ class CourseReportRepository
                 'intermediate' => $byLevel['intermediate'] ?? 0,
                 'advanced' => $byLevel['advanced'] ?? 0,
             ],
-            'by_category' => $byCategory,
             'most_enrolled' => $mostEnrolled,
             'bestsellers' => $bestsellers,
         ];
@@ -233,5 +188,33 @@ class CourseReportRepository
         return CourseOffering::where('course_id', $courseId)
             ->join('enrollment_details', 'course_offerings.id', '=', 'enrollment_details.course_offering_id')
             ->count();
+    }
+
+    /**
+     * Método auxiliar para obtener instructores de un curso
+     */
+    public function getCourseInstructors($courseId)
+    {
+        return CourseInstructor::with(['instructor.user'])
+            ->where('course_id', $courseId)
+            ->get()
+            ->map(function ($courseInstructor) {
+                return [
+                    'id' => $courseInstructor->id,
+                    'assigned_date' => $courseInstructor->assigned_date,
+                    'instructor' => $courseInstructor->instructor ? [
+                        'id' => $courseInstructor->instructor->id,
+                        'bio' => $courseInstructor->instructor->bio,
+                        'expertise_area' => $courseInstructor->instructor->expertise_area,
+                        'status' => $courseInstructor->instructor->status,
+                        'user' => $courseInstructor->instructor->user ? [
+                            'id' => $courseInstructor->instructor->user->id,
+                            'first_name' => $courseInstructor->instructor->user->first_name,
+                            'last_name' => $courseInstructor->instructor->user->last_name,
+                            'email' => $courseInstructor->instructor->user->email,
+                        ] : null
+                    ] : null
+                ];
+            });
     }
 }

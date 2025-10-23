@@ -11,8 +11,6 @@ use App\Domains\SupportTechnical\Models\Ticket;
 use App\Domains\SupportSecurity\Models\SecurityAlert;
 use App\Domains\SupportSecurity\Models\BlockedIp;
 use App\Domains\DataAnalyst\Models\Payment;
-
-
 use Illuminate\Support\Facades\DB;
 
 class DashboardRepository
@@ -97,33 +95,34 @@ class DashboardRepository
 
     private function getAttendanceMetrics(array $filters)
     {
-        // Consulta SIMPLE solo con la tabla attendances
+        // Consulta SIMPLE solo con la tabla attendances - CORREGIDO
         $attendanceQuery = Attendance::query();
         
-        // Aplicar filtros
-        $this->applyDateFilters($attendanceQuery, $filters, 'record_date');
+        // Aplicar filtros - usar created_at en lugar de record_date
+        $this->applyDateFilters($attendanceQuery, $filters, 'created_at');
 
         $totalRecords = $attendanceQuery->count();
-        $attendedRecords = (clone $attendanceQuery)->where('attended', 'YES')->count();
+        // CORREGIDO: attended es booleano, no string
+        $attendedRecords = (clone $attendanceQuery)->where('attended', true)->count();
         
         $averageRate = $totalRecords > 0 ? ($attendedRecords / $totalRecords) * 100 : 0;
         
-        // Calcular tendencia (última semana vs semana anterior)
+        // Calcular tendencia (última semana vs semana anterior) - CORREGIDO
         $currentWeek = now()->startOfWeek();
         $previousWeek = now()->subWeek()->startOfWeek();
         
-        $currentWeekAttended = Attendance::whereDate('record_date', '>=', $currentWeek)
-            ->where('attended', 'YES')
+        $currentWeekAttended = Attendance::whereDate('created_at', '>=', $currentWeek)
+            ->where('attended', true)
             ->count();
-        $currentWeekTotal = Attendance::whereDate('record_date', '>=', $currentWeek)->count();
+        $currentWeekTotal = Attendance::whereDate('created_at', '>=', $currentWeek)->count();
         $currentWeekRate = $currentWeekTotal > 0 ? ($currentWeekAttended / $currentWeekTotal) * 100 : 0;
             
-        $previousWeekAttended = Attendance::whereDate('record_date', '>=', $previousWeek)
-            ->whereDate('record_date', '<', $currentWeek)
-            ->where('attended', 'YES')
+        $previousWeekAttended = Attendance::whereDate('created_at', '>=', $previousWeek)
+            ->whereDate('created_at', '<', $currentWeek)
+            ->where('attended', true)
             ->count();
-        $previousWeekTotal = Attendance::whereDate('record_date', '>=', $previousWeek)
-            ->whereDate('record_date', '<', $currentWeek)
+        $previousWeekTotal = Attendance::whereDate('created_at', '>=', $previousWeek)
+            ->whereDate('created_at', '<', $currentWeek)
             ->count();
         $previousWeekRate = $previousWeekTotal > 0 ? ($previousWeekAttended / $previousWeekTotal) * 100 : 0;
             

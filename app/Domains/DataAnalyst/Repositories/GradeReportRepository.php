@@ -29,7 +29,7 @@ class GradeReportRepository
         $passingCount = (clone $gradeQuery)->where('obtained_grade', '>=', 60)->count();
         $passingRate = $totalGrades > 0 ? ($passingCount / $totalGrades) * 100 : 0;
 
-        // Estadísticas por grupo
+        // CORREGIDO: Estadísticas por grupo - usar la relación a través de evaluation
         $byGroup = Group::select(
                 'groups.id as group_id',
                 'groups.name as group_name',
@@ -39,7 +39,8 @@ class GradeReportRepository
                 DB::raw('(COUNT(CASE WHEN grade_records.obtained_grade >= 60 THEN 1 END) * 100.0 / COUNT(grade_records.id)) as passing_rate')
             )
             ->join('courses', 'groups.course_id', '=', 'courses.id')
-            ->leftJoin('grade_records', 'groups.id', '=', 'grade_records.group_id')
+            ->leftJoin('evaluations', 'groups.id', '=', 'evaluations.group_id')
+            ->leftJoin('grade_records', 'evaluations.id', '=', 'grade_records.evaluation_id')
             ->when(!empty($filters['course_id']), function ($q) use ($filters) {
                 $q->where('groups.course_id', $filters['course_id']);
             })
@@ -73,9 +74,8 @@ class GradeReportRepository
     {
         $query = GradeRecord::with([
             'user.student',
-            'group.course',
-            'evaluation',
-            'configuration'
+            'evaluation.group.course', // CORREGIDO: Acceder al grupo a través de evaluation
+            'evaluation'
         ]);
 
         $this->applyGradeFilters($query, $filters);
@@ -87,19 +87,22 @@ class GradeReportRepository
     private function applyGradeFilters(Builder $query, array $filters)
     {
         if (!empty($filters['course_id'])) {
-            $query->whereHas('group', function ($q) use ($filters) {
+            $query->whereHas('evaluation.group', function ($q) use ($filters) {
                 $q->where('course_id', $filters['course_id']);
             });
         }
 
         if (!empty($filters['academic_period_id'])) {
-            $query->whereHas('group.course.courseOfferings', function ($q) use ($filters) {
+            $query->whereHas('evaluation.group.course.courseOfferings', function ($q) use ($filters) {
                 $q->where('academic_period_id', $filters['academic_period_id']);
             });
         }
 
         if (!empty($filters['grade_type'])) {
-            $query->where('grade_records.grade_type', $filters['grade_type']);
+            // CORREGIDO: Ya no existe grade_type en grade_records, usar evaluation_type
+            $query->whereHas('evaluation', function ($q) use ($filters) {
+                $q->where('evaluation_type', $filters['grade_type']);
+            });
         }
 
         if (!empty($filters['start_date'])) {
@@ -122,7 +125,8 @@ class GradeReportRepository
             )
             ->join('students', 'users.id', '=', 'students.user_id')
             ->join('grade_records', 'users.id', '=', 'grade_records.user_id')
-            ->join('groups', 'grade_records.group_id', '=', 'groups.id')
+            ->join('evaluations', 'grade_records.evaluation_id', '=', 'evaluations.id') // CORREGIDO
+            ->join('groups', 'evaluations.group_id', '=', 'groups.id') // CORREGIDO
             ->where('grade_records.obtained_grade', '>=', 60)
             ->groupBy('users.id', 'students.first_name', 'students.last_name')
             ->havingRaw('COUNT(grade_records.id) >= 3')
@@ -134,7 +138,7 @@ class GradeReportRepository
         }
 
         if (!empty($filters['academic_period_id'])) {
-            $query->whereHas('gradeRecords.group.course.courseOfferings', function ($q) use ($filters) {
+            $query->whereHas('gradeRecords.evaluation.group.course.courseOfferings', function ($q) use ($filters) {
                 $q->where('academic_period_id', $filters['academic_period_id']);
             });
         }
