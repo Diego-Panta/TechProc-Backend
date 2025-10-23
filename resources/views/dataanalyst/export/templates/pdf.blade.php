@@ -8,9 +8,9 @@
         .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #000; padding-bottom: 10px; }
         .header h1 { margin: 0; color: #333; }
         .info { margin-bottom: 20px; padding: 10px; background: #f5f5f5; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background: #333; color: white; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 9px; }
+        th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
+        th { background: #333; color: white; font-size: 9px; }
         .footer { margin-top: 30px; text-align: center; font-size: 10px; color: #666; border-top: 1px solid #ddd; padding-top: 10px; }
         .no-data { text-align: center; padding: 20px; color: #666; font-style: italic; }
         .error { color: #d00; background: #fee; padding: 10px; border: 1px solid #d00; }
