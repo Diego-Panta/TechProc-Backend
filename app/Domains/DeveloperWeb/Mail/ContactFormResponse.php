@@ -20,11 +20,13 @@ class ContactFormResponse extends Mailable
     public function build(): self
     {
         return $this
-            ->subject("Respuesta a: {$this->originalSubject}")
-            ->view('emails.contact-form-response-simple')
+            ->subject("Respuesta a tu consulta: {$this->originalSubject}")
+            ->view('emails.contact-form-response')
             ->with([
                 'fullName' => $this->fullName,
+                'originalSubject' => $this->originalSubject,
                 'response' => $this->response,
+                'responseDate' => now()->format('d/m/Y H:i'),
             ]);
     }
 }

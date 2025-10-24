@@ -86,16 +86,19 @@ class ContactFormApiController
             $success = $this->contactFormService->respondToContact($id, $request->response, $assignedTo);
             
             if ($success) {
-                // Log de la acción
-                Log::info('Usuario respondió contacto', [
+                // Obtener el contacto actualizado para el log
+                $contactForm = $this->contactFormService->getContactFormById($id);
+                
+                Log::info('Usuario respondió contacto y se envió email', [
                     'user_id' => $user->id,
                     'employee_id' => $employee->id,
-                    'contact_form_id' => $id
+                    'contact_form_id' => $id,
+                    'user_email' => $contactForm->email
                 ]);
 
                 return response()->json([
                     'success' => true,
-                    'message' => 'Respuesta enviada correctamente.'
+                    'message' => 'Respuesta enviada correctamente y notificación por email enviada al usuario.'
                 ]);
             }
 
