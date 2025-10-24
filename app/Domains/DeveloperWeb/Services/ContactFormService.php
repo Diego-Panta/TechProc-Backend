@@ -6,6 +6,9 @@ use App\Domains\DeveloperWeb\Models\ContactForm;
 use App\Domains\DeveloperWeb\Repositories\ContactFormRepository;
 use App\Domains\DeveloperWeb\Enums\ContactFormStatus;
 use Illuminate\Pagination\LengthAwarePaginator;
+use App\Domains\DeveloperWeb\Mail\ContactFormResponse;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 
 class ContactFormService
 {
@@ -60,7 +63,46 @@ class ContactFormService
             return false;
         }
 
-        return $this->contactFormRepository->respondToContact($contactForm, $response, $assignedTo);
+        // 1. Primero actualizar en base de datos
+        $success = $this->contactFormRepository->respondToContact($contactForm, $response, $assignedTo);
+
+        if ($success) {
+            // 2. Enviar email de respuesta al usuario
+            $this->sendResponseEmail($contactForm, $response);
+        }
+
+        return $success;
+    }
+
+    /**
+     * Enviar email de respuesta al usuario
+     */
+    private function sendResponseEmail(ContactForm $contactForm, string $response): void
+    {
+        try {
+            Mail::to($contactForm->email)
+                ->send(new ContactFormResponse(
+                    fullName: $contactForm->full_name,
+                    originalSubject: $contactForm->subject,
+                    response: $response
+                ));
+
+            Log::info('Email de respuesta enviado correctamente', [
+                'contact_form_id' => $contactForm->id,
+                'user_email' => $contactForm->email,
+                'subject' => $contactForm->subject
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error al enviar email de respuesta', [
+                'contact_form_id' => $contactForm->id,
+                'user_email' => $contactForm->email,
+                'error' => $e->getMessage()
+            ]);
+
+            // No lanzamos excepción para no interrumpir el flujo principal
+            // La respuesta ya se guardó en la base de datos
+        }
     }
 
     /**
@@ -160,11 +202,11 @@ class ContactFormService
     public function getEnhancedStats(): array
     {
         $counts = $this->contactFormRepository->getStatusCounts();
-        
+
         // Calcular porcentajes
         $total = $counts['total'];
         $percentages = [];
-        
+
         foreach (ContactFormStatus::values() as $status) {
             $percentages[$status] = $total > 0 ? round(($counts[$status] / $total) * 100, 1) : 0;
         }
