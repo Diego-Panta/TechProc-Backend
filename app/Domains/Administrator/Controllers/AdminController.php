@@ -50,13 +50,8 @@ class AdminController extends Controller
                 });
             }
 
-            // Paginación
-            $page = $request->get('page', 1);
-            $limit = $request->get('limit', 20);
-            $offset = ($page - 1) * $limit;
-
-            $totalRecords = $query->count();
-            $users = $query->skip($offset)->take($limit)->get();
+            // Obtener todos los usuarios (sin paginación por defecto)
+            $users = $query->get();
 
             $usersData = $users->map(function ($user) {
                 return [
