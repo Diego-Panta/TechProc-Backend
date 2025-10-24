@@ -56,34 +56,40 @@ class AdminController extends Controller
             $offset = ($page - 1) * $limit;
 
             $totalRecords = $query->count();
-            $users = $query->with('employee')->skip($offset)->take($limit)->get();
+            $users = $query->skip($offset)->take($limit)->get();
 
             $usersData = $users->map(function ($user) {
                 return [
                     'id' => $user->id,
                     'first_name' => $user->first_name,
                     'last_name' => $user->last_name,
+                    'full_name' => $user->full_name,
+                    'dni' => $user->dni,
+                    'document' => $user->document,
                     'email' => $user->email,
+                    'email_verified_at' => $user->email_verified_at ? $user->email_verified_at->toISOString() : null,
+                    'phone_number' => $user->phone_number,
+                    'address' => $user->address,
+                    'birth_date' => $user->birth_date ? $user->birth_date->format('Y-m-d') : null,
                     'role' => $user->role,
+                    'gender' => $user->gender,
+                    'country' => $user->country,
+                    'country_location' => $user->country_location,
+                    'timezone' => $user->timezone,
+                    'profile_photo' => $user->profile_photo,
                     'status' => $user->status,
-                    'employee_id' => $user->employee ? $user->employee->id : null,
-                    'last_access' => $user->last_access ? $user->last_access->toISOString() : null,
+                    'synchronized' => $user->synchronized,
                     'last_access_ip' => $user->last_access_ip,
-                    'created_at' => $user->created_at->toISOString()
+                    'last_access' => $user->last_access ? $user->last_access->toISOString() : null,
+                    'last_connection' => $user->last_connection ? $user->last_connection->toISOString() : null,
+                    'created_at' => $user->created_at->toISOString(),
+                    'updated_at' => $user->updated_at->toISOString()
                 ];
             });
 
             return response()->json([
                 'success' => true,
-                'data' => [
-                    'users' => $usersData,
-                    'pagination' => [
-                        'current_page' => (int) $page,
-                        'total_pages' => ceil($totalRecords / $limit),
-                        'total_records' => $totalRecords,
-                        'per_page' => (int) $limit
-                    ]
-                ]
+                'data' => $usersData
             ], 200);
 
         } catch (\Exception $e) {
