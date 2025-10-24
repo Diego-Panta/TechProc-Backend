@@ -186,8 +186,8 @@ class AuthController extends Controller
             'role' => 'required|in:admin,lms,seg,infra,web,data,support',
             'reason' => 'required|string|max:500',
             // Datos del empleado
-            'position_id' => 'required|integer|exists:positions,id',
-            'department_id' => 'required|integer|exists:departments,id',
+            'position_id' => 'required|integer',
+            'department_id' => 'required|integer',
             'hire_date' => 'nullable|date',
             'employment_status' => 'nullable|in:Active,Inactive,Terminated',
             'schedule' => 'nullable|string',
@@ -202,6 +202,29 @@ class AuthController extends Controller
                     'code' => 'VALIDATION_ERROR',
                     'message' => 'Error de validación en los datos enviados',
                     'details' => $validator->errors()
+                ]
+            ], 422);
+        }
+
+        // Validación manual de existencia de position y department
+        $position = \App\Domains\Administrator\Models\Position::find($request->position_id);
+        $department = \App\Domains\Administrator\Models\Department::find($request->department_id);
+
+        $errors = [];
+        if (!$position) {
+            $errors['position_id'] = ['El ID de posición proporcionado no existe.'];
+        }
+        if (!$department) {
+            $errors['department_id'] = ['El ID de departamento proporcionado no existe.'];
+        }
+
+        if (!empty($errors)) {
+            return response()->json([
+                'success' => false,
+                'error' => [
+                    'code' => 'VALIDATION_ERROR',
+                    'message' => 'Error de validación en los datos enviados',
+                    'details' => $errors
                 ]
             ], 422);
         }
