@@ -10,6 +10,9 @@ use App\Domains\Lms\Http\Controllers\EnrollmentController;
 use App\Domains\Lms\Http\Controllers\CompanyController;
 use App\Domains\Lms\Http\Controllers\AcademicPeriodController;
 use App\Domains\Lms\Http\Controllers\CourseOfferingController;
+use App\Domains\Lms\Http\Controllers\GroupController;
+use App\Domains\Lms\Http\Controllers\ClassController;
+use App\Domains\Lms\Http\Controllers\ClassMaterialController;
 
 // TODO: Agregar middleware de autenticación cuando esté disponible
 // Route::middleware(['auth:api'])->group(function () {
@@ -73,6 +76,27 @@ Route::prefix('lms')->group(function () {
     Route::post('/course-offerings', [CourseOfferingController::class, 'store']);
     Route::put('/course-offerings/{course_offering_id}', [CourseOfferingController::class, 'update']);
     Route::delete('/course-offerings/{course_offering_id}', [CourseOfferingController::class, 'destroy']);
+
+    // Gestión de Grupos (Groups)
+    Route::get('/groups', [GroupController::class, 'index']);
+    Route::get('/groups/{id}', [GroupController::class, 'show']);
+    Route::post('/groups', [GroupController::class, 'store']);
+    Route::put('/groups/{id}', [GroupController::class, 'update']);
+    Route::delete('/groups/{id}', [GroupController::class, 'destroy']);
+
+    // Gestión de Clases (Classes)
+    Route::get('/classes', [ClassController::class, 'index']);
+    Route::get('/classes/{id}', [ClassController::class, 'show']);
+    Route::post('/classes', [ClassController::class, 'store']);
+    Route::put('/classes/{id}', [ClassController::class, 'update']);
+    Route::delete('/classes/{id}', [ClassController::class, 'destroy']);
+
+    // Gestión de Materiales de Clase (Class Materials)
+    Route::get('/class-materials', [ClassMaterialController::class, 'index']);
+    Route::get('/class-materials/{id}', [ClassMaterialController::class, 'show']);
+    Route::post('/class-materials', [ClassMaterialController::class, 'store']);
+    Route::put('/class-materials/{id}', [ClassMaterialController::class, 'update']);
+    Route::delete('/class-materials/{id}', [ClassMaterialController::class, 'destroy']);
 
 });
 

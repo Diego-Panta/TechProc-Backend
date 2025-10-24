@@ -4,6 +4,8 @@
 -- - Table names: lowercase, English, plural, snake_case
 -- - Attributes: snake_case
 -- =====================================
+
+
 -- =============================================
 -- TABLAS LARAVEL PARA POSTGRESQL
 -- =============================================
@@ -15,14 +17,12 @@ CREATE TABLE IF NOT EXISTS cache (
     expiration INTEGER NOT NULL
 );
 
-
 -- 2. Tabla CACHE_LOCKS
 CREATE TABLE IF NOT EXISTS cache_locks (
     key VARCHAR(255) PRIMARY KEY NOT NULL,
     owner VARCHAR(255) NOT NULL,
     expiration INTEGER NOT NULL
 );
-
 
 -- 3. Tabla SESSIONS
 CREATE TABLE IF NOT EXISTS sessions (
@@ -62,13 +62,24 @@ CREATE TABLE IF NOT EXISTS job_batches (
     finished_at INTEGER NULL
 );
 
-
-
 -- 7. Tabla PASSWORD_RESET_TOKENS
 CREATE TABLE IF NOT EXISTS password_reset_tokens (
     email VARCHAR(255) PRIMARY KEY NOT NULL,
     token VARCHAR(255) NOT NULL,
     created_at TIMESTAMP(0) NULL
+);
+
+CREATE TABLE personal_access_tokens (
+    id BIGSERIAL PRIMARY KEY,
+    tokenable_type VARCHAR(255) NOT NULL,
+    tokenable_id BIGINT NOT NULL,
+    name TEXT NOT NULL,
+    token VARCHAR(64) UNIQUE NOT NULL,
+    abilities TEXT,
+    last_used_at TIMESTAMPTZ,
+    expires_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
 );
 
 
@@ -329,6 +340,7 @@ CREATE TABLE documents (
     entity_id BIGINT,
     version BIGINT,
     status VARCHAR(20) CHECK (status IN ('draft','active','archived')),
+    download_count INTEGER DEFAULT 0,
     file_path VARCHAR(255),
     created_by BIGINT,
     created_at TIMESTAMPTZ DEFAULT now(),
@@ -395,13 +407,18 @@ CREATE TABLE indicator_alerts (
 CREATE TABLE departments (
     id BIGSERIAL PRIMARY KEY,
     department_name VARCHAR(100) NOT NULL,
-    description TEXT
+    description TEXT,
+    created_at TIMESTAMP with TIME zone null,
+    updated_at TIMESTAMP with TIME zone null
+
 );
 
 CREATE TABLE positions (
     id BIGSERIAL PRIMARY KEY,
     position_name VARCHAR(100) NOT NULL,
     department_id BIGINT NOT NULL,
+    created_at TIMESTAMP with TIME zone null,
+    updated_at TIMESTAMP with TIME zone null,
     FOREIGN KEY (department_id) REFERENCES departments(id)
 );
 
@@ -417,6 +434,7 @@ CREATE TABLE employees (
     speciality VARCHAR(255),
     salary DECIMAL(10,2),
     created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMP with TIME zone null,
     FOREIGN KEY (position_id) REFERENCES positions(id),
     FOREIGN KEY (department_id) REFERENCES departments(id),
     FOREIGN KEY (user_id) REFERENCES users(id)
@@ -459,6 +477,7 @@ CREATE TABLE trainings (
     description TEXT,
     institution VARCHAR(200),
     provider VARCHAR(100),
+    training_status VARCHAR(50) default 'Active',
     duration_hours BIGINT CHECK (duration_hours IS NULL OR duration_hours >= 0),
     start_date DATE,
     end_date DATE,
@@ -1042,12 +1061,14 @@ CREATE TABLE channels (
     name VARCHAR(255),
     channel_type VARCHAR(100),
     related_plan_id BIGINT,
+    team_id BIGINT,
     created_by_user_id BIGINT,
     members JSONB,
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now(),
     FOREIGN KEY (related_plan_id) REFERENCES strategic_plans(id),
-    FOREIGN KEY (created_by_user_id) REFERENCES users(id)
+    FOREIGN KEY (created_by_user_id) REFERENCES users(id),
+    FOREIGN KEY (team_id) REFERENCES teams(id)
 );
 
 CREATE TABLE messages (
@@ -1124,40 +1145,87 @@ CREATE TABLE evidences (
     FOREIGN KEY (initiative_id) REFERENCES initiatives(id)
 );
 
--- Surveys
+-- Surveys (Modified by tmr_script)
 CREATE TABLE surveys (
     id BIGSERIAL PRIMARY KEY,
     title VARCHAR(255),
+    description TEXT,
     target_type VARCHAR(100),
+    status VARCHAR(20) CHECK (status IN ('draft', 'active', 'closed')) DEFAULT 'draft',
     created_by_user_id BIGINT,
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now(),
     FOREIGN KEY (created_by_user_id) REFERENCES users(id)
 );
+COMMENT ON TABLE surveys IS 'Tabla principal para definir todas las encuestas del sistema.';
 
+-- Survey Questions (Modified by tmr_script)
 CREATE TABLE survey_questions (
     id BIGSERIAL PRIMARY KEY,
     survey_id BIGINT NOT NULL,
     question_text TEXT,
     question_type VARCHAR(50),
-    FOREIGN KEY (survey_id) REFERENCES surveys(id)
+    "order" INTEGER DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now(),
+    FOREIGN KEY (survey_id) REFERENCES surveys(id) ON DELETE CASCADE
 );
+COMMENT ON TABLE survey_questions IS 'Preguntas pertenecientes a una encuesta definida en la tabla surveys.';
 
-CREATE TABLE survey_responses (
+-- NEW Survey Options (from tmr_script)
+CREATE TABLE survey_options (
     id BIGSERIAL PRIMARY KEY,
-    survey_id BIGINT NOT NULL,
-    respondent_user_id BIGINT,
-    answers JSONB,
-    completed_at TIMESTAMPTZ,
-    FOREIGN KEY (survey_id) REFERENCES surveys(id),
-    FOREIGN KEY (respondent_user_id) REFERENCES users(id)
+    survey_question_id BIGINT NOT NULL,
+    option_text TEXT NOT NULL,
+    "order" INTEGER DEFAULT 0, -- Orden de la opción
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now(),
+    FOREIGN KEY (survey_question_id) REFERENCES survey_questions(id) ON DELETE CASCADE -- Se borra si se borra la pregunta
 );
+COMMENT ON TABLE survey_options IS 'Opciones para preguntas de opción múltiple de la tabla survey_questions.';
+
+-- NEW Survey Answers (from tmr_script)
+CREATE TABLE survey_answers (
+    id BIGSERIAL PRIMARY KEY,
+    survey_question_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL, -- Quién respondió (Enlazado a users general)
+    survey_option_id BIGINT NULL, -- Respuesta si es opción múltiple (FK a survey_options)
+    answer_text TEXT NULL,        -- Respuesta si es texto abierto
+    answer_rating INTEGER NULL,   -- Respuesta si es calificación numérica
+    answered_at TIMESTAMPTZ DEFAULT now(),
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now(),
+    FOREIGN KEY (survey_question_id) REFERENCES survey_questions(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (survey_option_id) REFERENCES survey_options(id) ON DELETE SET NULL -- Si se borra la opción, la respuesta no se borra, solo pierde el enlace
+);
+COMMENT ON TABLE survey_answers IS 'Respuestas individuales de los usuarios a las preguntas de las encuestas.';
+
+-- NEW Survey Assignments (from tmr_script)
+CREATE TABLE survey_assignments (
+    id BIGSERIAL PRIMARY KEY,
+    survey_id BIGINT NOT NULL, -- Enlaza a la tabla principal 'surveys'
+    user_id BIGINT NOT NULL, -- A quién se asigna (Enlazado a users general)
+    status VARCHAR(20) CHECK (status IN ('pending', 'completed')) DEFAULT 'pending',
+    assigned_at TIMESTAMPTZ DEFAULT now(),
+    completed_at TIMESTAMPTZ NULL, -- Fecha en que completó la encuesta
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now(),
+    FOREIGN KEY (survey_id) REFERENCES surveys(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE (survey_id, user_id) -- Evita asignar la misma encuesta dos veces a la misma persona
+);
+COMMENT ON TABLE survey_assignments IS 'Registra qué encuestas han sido asignadas a qué usuarios y su estado.';
+
+-- survey_responses (JSONB version) was REMOVED by tmr_script
+
 
 -- Audits and accreditations
 CREATE TABLE audits (
     id BIGSERIAL PRIMARY KEY,
     area VARCHAR(255),
     user_id BIGINT,
+    assigned_user_id BIGINT,
     start_date DATE,
     end_date DATE,
     summary_results TEXT,
@@ -1169,7 +1237,8 @@ CREATE TABLE audits (
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now(),
     FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (report_document_version_id) REFERENCES document_versions(id)
+    FOREIGN KEY (report_document_version_id) REFERENCES document_versions(id),
+    FOREIGN KEY (assigned_user_id) REFERENCES users(id)
 );
 
 CREATE TABLE accreditations (
@@ -1197,71 +1266,99 @@ CREATE TABLE activity_logs (
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
+-- Notifications (Modified by vrga_script)
 CREATE TABLE notifications (
     id BIGSERIAL PRIMARY KEY,
-    user_id BIGINT NOT NULL,
-    title VARCHAR(255),
     type VARCHAR(255) NOT NULL,
-
-    message TEXT,
-    read_at TIMESTAMPTZ NULL,
-    related_type VARCHAR(100),
-    related_id BIGINT,
-    created_at TIMESTAMPTZ DEFAULT now(),
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    notifiable_type VARCHAR(255) NOT NULL,
+    notifiable_id BIGINT NOT NULL,
+    data TEXT NOT NULL,
+    read_at TIMESTAMP(0) NULL,
+    created_at TIMESTAMP(0) DEFAULT now(),
+    updated_at TIMESTAMP(0) NULL
 );
+CREATE INDEX IF NOT EXISTS notifications_notifiable_index ON notifications (notifiable_type, notifiable_id);
 
 
 -- =====================================================
 -- NEW TABLES FROM GRUPO_6
 -- =====================================================
+-- =============================================
+-- NUEVO SISTEMA DE ENCUESTAS (Con prefijos)
+-- =============================================
 
--- Employability surveys
-CREATE TABLE employability_questions (
+-- Tabla principal de encuestas de empleabilidad
+CREATE TABLE emp_surveys (
     id BIGSERIAL PRIMARY KEY,
-    id_question BIGINT,
-    question_text VARCHAR(255),
-    question_type VARCHAR(13) CHECK (question_type IN ('text', 'number', 'option', 'date'))
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE TABLE option_job_questions (
+-- Preguntas de las encuestas
+CREATE TABLE emp_questions (
     id BIGSERIAL PRIMARY KEY,
-    id_option BIGINT,
-    id_question BIGINT,
-    option_text VARCHAR(50),
-    FOREIGN KEY (id_question) REFERENCES employability_questions(id)
+    survey_id BIGINT NOT NULL,
+    question_text TEXT NOT NULL,
+    question_type VARCHAR(13) CHECK (question_type IN ('text', 'number', 'option', 'date')),
+    question_order INTEGER DEFAULT 0,
+    is_required BOOLEAN DEFAULT TRUE,
+    FOREIGN KEY (survey_id) REFERENCES emp_surveys(id) ON DELETE CASCADE
 );
 
-CREATE TABLE employability_surveys (
+-- Opciones para preguntas de tipo opción
+CREATE TABLE emp_question_options (
     id BIGSERIAL PRIMARY KEY,
-    id_survey BIGINT,
-    id_graduates BIGINT,
-    registration_date TIMESTAMPTZ DEFAULT now(),
-    FOREIGN KEY (id_graduates) REFERENCES graduates(id)
+    question_id BIGINT NOT NULL,
+    option_text VARCHAR(255) NOT NULL,
+    option_value VARCHAR(100),
+    option_order INTEGER DEFAULT 0,
+    FOREIGN KEY (question_id) REFERENCES emp_questions(id) ON DELETE CASCADE
 );
 
-CREATE TABLE response_graduates (
+-- Encuestas asignadas a graduados
+CREATE TABLE emp_graduate_surveys (
     id BIGSERIAL PRIMARY KEY,
-    id_answer BIGINT,
-    id_survey BIGINT,
-    id_question BIGINT,
-    id_option BIGINT,
-    answer_text VARCHAR(255),
-    answer_number FLOAT,
-    fanswer_date TIMESTAMPTZ,
-    FOREIGN KEY (id_survey) REFERENCES employability_surveys(id),
-    FOREIGN KEY (id_question) REFERENCES employability_questions(id),
-    FOREIGN KEY (id_option) REFERENCES option_job_questions(id)
+    graduate_id BIGINT NOT NULL,
+    survey_id BIGINT NOT NULL,
+    status VARCHAR(20) CHECK (status IN ('pending', 'in_progress', 'completed')) DEFAULT 'pending',
+    assigned_date TIMESTAMPTZ DEFAULT now(),
+    started_at TIMESTAMPTZ,
+    completed_at TIMESTAMPTZ,
+    FOREIGN KEY (graduate_id) REFERENCES graduates(id) ON DELETE CASCADE,
+    FOREIGN KEY (survey_id) REFERENCES emp_surveys(id) ON DELETE CASCADE,
+    UNIQUE(graduate_id, survey_id)
 );
 
-CREATE TABLE professional_social_impacts (
+-- Respuestas de empleabilidad
+CREATE TABLE emp_survey_responses (
     id BIGSERIAL PRIMARY KEY,
-    id_impact BIGINT,
-    id_graduates BIGINT,
-    description VARCHAR(255),
-    registration_date TIMESTAMPTZ DEFAULT now(),
-    FOREIGN KEY (id_graduates) REFERENCES graduates(id)
+    graduate_survey_id BIGINT NOT NULL,
+    question_id BIGINT NOT NULL,
+    option_id BIGINT,
+    text_response TEXT,
+    number_response DECIMAL(10,2),
+    date_response DATE,
+    responded_at TIMESTAMPTZ DEFAULT now(),
+    FOREIGN KEY (graduate_survey_id) REFERENCES emp_graduate_surveys(id) ON DELETE CASCADE,
+    FOREIGN KEY (question_id) REFERENCES emp_questions(id) ON DELETE CASCADE,
+    FOREIGN KEY (option_id) REFERENCES emp_question_options(id) ON DELETE SET NULL,
+    UNIQUE(graduate_survey_id, question_id)
 );
+
+-- Tabla de impactos sociales profesionales
+CREATE TABLE emp_professional_impacts (
+    id BIGSERIAL PRIMARY KEY,
+    graduate_id BIGINT NOT NULL,
+    description TEXT NOT NULL,
+    impact_date DATE,
+    evidence_url VARCHAR(500),
+    created_at TIMESTAMPTZ DEFAULT now(),
+    FOREIGN KEY (graduate_id) REFERENCES graduates(id) ON DELETE CASCADE
+);
+
 
 -- Audit findings and reports  
 CREATE TABLE findings (
@@ -1326,67 +1423,68 @@ CREATE TABLE student_courses (
 );
 
 -- Evaluation criteria and instructor evaluations
-CREATE TABLE evaluation_criteria (
+CREATE TABLE evaluation_sessions (
     id BIGSERIAL PRIMARY KEY,
-    id_evaluation_criteria BIGINT,
-    criterion_name VARCHAR(255) NOT NULL,
-    category TIMESTAMPTZ,
-    response_type VARCHAR(13) CHECK (response_type IN ('numeric', 'text', 'option')) NOT NULL,
-    percentage_weight FLOAT,
-    state VARCHAR(255)
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    start_date DATE,
+    end_date DATE,
+    academic_period VARCHAR(50),
+    status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'completed')),
+    created_by BIGINT REFERENCES users(id),
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE TABLE option_criteria (
+CREATE TABLE evaluation_questions (
     id BIGSERIAL PRIMARY KEY,
-    id_option_criteria BIGINT,
-    id_evaluation_criteria BIGINT NOT NULL,
-    option_text VARCHAR(255),
-    FOREIGN KEY (id_evaluation_criteria) REFERENCES evaluation_criteria(id)
+    evaluation_session_id BIGINT REFERENCES evaluation_sessions(id),
+    question_text TEXT NOT NULL,
+    question_type VARCHAR(20) DEFAULT 'scale_1_5' CHECK (question_type IN ('scale_1_5', 'text')),
+    question_order INT DEFAULT 0,
+    is_required BOOLEAN DEFAULT true,
+    status VARCHAR(20) DEFAULT 'active',
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE TABLE instructor_evaluations (
+CREATE TABLE evaluation_question_options (
     id BIGSERIAL PRIMARY KEY,
-    instructor_evaluation_id BIGINT,
-    student_id BIGINT,
-    instructor_id BIGINT,
-    course_offering_id BIGINT,
-    rating NUMERIC(3,2),
-    feedback TEXT,
-    evaluation_period VARCHAR(255),
-    evaluation_status VARCHAR(255),
-    evaluation_date TIMESTAMPTZ DEFAULT now(),
-    FOREIGN KEY (student_id) REFERENCES students(id),
-    FOREIGN KEY (instructor_id) REFERENCES instructors(id),
-    FOREIGN KEY (course_offering_id) REFERENCES course_offerings(id)
+    question_id BIGINT NOT NULL REFERENCES evaluation_questions(id) ON DELETE CASCADE,
+    option_value INT NOT NULL CHECK (option_value BETWEEN 1 AND 5),
+    option_text VARCHAR(255) NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE TABLE detail_evaluation_criteria (
+CREATE TABLE evaluation_responses (
     id BIGSERIAL PRIMARY KEY,
-    id_detail_evaluation_criteria BIGINT,
-    id_evaluation_criteria BIGINT NOT NULL,
-    id_option_criteria BIGINT,
-    id_instructor_evaluation BIGINT NOT NULL,
-    numeric_response FLOAT,
-    response_text VARCHAR(255),
-    FOREIGN KEY (id_evaluation_criteria) REFERENCES evaluation_criteria(id),
-    FOREIGN KEY (id_option_criteria) REFERENCES option_criteria(id),
-    FOREIGN KEY (id_instructor_evaluation) REFERENCES instructor_evaluations(id)
+    student_id BIGINT NOT NULL REFERENCES students(id),
+    instructor_id BIGINT NOT NULL REFERENCES instructors(id),
+    evaluation_session_id BIGINT NOT NULL REFERENCES evaluation_sessions(id),
+    question_id BIGINT NOT NULL REFERENCES evaluation_questions(id),
+    course_offering_id BIGINT REFERENCES course_offerings(id),
+    rating INT CHECK (rating BETWEEN 1 AND 5),
+    text_response TEXT,
+    response_date TIMESTAMPTZ DEFAULT now(),
+    created_at TIMESTAMPTZ DEFAULT now(),
+    UNIQUE(student_id, instructor_id, question_id, evaluation_session_id)
 );
 
-CREATE TABLE evaluation_reports (
+CREATE TABLE instructor_evaluation_summary (
     id BIGSERIAL PRIMARY KEY,
-    id_evaluation_report BIGINT,
-    id_instructor BIGINT NOT NULL,
-    id_instructor_evaluation BIGINT NOT NULL,
-    id_curse BIGINT NOT NULL,
-    overall_average FLOAT,
-    evaluation_period FLOAT,
-    total_evaluations FLOAT,
-    generation_date TIMESTAMPTZ,
-    FOREIGN KEY (id_instructor) REFERENCES instructors(id),
-    FOREIGN KEY (id_instructor_evaluation) REFERENCES instructor_evaluations(id),
-    FOREIGN KEY (id_curse) REFERENCES courses(id)
+    instructor_id BIGINT NOT NULL REFERENCES instructors(id),
+    evaluation_session_id BIGINT NOT NULL REFERENCES evaluation_sessions(id),
+    course_offering_id BIGINT REFERENCES course_offerings(id),
+    total_questions INT DEFAULT 0,
+    total_responses INT DEFAULT 0,
+    average_rating DECIMAL(5,2),
+    completion_rate DECIMAL(5,2),
+    evaluation_period DATE,
+    calculated_at TIMESTAMPTZ DEFAULT now(),
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
 );
+
 
 -- Satisfaction surveys
 CREATE TABLE satisfaction_survey_categories (
@@ -1466,6 +1564,7 @@ CREATE TABLE version_documents (
     num_version VARCHAR(255),
     observations VARCHAR(255),
     user_id BIGINT,
+    download_count INTEGER default 0,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
@@ -1473,30 +1572,48 @@ CREATE TABLE version_documents (
 -- NEW TABLES FROM GRUPO_7
 -- =====================================================
 
--- Community forums
-CREATE TABLE student_community_forums (
-    id BIGSERIAL PRIMARY KEY,
+-- Community forums (versión actualizada)
+CREATE TABLE public.student_community_forums (
+    id BIGSERIAL,
     id_forum BIGINT,
     title VARCHAR(100),
     description VARCHAR(250),
     associated_program VARCHAR(250),
-    state VARCHAR(14) CHECK (state IN ('Agendada','Realizada','Cancelada')),
-    creation_date TIMESTAMPTZ
+    state VARCHAR(14),
+    creation_date TIMESTAMPTZ,
+    creator_id BIGINT,
+    CONSTRAINT forums_pkey PRIMARY KEY (id),
+    CONSTRAINT forums_creator_fk
+        FOREIGN KEY (creator_id) REFERENCES public.students(id)
+            ON UPDATE NO ACTION ON DELETE NO ACTION,
+    CONSTRAINT forums_state_check
+        CHECK (state IN ('Pendiente','Activo','Finalizado','Rechazado'))
 );
 
+-- 2) Ajustar nombres para que coincidan esquema destino
+ALTER SEQUENCE IF EXISTS public.student_community_forums_id_seq RENAME TO forums_id_seq;
+ALTER TABLE public.student_community_forums
+  ALTER COLUMN id SET DEFAULT nextval('forums_id_seq'::regclass);
+ALTER SEQUENCE public.forums_id_seq OWNED BY public.student_community_forums.id;
+
+
+-- Vinculations (versión actualizada)
 CREATE TABLE student_community_vinculations (
     id BIGSERIAL PRIMARY KEY,
     id_foro BIGINT NOT NULL,
     id_estudiante BIGINT NOT NULL,
     fecha_vinculacion TIMESTAMP NOT NULL,
-    tipo VARCHAR(14) NOT NULL CHECK (tipo IN ('Miembro','Moderador')),
+    tipo VARCHAR(14) NOT NULL,
     CONSTRAINT fk_vinc_forum
         FOREIGN KEY (id_foro) REFERENCES student_community_forums(id),
     CONSTRAINT fk_vinc_student
         FOREIGN KEY (id_estudiante) REFERENCES students(id),
     CONSTRAINT uq_vinculations_forum_student
-        UNIQUE (id_foro, id_estudiante)
+        UNIQUE (id_foro, id_estudiante),
+    CONSTRAINT vinculations_tipo_check
+        CHECK (tipo IN ('Miembro','Moderador','Owner'))
 );
+
 
 CREATE TABLE student_community_posts(
     id BIGSERIAL PRIMARY KEY,
@@ -1620,6 +1737,30 @@ CREATE TABLE vocational_results (
     FOREIGN KEY (questionnaire_id) REFERENCES vocational_questionnaires(id)
 );
 
+CREATE TABLE vocational_answers(
+	id BIGSERIAL PRIMARY KEY,
+	student_id BIGINT,
+	questionnaire_id BIGINT,
+	question_id BIGINT,
+	response_id BIGINT,
+	answered_at TIMESTAMPTZ, 
+	FOREIGN KEY (questionnaire_id) REFERENCES vocational_questionnaires(id),
+	FOREIGN KEY (question_id) REFERENCES vocational_questions(id),
+	FOREIGN KEY (response_id) REFERENCES vocational_responses(id)
+);
+
+CREATE TABLE vocational_response_courses(
+	id BIGSERIAL PRIMARY KEY,
+	response_id BIGINT,
+	course_id BIGINT,
+	rank SMALLINT DEFAULT 1,         -- orden sugerido 1..5
+	weight NUMERIC(5,2) DEFAULT 1.0, -- ponderación opcional
+	FOREIGN KEY (response_id) REFERENCES vocational_responses(id),
+	FOREIGN KEY (course_id) REFERENCES courses(id)
+);
+
+
+
 -- Tutoring and wellness
 CREATE TABLE student_wellbeing_tutorings (
     id BIGSERIAL PRIMARY KEY,
@@ -1698,36 +1839,29 @@ CREATE TABLE claim_assignments (
 -- User profiles and academic programs
 -- ===============================================
 
+-- --- Perfil del Profesor ---
 CREATE TABLE teacher_profiles (
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT UNIQUE NOT NULL,
     professional_title VARCHAR(200) NOT NULL,
     specialty VARCHAR(100) NOT NULL,
-    experience_years BIGINT DEFAULT 0 CHECK (experience_years >= 0),
+    experience_years BIGINT DEFAULT 0,
     biography TEXT,
-    linkedin_link VARCHAR(255),
-    cover_photo VARCHAR(255),
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now(),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-CREATE TABLE student_profiles (
-    id BIGSERIAL PRIMARY KEY,
-    user_id BIGINT UNIQUE NOT NULL,
-    career_interest VARCHAR(100),
-    work_situation VARCHAR(20) CHECK (work_situation IN ('employed','unemployed','student','other')),
-    created_at TIMESTAMPTZ DEFAULT now(),
-    updated_at TIMESTAMPTZ DEFAULT now(),
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
+ALTER TABLE teacher_profiles ADD CONSTRAINT teacher_profiles_experience_years_check CHECK (experience_years >= 0);
 
+-- --- Estructura de Cursos y Programas ---
 CREATE TABLE program_courses (
     id BIGSERIAL PRIMARY KEY,
     program_id BIGINT NOT NULL,
     course_id BIGINT NOT NULL,
     mandatory BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now(),
     CONSTRAINT uq_program_course UNIQUE (program_id, course_id),
     FOREIGN KEY (program_id) REFERENCES programs(id) ON DELETE CASCADE,
     FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
@@ -1738,12 +1872,15 @@ CREATE TABLE course_previous_requirements (
     course_id BIGINT NOT NULL,
     previous_course_id BIGINT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT now(),
-    CONSTRAINT ck_course_previous_no_self CHECK (course_id <> previous_course_id),
+    updated_at TIMESTAMPTZ DEFAULT now(),
     CONSTRAINT uq_course_previous UNIQUE (course_id, previous_course_id),
     FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
     FOREIGN KEY (previous_course_id) REFERENCES courses(id) ON DELETE CASCADE
 );
 
+ALTER TABLE course_previous_requirements ADD CONSTRAINT ck_course_previous_no_self CHECK (course_id <> previous_course_id);
+
+-- --- Grupos y Clases ---
 CREATE TABLE groups (
     id BIGSERIAL PRIMARY KEY,
     course_id BIGINT NOT NULL,
@@ -1751,221 +1888,203 @@ CREATE TABLE groups (
     name VARCHAR(200) NOT NULL,
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
-    minimum_enrolled BIGINT DEFAULT 1 CHECK (minimum_enrolled >= 1),
-    status VARCHAR(20) DEFAULT 'draft' CHECK (status IN ('draft','approved','open','in_progress','completed','cancelled','suspended')),
+    status VARCHAR(20) DEFAULT 'draft',
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now(),
     FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
 );
+     
+ALTER TABLE groups ADD CONSTRAINT groups_status_check CHECK (status IN ('draft','approved','open','in_progress','completed','cancelled','suspended'));
 
 CREATE TABLE classes (
     id BIGSERIAL PRIMARY KEY,
-    group_id BIGINT NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+    group_id BIGINT NOT NULL,
     class_name VARCHAR(100) NOT NULL,
+    meeting_url VARCHAR(500),
+    description TEXT,
     class_date DATE NOT NULL,
     start_time TIME NOT NULL,
     end_time TIME NOT NULL,
-    platform VARCHAR(50) DEFAULT 'Zoom',
-    meeting_url VARCHAR(500),
-    external_meeting_id VARCHAR(100),
-    meeting_password VARCHAR(100),
-    allow_recording BOOLEAN DEFAULT TRUE,
-    recording_url VARCHAR(500),
-    max_participants BIGINT DEFAULT 100 CHECK (max_participants > 0),
-    class_status VARCHAR(12) DEFAULT 'SCHEDULED' CHECK (class_status IN ('SCHEDULED','IN_PROGRESS','FINISHED','CANCELLED')),
-    created_at TIMESTAMPTZ DEFAULT now()
+    class_status VARCHAR(12) DEFAULT 'SCHEDULED',
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now(),
+    FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE
+);
+     
+ALTER TABLE classes ADD CONSTRAINT classes_class_status_check CHECK (class_status IN ('SCHEDULED','IN_PROGRESS','FINISHED','CANCELLED'));
+
+CREATE TABLE class_materials (
+    id BIGSERIAL PRIMARY KEY,             -- id del material
+    class_id BIGINT NOT NULL,             -- id de la clase (llave foránea)
+    material_url TEXT NOT NULL,           -- URL del material (puede ser larga)
+    type VARCHAR(50) NOT NULL,            -- tipo de material (ej: 'PDF', 'Video', 'Enlace')
+    created_at TIMESTAMP DEFAULT NOW(),   -- fecha de creación
+    updated_at TIMESTAMP DEFAULT NOW(),   -- fecha de última actualización
+
+    CONSTRAINT fk_class_materials_class
+        FOREIGN KEY (class_id)
+        REFERENCES classes (id)
+        ON DELETE CASCADE                 -- elimina los materiales al borrar la clase
 );
 
+-- --- Participantes y Asistencia ---
 CREATE TABLE group_participants (
     id BIGSERIAL PRIMARY KEY,
     group_id BIGINT NOT NULL,
     user_id BIGINT NOT NULL,
-    role VARCHAR(10) NOT NULL CHECK (role IN ('student','teacher')),
-    teacher_function VARCHAR(20) NULL CHECK (teacher_function IN ('titular','auxiliary','coordinator')),
-    enrollment_status VARCHAR(12) DEFAULT 'active' CHECK (enrollment_status IN ('pending','approved','rejected','active','withdrawn','finished')),
+    role VARCHAR(10) NOT NULL, -- 'student' o 'teacher'
+    enrollment_status VARCHAR(12) DEFAULT 'active',
     assignment_date TIMESTAMPTZ DEFAULT now(),
-    schedule JSONB,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now(),
     CONSTRAINT uq_group_user UNIQUE (group_id, user_id),
     FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+ALTER TABLE group_participants ADD CONSTRAINT group_participants_role_check CHECK (role IN ('student','teacher'));
+ALTER TABLE group_participants ADD CONSTRAINT group_participants_enrollment_status_check CHECK (enrollment_status IN ('pending','approved','rejected','active','withdrawn','finished'));
+
 CREATE TABLE attendances (
     id BIGSERIAL PRIMARY KEY,
-    group_participant_id BIGINT NOT NULL REFERENCES group_participants(id) ON DELETE CASCADE,
-    class_id BIGINT NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
-    attended VARCHAR(3) DEFAULT 'NO' CHECK (attended IN ('YES','NO')),
-    entry_time TIMESTAMPTZ,
-    exit_time TIMESTAMPTZ,
-    connected_minutes BIGINT DEFAULT 0 CHECK (connected_minutes >= 0),
-    connection_ip VARCHAR(45),
-    device VARCHAR(100),
-    approximate_location VARCHAR(100),
-    connection_quality VARCHAR(12) CHECK (connection_quality IN ('EXCELLENT','GOOD','FAIR','POOR')),
+    group_participant_id BIGINT NOT NULL,
+    class_id BIGINT NOT NULL,
+    attended BOOLEAN DEFAULT FALSE,
     observations VARCHAR(200),
-    cloud_synchronized BOOLEAN DEFAULT FALSE,
-    record_date TIMESTAMPTZ DEFAULT now(),
-    CONSTRAINT uq_attendance UNIQUE (group_participant_id, class_id)
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now(),
+    CONSTRAINT uq_attendance UNIQUE (group_participant_id, class_id),
+    FOREIGN KEY (group_participant_id) REFERENCES group_participants(id) ON DELETE CASCADE,
+    FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE CASCADE
 );
 
+-- --- Sistema de Evaluaciones y Calificaciones (Simplificado) ---
 CREATE TABLE evaluations (
     id BIGSERIAL PRIMARY KEY,
-    group_id BIGINT NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+    group_id BIGINT NOT NULL,
     title VARCHAR(200) NOT NULL,
-    evaluation_type VARCHAR(20) NOT NULL CHECK (evaluation_type IN ('Exam','Quiz','Project','Assignment','Final')),
-    start_date TIMESTAMPTZ NOT NULL,
-    end_date TIMESTAMPTZ NOT NULL,
-    duration_minutes BIGINT NOT NULL CHECK (duration_minutes > 0),
-    total_score NUMERIC(5,2) NOT NULL CHECK (total_score > 0),
-    status VARCHAR(20) DEFAULT 'Active' CHECK (status IN ('Active','Inactive','Finished')),
-    teacher_creator_id BIGINT REFERENCES users(id) ON DELETE SET NULL
+    description TEXT,
+    external_url VARCHAR(500),
+    evaluation_type VARCHAR(20) NOT NULL,
+    due_date TIMESTAMPTZ,
+    weight NUMERIC(5,2) DEFAULT 1.00,
+    teacher_creator_id BIGINT,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now(),
+    FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE,
+    FOREIGN KEY (teacher_creator_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
-CREATE TABLE questions (
-    id BIGSERIAL PRIMARY KEY,
-    evaluation_id BIGINT NOT NULL REFERENCES evaluations(id) ON DELETE CASCADE,
-    statement TEXT NOT NULL,
-    question_type VARCHAR(20) NOT NULL CHECK (question_type IN ('Multiple','Essay','True_False')),
-    answer_options JSONB,
-    correct_answer JSONB,
-    score NUMERIC(5,2) NOT NULL CHECK (score > 0)
-);
-
-CREATE TABLE attempts (
-    id BIGSERIAL PRIMARY KEY,
-    evaluation_id BIGINT NOT NULL REFERENCES evaluations(id) ON DELETE CASCADE,
-    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE, -- student
-    start_date TIMESTAMPTZ NOT NULL,
-    end_date TIMESTAMPTZ,
-    answers JSONB NOT NULL,
-    obtained_score NUMERIC(5,2),
-    status VARCHAR(20) DEFAULT 'In_progress' CHECK (status IN ('In_progress','Completed','Abandoned'))
-);
-
-CREATE TABLE gradings (
-    id BIGSERIAL PRIMARY KEY,
-    attempt_id BIGINT NOT NULL,
-    teacher_grader_id BIGINT,
-    grading_detail JSONB NOT NULL,
-    feedback TEXT,
-    grading_date TIMESTAMPTZ DEFAULT now(),
-    CONSTRAINT uq_grading_per_attempt UNIQUE (attempt_id),
-    FOREIGN KEY (attempt_id) REFERENCES attempts(id) ON DELETE CASCADE,
-    FOREIGN KEY (teacher_grader_id) REFERENCES users(id) ON DELETE SET NULL
-);
-
-CREATE TABLE grade_configurations (
-    id BIGSERIAL PRIMARY KEY,
-    group_id BIGINT NOT NULL UNIQUE REFERENCES groups(id) ON DELETE CASCADE,
-    grading_system VARCHAR(50) NOT NULL,  -- e.g., 0-20
-    max_grade NUMERIC(5,2) NOT NULL,
-    passing_grade NUMERIC(5,2) NOT NULL,
-    evaluation_weight NUMERIC(5,2) DEFAULT 100.00
-);
+ALTER TABLE evaluations ADD CONSTRAINT evaluations_evaluation_type_check CHECK (evaluation_type IN ('Exam','Quiz','Project','Assignment','Final'));
+ALTER TABLE evaluations ADD CONSTRAINT evaluations_weight_check CHECK (weight > 0);
 
 CREATE TABLE grade_records (
     id BIGSERIAL PRIMARY KEY,
-    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE, -- student
-    evaluation_id BIGINT NOT NULL REFERENCES evaluations(id) ON DELETE CASCADE,
-    group_id BIGINT NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
-    configuration_id BIGINT NOT NULL REFERENCES grade_configurations(id) ON DELETE CASCADE,
+    evaluation_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL, -- ID del estudiante
     obtained_grade NUMERIC(5,2) NOT NULL,
-    grade_weight NUMERIC(5,2) NOT NULL,
-    grade_type VARCHAR(20) NOT NULL CHECK (grade_type IN ('Partial','Final','Makeup')),
-    status VARCHAR(20) DEFAULT 'Recorded' CHECK (status IN ('Recorded','Validated','Published','Observed')),
-    record_date TIMESTAMPTZ DEFAULT now()
+    feedback TEXT,
+    record_date TIMESTAMPTZ DEFAULT now(),
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now(),
+    CONSTRAINT uq_grade_record_eval_user UNIQUE (evaluation_id, user_id),
+    FOREIGN KEY (evaluation_id) REFERENCES evaluations(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 CREATE TABLE final_grades (
     id BIGSERIAL PRIMARY KEY,
-    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE, -- student
-    group_id BIGINT NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
-    configuration_id BIGINT NOT NULL REFERENCES grade_configurations(id) ON DELETE CASCADE,
+    user_id BIGINT NOT NULL,
+    group_id BIGINT NOT NULL,
     final_grade NUMERIC(5,2) NOT NULL,
-    partial_average NUMERIC(5,2),
-    program_status VARCHAR(20) NOT NULL CHECK (program_status IN ('Passed','Failed','Withdrawn','In_progress')),
-    certification_obtained BOOLEAN DEFAULT FALSE,
+    program_status VARCHAR(20) NOT NULL,
     calculation_date TIMESTAMPTZ DEFAULT now(),
-    CONSTRAINT uq_final_user_group UNIQUE (user_id, group_id)
-);
-
-CREATE TABLE grade_changes (
-    id BIGSERIAL PRIMARY KEY,
-    record_id BIGINT NOT NULL REFERENCES grade_records(id) ON DELETE CASCADE,
-    previous_grade NUMERIC(5,2) NOT NULL,
-    new_grade NUMERIC(5,2) NOT NULL,
-    reason TEXT NOT NULL,
-    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
-    change_date TIMESTAMPTZ DEFAULT now()
-);
-
-CREATE TABLE certificates (
-    id BIGSERIAL PRIMARY KEY,
-    user_id BIGINT NOT NULL,
-    program_id BIGINT NOT NULL,
-    issue_date DATE NOT NULL,
-    status VARCHAR(20),
-    verification_code VARCHAR(255) UNIQUE,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now(),
+    CONSTRAINT uq_final_user_group UNIQUE (user_id, group_id),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (program_id) REFERENCES programs(id) ON DELETE CASCADE
+    FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE
 );
 
-CREATE TABLE diplomas (
+ALTER TABLE final_grades ADD CONSTRAINT final_grades_program_status_check CHECK (program_status IN ('Passed','Failed','Withdrawn','In_progress'));
+
+-- --- Credenciales y Configuración ---
+CREATE TABLE credentials (
     id BIGSERIAL PRIMARY KEY,
+    uuid UUID UNIQUE NOT NULL,
     user_id BIGINT NOT NULL,
-    program_id BIGINT NOT NULL,
+    group_id BIGINT NOT NULL,
     issue_date DATE NOT NULL,
-    status VARCHAR(20),
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now(),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (program_id) REFERENCES programs(id) ON DELETE CASCADE
+    FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE
 );
 
-CREATE TABLE graduate_surveys (
+CREATE TABLE academic_settings (
     id BIGSERIAL PRIMARY KEY,
-    graduate_id BIGINT NOT NULL,
-    date DATE NOT NULL,
-    employability VARCHAR(255),
-    satisfaction VARCHAR(50),
-    curriculum_feedback TEXT,
-    FOREIGN KEY (graduate_id) REFERENCES graduates(id) ON DELETE CASCADE
-);
-
-CREATE TABLE teacher_recruitments (
-    id BIGSERIAL PRIMARY KEY,
-    request_date DATE NOT NULL,
-    title VARCHAR(200) NOT NULL,
-    description TEXT,
-    required_profile TEXT,
-    status VARCHAR(12) DEFAULT 'open' CHECK (status IN ('open','closed','suspended')),
+    base_grade NUMERIC(5, 2) DEFAULT 20.00,
+    min_passing_grade NUMERIC(5, 2) DEFAULT 11.00,
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE TABLE teacher_applications (
+-- Crear tabla teacher_offers
+CREATE TABLE teacher_offers (
     id BIGSERIAL PRIMARY KEY,
-    recruitment_id BIGINT NOT NULL,
-    user_id BIGINT NOT NULL,
-    cv VARCHAR(255) NOT NULL,
-    status VARCHAR(15) DEFAULT 'received' CHECK (status IN ('received','under_review','interview','selected','rejected')),
-    created_at TIMESTAMPTZ DEFAULT now(),
-    updated_at TIMESTAMPTZ DEFAULT now(),
-    CONSTRAINT uq_application UNIQUE (recruitment_id, user_id),
-    FOREIGN KEY (recruitment_id) REFERENCES teacher_recruitments(id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    title VARCHAR(255) NOT NULL,
+    description TEXT NOT NULL,
+    requirements TEXT,
+    status VARCHAR(20) DEFAULT 'open',
+    created_at TIMESTAMP(0) DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP(0) DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE teacher_evaluations (
+-- Agregar constraint CHECK para status en teacher_offers
+ALTER TABLE teacher_offers 
+ADD CONSTRAINT teacher_offers_status_check 
+CHECK (status IN ('open', 'closed'));
+
+-- Crear tabla teacher_applications
+CREATE TABLE teacher_applications (
     id BIGSERIAL PRIMARY KEY,
-    evaluator_id BIGINT NOT NULL,
-    group_id BIGINT NOT NULL,
-    teacher_id BIGINT NOT NULL,
-    answers JSONB NOT NULL,
-    score NUMERIC(5,2),
-    created_at TIMESTAMPTZ DEFAULT now(),
-    FOREIGN KEY (evaluator_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE,
-    FOREIGN KEY (teacher_id) REFERENCES users(id) ON DELETE CASCADE
+    user_id BIGINT NOT NULL,
+    teacher_offer_id BIGINT NOT NULL,
+    professional_title VARCHAR(200) NOT NULL,
+    specialty VARCHAR(100) NOT NULL,
+    experience_years BIGINT DEFAULT 0,
+    biography TEXT,
+    cv_path VARCHAR(500) NOT NULL,
+    cover_letter TEXT,
+    status VARCHAR(20) DEFAULT 'pending',
+    admin_feedback TEXT,
+    created_at TIMESTAMP(0) DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP(0) DEFAULT CURRENT_TIMESTAMP,
+    
+    -- Llaves foráneas
+    CONSTRAINT fk_teacher_applications_user 
+        FOREIGN KEY (user_id) 
+        REFERENCES users(id) 
+        ON DELETE CASCADE,
+        
+    CONSTRAINT fk_teacher_applications_teacher_offer 
+        FOREIGN KEY (teacher_offer_id) 
+        REFERENCES teacher_offers(id) 
+        ON DELETE CASCADE,
+    
+    -- Restricción única para evitar postulaciones duplicadas
+    CONSTRAINT user_offer_unique_application 
+        UNIQUE (user_id, teacher_offer_id)
 );
+
+-- Agregar constraints CHECK para teacher_applications
+ALTER TABLE teacher_applications 
+ADD CONSTRAINT teacher_applications_status_check 
+CHECK (status IN ('pending', 'accepted', 'rejected'));
+
+ALTER TABLE teacher_applications 
+ADD CONSTRAINT teacher_applications_experience_years_check 
+CHECK (experience_years >= 0);
 
 -- ====================================================
 -- MARKETING AND CONTENT GENERATION SYSTEM (from grupo_4.sql)
