@@ -71,6 +71,29 @@ class StudentService
 
     public function deleteStudent(int $studentId): bool
     {
-        return $this->repository->delete($studentId);
+        return DB::transaction(function () use ($studentId) {
+            // Buscar el estudiante
+            $student = $this->repository->findById($studentId);
+
+            if (!$student) {
+                return false;
+            }
+
+            // Guardar el user_id antes de eliminar el estudiante
+            $userId = $student->user_id;
+
+            // Eliminar el estudiante
+            $studentDeleted = $this->repository->delete($studentId);
+
+            // Si el estudiante fue eliminado y tiene un usuario asociado, eliminar el usuario
+            if ($studentDeleted && $userId) {
+                $user = User::find($userId);
+                if ($user) {
+                    $user->delete();
+                }
+            }
+
+            return $studentDeleted;
+        });
     }
 }
