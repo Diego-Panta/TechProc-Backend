@@ -18,7 +18,6 @@ class Group extends Model
         'name',
         'start_date',
         'end_date',
-        'minimum_enrolled',
         'status',
     ];
 
