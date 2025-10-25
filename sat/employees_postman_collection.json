@@ -1,0 +1,228 @@
+{
+  "info": {
+    "name": "Employees CRUD API",
+    "description": "Colección de endpoints para el CRUD de Employees",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. GET - Listar todos los employees",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/infraestructura/employees",
+          "host": ["{{base_url}}"],
+          "path": ["api", "infraestructura", "employees"]
+        },
+        "description": "Obtiene la lista completa de todos los empleados con sus relaciones (user, position, department)"
+      }
+    },
+    {
+      "name": "1.1. GET - Filtrar employees por department_id",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/infraestructura/employees?department_id=4",
+          "host": ["{{base_url}}"],
+          "path": ["api", "infraestructura", "employees"],
+          "query": [
+            {
+              "key": "department_id",
+              "value": "4",
+              "description": "ID del departamento"
+            }
+          ]
+        },
+        "description": "Filtra y obtiene solo los empleados del departamento con ID 4"
+      }
+    },
+    {
+      "name": "1.2. GET - Filtrar employees por position_id",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/infraestructura/employees?position_id=11",
+          "host": ["{{base_url}}"],
+          "path": ["api", "infraestructura", "employees"],
+          "query": [
+            {
+              "key": "position_id",
+              "value": "11",
+              "description": "ID de la posición"
+            }
+          ]
+        },
+        "description": "Filtra y obtiene solo los empleados con position_id 11"
+      }
+    },
+    {
+      "name": "1.3. GET - Filtrar employees por employment_status",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/infraestructura/employees?employment_status=Active",
+          "host": ["{{base_url}}"],
+          "path": ["api", "infraestructura", "employees"],
+          "query": [
+            {
+              "key": "employment_status",
+              "value": "Active",
+              "description": "Estado del empleado (Active, Inactive, Terminated)"
+            }
+          ]
+        },
+        "description": "Filtra empleados por estado. Valores válidos: Active, Inactive, Terminated"
+      }
+    },
+    {
+      "name": "1.4. GET - Filtros combinados",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/infraestructura/employees?department_id=4&employment_status=Active",
+          "host": ["{{base_url}}"],
+          "path": ["api", "infraestructura", "employees"],
+          "query": [
+            {
+              "key": "department_id",
+              "value": "4",
+              "description": "ID del departamento"
+            },
+            {
+              "key": "employment_status",
+              "value": "Active",
+              "description": "Estado del empleado"
+            }
+          ]
+        },
+        "description": "Combina múltiples filtros: empleados activos del departamento 4"
+      }
+    },
+    {
+      "name": "2. POST - Crear nuevo employee",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"employee_id\": 5001,\n  \"hire_date\": \"2025-01-15\",\n  \"position_id\": 11,\n  \"department_id\": 4,\n  \"user_id\": 33,\n  \"employment_status\": \"Active\",\n  \"schedule\": \"Lunes a Viernes 9:00-18:00\",\n  \"speciality\": \"Contabilidad\",\n  \"salary\": 5500.00\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/infraestructura/employees",
+          "host": ["{{base_url}}"],
+          "path": ["api", "infraestructura", "employees"]
+        },
+        "description": "Crea un nuevo empleado. Los campos position_id y department_id son requeridos y deben existir."
+      }
+    },
+    {
+      "name": "2.1. POST - Crear employee CON usuario nuevo",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"user\": {\n    \"first_name\": \"Carlos\",\n    \"last_name\": \"Rodríguez\",\n    \"dni\": \"12345678\",\n    \"email\": \"carlos.rodriguez@techproc.com\",\n    \"password\": \"password123\",\n    \"phone_number\": \"+51987654321\",\n    \"address\": \"Av. Principal 123, Lima\",\n    \"birth_date\": \"1990-05-15\",\n    \"role\": [\"employee\"],\n    \"gender\": \"male\",\n    \"country\": \"Peru\",\n    \"country_location\": \"Lima\",\n    \"timezone\": \"America/Lima\",\n    \"status\": \"active\"\n  },\n  \"employee\": {\n    \"employee_id\": 6001,\n    \"hire_date\": \"2025-01-20\",\n    \"position_id\": 11,\n    \"department_id\": 4,\n    \"employment_status\": \"Active\",\n    \"schedule\": \"Lunes a Viernes 8:00-17:00\",\n    \"speciality\": \"Análisis Financiero\",\n    \"salary\": 6500.00\n  }\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/infraestructura/employees/create-with-user",
+          "host": ["{{base_url}}"],
+          "path": ["api", "infraestructura", "employees", "create-with-user"]
+        },
+        "description": "Crea un nuevo usuario Y empleado en una sola operación. El usuario se crea primero y luego se asocia automáticamente al empleado. Si hay error, ambas operaciones se revierten (transaction).\n\nCampos requeridos del usuario:\n- first_name, last_name, email, password\n\nCampos requeridos del empleado:\n- position_id, department_id\n\nEl user_id se asigna automáticamente al employee."
+      }
+    },
+    {
+      "name": "3. GET - Obtener employee por ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/infraestructura/employees/11",
+          "host": ["{{base_url}}"],
+          "path": ["api", "infraestructura", "employees", "11"]
+        },
+        "description": "Obtiene un empleado específico por su ID. Incluye relaciones con user, position y department."
+      }
+    },
+    {
+      "name": "4. PUT - Actualizar employee completo",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"employee_id\": 5001,\n  \"hire_date\": \"2025-01-15\",\n  \"position_id\": 12,\n  \"department_id\": 4,\n  \"user_id\": 33,\n  \"employment_status\": \"Active\",\n  \"schedule\": \"Lunes a Viernes 8:00-17:00\",\n  \"speciality\": \"Contabilidad General\",\n  \"salary\": 6000.00\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/infraestructura/employees/11",
+          "host": ["{{base_url}}"],
+          "path": ["api", "infraestructura", "employees", "11"]
+        },
+        "description": "Actualiza todos los campos de un empleado existente"
+      }
+    },
+    {
+      "name": "5. PATCH - Actualizar employee parcialmente",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"employment_status\": \"Inactive\",\n  \"salary\": 6500.00\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/infraestructura/employees/11",
+          "host": ["{{base_url}}"],
+          "path": ["api", "infraestructura", "employees", "11"]
+        },
+        "description": "Actualiza solo los campos específicos de un empleado"
+      }
+    },
+    {
+      "name": "6. DELETE - Eliminar employee",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/infraestructura/employees/11",
+          "host": ["{{base_url}}"],
+          "path": ["api", "infraestructura", "employees", "11"]
+        },
+        "description": "Elimina un empleado por su ID"
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string"
+    }
+  ]
+}
