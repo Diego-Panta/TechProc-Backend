@@ -11,31 +11,47 @@ class FinalGradesSeeder extends Seeder
 {
     public function run(): void
     {
-        $users = DB::table('users')->where('role', 'like', '%student%')->get();
+        // Obtener estudiantes y grupos
+        $studentUsers = DB::table('users')->where('role', 'like', '%student%')->get();
         $groups = DB::table('groups')->get();
-        $gradeConfigs = DB::table('grade_configurations')->get();
+
+        if ($studentUsers->isEmpty() || $groups->isEmpty()) {
+            $this->command->warn('No hay estudiantes o grupos para crear calificaciones finales.');
+            return;
+        }
 
         $finalGrades = [];
 
-        foreach ($users as $user) {
-            foreach ($groups as $group) {
-                $config = $gradeConfigs->where('group_id', $group->id)->first();
-                $finalGrade = rand(50, 100) + (rand(0, 99) / 100);
-                $programStatus = $finalGrade >= $config->passing_grade ? 'Passed' : 'Failed';
+        foreach ($studentUsers as $user) {
+            // Tomar algunos grupos aleatorios para este estudiante (no todos)
+            $randomGroups = $groups->random(min(3, $groups->count()));
+            
+            foreach ($randomGroups as $group) {
+                $finalGrade = rand(50, 100) + (rand(0, 99) / 100); // Nota entre 50.00 y 100.99
+                $programStatus = $finalGrade >= 70 ? 'Passed' : 'Failed'; // Usando 70 como nota de aprobación por defecto
 
                 $finalGrades[] = [
                     'user_id' => $user->id,
                     'group_id' => $group->id,
-                    'configuration_id' => $config->id,
                     'final_grade' => $finalGrade,
-                    'partial_average' => $finalGrade - rand(1, 5),
                     'program_status' => $programStatus,
-                    'certification_obtained' => $programStatus === 'Passed',
-                    'calculation_date' => Carbon::now(),
+                    'calculation_date' => Carbon::now()->subDays(rand(1, 60)),
+                    'created_at' => Carbon::now(),
+                    'updated_at' => Carbon::now(),
                 ];
             }
         }
 
-        DB::table('final_grades')->insert($finalGrades);
+        // Eliminar duplicados por si acaso (debido a la constraint UNIQUE)
+        $uniqueFinalGrades = collect($finalGrades)->unique(function ($item) {
+            return $item['user_id'] . '-' . $item['group_id'];
+        })->values()->all();
+
+        if (!empty($uniqueFinalGrades)) {
+            DB::table('final_grades')->insert($uniqueFinalGrades);
+            $this->command->info('Calificaciones finales creadas: ' . count($uniqueFinalGrades));
+            $this->command->info(' - Aprobados: ' . collect($uniqueFinalGrades)->where('program_status', 'Passed')->count());
+            $this->command->info(' - Reprobados: ' . collect($uniqueFinalGrades)->where('program_status', 'Failed')->count());
+        }
     }
 }
