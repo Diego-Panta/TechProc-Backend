@@ -19,6 +19,30 @@ class CourseOfferingController extends Controller
     }
 
     /**
+     * Display course offerings from the latest published academic period (PUBLIC).
+     *
+     * @public
+     * GET /api/lms/course-offerings/public/latest-period
+     */
+    public function publicLatestPeriod(): JsonResponse
+    {
+        $courseOfferings = $this->courseOfferingService->getCourseOfferingsFromLatestPeriod();
+
+        if ($courseOfferings->isEmpty()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'No hay cursos disponibles en el período académico actual',
+                'data' => [],
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => CourseOfferingResource::collection($courseOfferings),
+        ]);
+    }
+
+    /**
      * Display a listing of course offerings.
      *
      * @authenticated
