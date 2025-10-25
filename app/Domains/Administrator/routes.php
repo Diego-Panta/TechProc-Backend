@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Domains\Administrator\Controllers\AdminController;
+use App\Domains\Administrator\Controllers\PositionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -12,6 +13,11 @@ use App\Domains\Administrator\Controllers\AdminController;
 | Todas las rutas requieren autenticación JWT y permisos de administrador.
 |
 */
+
+// Rutas públicas para CRUD de Positions (sin autenticación)
+Route::prefix('administrator')->group(function () {
+    Route::apiResource('positions', PositionController::class);
+});
 
 Route::prefix('admin')->middleware('admin')->group(function () {
     
