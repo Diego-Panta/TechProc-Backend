@@ -238,7 +238,7 @@ class ExportReportRepository
     {
         try {
             $query = Attendance::query();
-            $this->applyOtherFilters($query, $filters, 'record_date');
+            $this->applyOtherFilters($query, $filters, 'created_at');
 
             $attendances = $query->get();
 

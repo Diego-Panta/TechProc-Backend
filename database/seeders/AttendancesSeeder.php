@@ -26,28 +26,20 @@ class AttendancesSeeder extends Seeder
             $randomClasses = $classes->random(min(5, $classes->count()));
             
             foreach ($randomClasses as $class) {
-                $attended = rand(0, 1) ? 'YES' : 'NO';
-                $entryTime = $attended === 'YES' ? Carbon::now()->subHours(2) : null;
+                $attended = (bool)rand(0, 1); // true o false para boolean
                 
                 $attendances[] = [
                     'group_participant_id' => $participant->id,
                     'class_id' => $class->id,
                     'attended' => $attended,
-                    'entry_time' => $entryTime,
-                    'exit_time' => $attended === 'YES' ? Carbon::now()->subHours(1) : null,
-                    'connected_minutes' => $attended === 'YES' ? rand(45, 120) : 0,
-                    'connection_ip' => $attended === 'YES' ? '192.168.1.' . rand(1, 255) : null,
-                    'device' => $attended === 'YES' ? ['Windows Chrome', 'Mac Safari', 'Android App', 'iOS App'][rand(0, 3)] : null,
-                    'approximate_location' => $attended === 'YES' ? 'Lima, Perú' : null,
-                    'connection_quality' => $attended === 'YES' ? ['EXCELLENT', 'GOOD', 'FAIR', 'POOR'][rand(0, 3)] : null,
-                    'observations' => $attended === 'YES' ? 'Asistencia registrada correctamente' : 'Inasistencia justificada',
-                    'cloud_synchronized' => true,
-                    'record_date' => Carbon::now()->subDays(rand(1, 30)),
+                    'observations' => $attended ? 'Asistencia registrada correctamente' : 'Inasistencia justificada',
+                    'created_at' => Carbon::now(),
+                    'updated_at' => Carbon::now(),
                 ];
             }
         }
 
-        // Eliminar duplicados por si acaso
+        // Eliminar duplicados por si acaso (debido a la constraint UNIQUE)
         $uniqueAttendances = collect($attendances)->unique(function ($item) {
             return $item['group_participant_id'] . '-' . $item['class_id'];
         })->values()->all();
@@ -55,8 +47,8 @@ class AttendancesSeeder extends Seeder
         if (!empty($uniqueAttendances)) {
             DB::table('attendances')->insert($uniqueAttendances);
             $this->command->info('Asistencias creadas: ' . count($uniqueAttendances));
-            $this->command->info(' - Asistencias (YES): ' . collect($uniqueAttendances)->where('attended', 'YES')->count());
-            $this->command->info(' - Inasistencias (NO): ' . collect($uniqueAttendances)->where('attended', 'NO')->count());
+            $this->command->info(' - Asistencias (true): ' . collect($uniqueAttendances)->where('attended', true)->count());
+            $this->command->info(' - Inasistencias (false): ' . collect($uniqueAttendances)->where('attended', false)->count());
         }
     }
 }

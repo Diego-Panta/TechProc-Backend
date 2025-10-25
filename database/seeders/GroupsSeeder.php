@@ -24,7 +24,6 @@ class GroupsSeeder extends Seeder
                     'name' => $course->name . ' - Grupo ' . $code,
                     'start_date' => Carbon::now()->addDays($codeIndex * 7),
                     'end_date' => Carbon::now()->addDays(120 + ($codeIndex * 7)),
-                    'minimum_enrolled' => 5,
                     'status' => ['draft', 'approved', 'open', 'in_progress'][rand(0, 3)],
                     'created_at' => Carbon::now(),
                     'updated_at' => Carbon::now(),

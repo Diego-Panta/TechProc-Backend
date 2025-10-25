@@ -35,7 +35,6 @@ class DatabaseSeeder extends Seeder
             // 3. Tablas académicas que dependen de las anteriores
             CourseOfferingsSeeder::class,
             GroupsSeeder::class,
-            GradeConfigurationsSeeder::class,
             EvaluationsSeeder::class,
             
             // 4. Tablas de estudiantes
