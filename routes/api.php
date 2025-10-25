@@ -12,6 +12,15 @@ Route::get('/health', function () {
     ]);
 });
 
+// Endpoint de prueba público
+Route::get('/test-public', function () {
+    return response()->json([
+        'success' => true,
+        'message' => 'Endpoint público funcionando correctamente',
+        'timestamp' => now()->toISOString()
+    ]);
+});
+
 //Incluir rutas del dominio Infraestructura
 require app_path('Domains/SupportInfrastructure/routes.php');
 
