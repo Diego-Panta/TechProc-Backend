@@ -50,40 +50,41 @@ class AdminController extends Controller
                 });
             }
 
-            // Paginación
-            $page = $request->get('page', 1);
-            $limit = $request->get('limit', 20);
-            $offset = ($page - 1) * $limit;
-
-            $totalRecords = $query->count();
-            $users = $query->with('employee')->skip($offset)->take($limit)->get();
+            // Obtener todos los usuarios (sin paginación por defecto)
+            $users = $query->get();
 
             $usersData = $users->map(function ($user) {
                 return [
                     'id' => $user->id,
                     'first_name' => $user->first_name,
                     'last_name' => $user->last_name,
+                    'full_name' => $user->full_name,
+                    'dni' => $user->dni,
+                    'document' => $user->document,
                     'email' => $user->email,
+                    'email_verified_at' => $user->email_verified_at ? $user->email_verified_at->toISOString() : null,
+                    'phone_number' => $user->phone_number,
+                    'address' => $user->address,
+                    'birth_date' => $user->birth_date ? $user->birth_date->format('Y-m-d') : null,
                     'role' => $user->role,
+                    'gender' => $user->gender,
+                    'country' => $user->country,
+                    'country_location' => $user->country_location,
+                    'timezone' => $user->timezone,
+                    'profile_photo' => $user->profile_photo,
                     'status' => $user->status,
-                    'employee_id' => $user->employee ? $user->employee->id : null,
-                    'last_access' => $user->last_access ? $user->last_access->toISOString() : null,
+                    'synchronized' => $user->synchronized,
                     'last_access_ip' => $user->last_access_ip,
-                    'created_at' => $user->created_at->toISOString()
+                    'last_access' => $user->last_access ? $user->last_access->toISOString() : null,
+                    'last_connection' => $user->last_connection ? $user->last_connection->toISOString() : null,
+                    'created_at' => $user->created_at->toISOString(),
+                    'updated_at' => $user->updated_at->toISOString()
                 ];
             });
 
             return response()->json([
                 'success' => true,
-                'data' => [
-                    'users' => $usersData,
-                    'pagination' => [
-                        'current_page' => (int) $page,
-                        'total_pages' => ceil($totalRecords / $limit),
-                        'total_records' => $totalRecords,
-                        'per_page' => (int) $limit
-                    ]
-                ]
+                'data' => $usersData
             ], 200);
 
         } catch (\Exception $e) {
@@ -156,17 +157,24 @@ class AdminController extends Controller
     public function createUser(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'first_name' => 'required|string|max:50',
-            'last_name' => 'required|string|max:50',
+            'first_name' => 'required|string|max:100',
+            'last_name' => 'required|string|max:100',
+            'full_name' => 'nullable|string|max:100',
+            'dni' => 'nullable|string|max:20|unique:users',
+            'document' => 'nullable|string|max:20|unique:users',
             'email' => 'required|email|unique:users',
             'password' => 'required|string|min:6',
             'phone_number' => 'nullable|string|max:20',
-            'address' => 'nullable|string|max:255',
+            'address' => 'nullable|string',
             'birth_date' => 'nullable|date',
             'gender' => 'nullable|in:male,female,other',
             'country' => 'nullable|string|max:100',
-            'role' => 'required|in:admin,lms,seg,infra,web,data',
-            'status' => 'required|in:active,inactive,banned'
+            'country_location' => 'nullable|string|max:100',
+            'timezone' => 'nullable|string|max:50',
+            'profile_photo' => 'nullable|string|max:500',
+            'role' => 'required|in:admin,instructor,student,lms,seg,infra,web,data',
+            'status' => 'nullable|in:active,inactive,banned',
+            'synchronized' => 'nullable|boolean'
         ]);
 
         if ($validator->fails()) {
@@ -183,9 +191,12 @@ class AdminController extends Controller
         try {
             DB::beginTransaction();
 
-            $user = User::create([
+            $userData = [
                 'first_name' => $request->first_name,
                 'last_name' => $request->last_name,
+                'full_name' => $request->full_name ?? ($request->first_name . ' ' . $request->last_name),
+                'dni' => $request->dni,
+                'document' => $request->document,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
                 'phone_number' => $request->phone_number,
@@ -193,9 +204,15 @@ class AdminController extends Controller
                 'birth_date' => $request->birth_date,
                 'gender' => $request->gender,
                 'country' => $request->country,
+                'country_location' => $request->country_location,
+                'timezone' => $request->timezone ?? 'America/Lima',
+                'profile_photo' => $request->profile_photo,
                 'role' => [$request->role],
-                'status' => $request->status
-            ]);
+                'status' => $request->status ?? 'active',
+                'synchronized' => $request->synchronized ?? true
+            ];
+
+            $user = User::create($userData);
 
             DB::commit();
 
@@ -227,12 +244,24 @@ class AdminController extends Controller
     public function updateUser(Request $request, $userId)
     {
         $validator = Validator::make($request->all(), [
-            'first_name' => 'sometimes|required|string|max:50',
-            'last_name' => 'sometimes|required|string|max:50',
+            'first_name' => 'sometimes|required|string|max:100',
+            'last_name' => 'sometimes|required|string|max:100',
+            'full_name' => 'nullable|string|max:100',
+            'dni' => 'nullable|string|max:20|unique:users,dni,' . $userId,
+            'document' => 'nullable|string|max:20|unique:users,document,' . $userId,
+            'email' => 'sometimes|email|unique:users,email,' . $userId,
+            'password' => 'nullable|string|min:6',
             'phone_number' => 'nullable|string|max:20',
-            'address' => 'nullable|string|max:255',
+            'address' => 'nullable|string',
+            'birth_date' => 'nullable|date',
+            'gender' => 'nullable|in:male,female,other',
+            'country' => 'nullable|string|max:100',
+            'country_location' => 'nullable|string|max:100',
+            'timezone' => 'nullable|string|max:50',
+            'profile_photo' => 'nullable|string|max:500',
+            'role' => 'sometimes|required|in:admin,instructor,student,lms,seg,infra,web,data',
             'status' => 'sometimes|required|in:active,inactive,banned',
-            'role' => 'sometimes|required|in:admin,lms,seg,infra,web,data'
+            'synchronized' => 'nullable|boolean'
         ]);
 
         if ($validator->fails()) {
@@ -260,11 +289,24 @@ class AdminController extends Controller
             }
 
             $updateData = $request->only([
-                'first_name', 'last_name', 'phone_number', 'address', 'status'
+                'first_name', 'last_name', 'full_name', 'dni', 'document', 'email',
+                'phone_number', 'address', 'birth_date', 'gender', 'country',
+                'country_location', 'timezone', 'profile_photo', 'status', 'synchronized'
             ]);
+
+            if ($request->has('password')) {
+                $updateData['password'] = Hash::make($request->password);
+            }
 
             if ($request->has('role')) {
                 $updateData['role'] = [$request->role];
+            }
+
+            // Auto-generar full_name si se actualizan first_name o last_name
+            if ($request->has('first_name') || $request->has('last_name')) {
+                $firstName = $request->first_name ?? $user->first_name;
+                $lastName = $request->last_name ?? $user->last_name;
+                $updateData['full_name'] = $updateData['full_name'] ?? ($firstName . ' ' . $lastName);
             }
 
             $user->update($updateData);

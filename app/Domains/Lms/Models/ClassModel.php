@@ -15,25 +15,18 @@ class ClassModel extends Model
     protected $fillable = [
         'group_id',
         'class_name',
+        'meeting_url',
+        'description',
         'class_date',
         'start_time',
         'end_time',
-        'platform',
-        'meeting_url',
-        'external_meeting_id',
-        'meeting_password',
-        'allow_recording',
-        'recording_url',
-        'max_participants',
         'class_status',
     ];
 
     protected $casts = [
         'class_date' => 'date',
-        'start_time' => 'datetime',
-        'end_time' => 'datetime',
-        'allow_recording' => 'boolean',
         'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     public function group()
