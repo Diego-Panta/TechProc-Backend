@@ -174,25 +174,28 @@ class AuthController extends Controller
 
     /**
      * Register new user
+     * No requiere autenticación - Solo crea usuario con status inactive
      */
     public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'first_name' => 'required|string|max:50',
-            'last_name' => 'required|string|max:50',
+            'first_name' => 'required|string|max:100',
+            'last_name' => 'required|string|max:100',
+            'full_name' => 'nullable|string|max:100',
+            'dni' => 'nullable|string|max:20|unique:users',
+            'document' => 'nullable|string|max:20|unique:users',
             'email' => 'required|email|unique:users',
             'password' => 'required|string|min:6',
             'phone_number' => 'nullable|string|max:20',
-            'role' => 'required|in:admin,lms,seg,infra,web,data,support',
-            'reason' => 'required|string|max:500',
-            // Datos del empleado
-            'position_id' => 'required|integer',
-            'department_id' => 'required|integer',
-            'hire_date' => 'nullable|date',
-            'employment_status' => 'nullable|in:Active,Inactive,Terminated',
-            'schedule' => 'nullable|string',
-            'speciality' => 'nullable|string|max:255',
-            'salary' => 'nullable|numeric|min:0'
+            'address' => 'nullable|string',
+            'birth_date' => 'nullable|date',
+            'gender' => 'nullable|in:male,female,other',
+            'country' => 'nullable|string|max:100',
+            'country_location' => 'nullable|string|max:100',
+            'timezone' => 'nullable|string|max:50',
+            'profile_photo' => 'nullable|string|max:500',
+            'role' => 'nullable|in:admin,instructor,student,lms,seg,infra,web,data',
+            'synchronized' => 'nullable|boolean'
         ]);
 
         if ($validator->fails()) {
@@ -206,70 +209,65 @@ class AuthController extends Controller
             ], 422);
         }
 
-        // Validación manual de existencia de position y department
-        $position = \App\Domains\Administrator\Models\Position::find($request->position_id);
-        $department = \App\Domains\Administrator\Models\Department::find($request->department_id);
-
-        $errors = [];
-        if (!$position) {
-            $errors['position_id'] = ['El ID de posición proporcionado no existe.'];
-        }
-        if (!$department) {
-            $errors['department_id'] = ['El ID de departamento proporcionado no existe.'];
-        }
-
-        if (!empty($errors)) {
-            return response()->json([
-                'success' => false,
-                'error' => [
-                    'code' => 'VALIDATION_ERROR',
-                    'message' => 'Error de validación en los datos enviados',
-                    'details' => $errors
-                ]
-            ], 422);
-        }
-
         try {
-            // Iniciar transacción para asegurar integridad de datos
             DB::beginTransaction();
 
-            // Crear usuario
-            $user = User::create([
+            // Datos obligatorios
+            $userData = [
                 'first_name' => $request->first_name,
                 'last_name' => $request->last_name,
+                'full_name' => $request->input('full_name', $request->first_name . ' ' . $request->last_name),
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
-                'phone_number' => $request->phone_number,
-                'role' => [$request->role],
-                'status' => 'inactive'
-            ]);
+                'role' => $request->has('role') ? [$request->role] : ['student'],
+                'status' => 'inactive', // Siempre inactive
+                'timezone' => $request->input('timezone', 'America/Lima'),
+                'synchronized' => $request->input('synchronized', true)
+            ];
 
-            // Crear empleado asociado
-            $employee = \App\Domains\Administrator\Models\Employee::create([
-                'user_id' => $user->id,
-                'position_id' => $request->position_id,
-                'department_id' => $request->department_id,
-                'hire_date' => $request->hire_date ?? now(),
-                'employment_status' => $request->employment_status ?? 'Active',
-                'schedule' => $request->schedule,
-                'speciality' => $request->speciality,
-                'salary' => $request->salary
-            ]);
+            // Agregar campos opcionales solo si están presentes
+            if ($request->has('dni')) {
+                $userData['dni'] = $request->dni;
+            }
+            if ($request->has('document')) {
+                $userData['document'] = $request->document;
+            }
+            if ($request->has('phone_number')) {
+                $userData['phone_number'] = $request->phone_number;
+            }
+            if ($request->has('address')) {
+                $userData['address'] = $request->address;
+            }
+            if ($request->has('birth_date')) {
+                $userData['birth_date'] = $request->birth_date;
+            }
+            if ($request->has('gender')) {
+                $userData['gender'] = $request->gender;
+            }
+            if ($request->has('country')) {
+                $userData['country'] = $request->country;
+            }
+            if ($request->has('country_location')) {
+                $userData['country_location'] = $request->country_location;
+            }
+            if ($request->has('profile_photo')) {
+                $userData['profile_photo'] = $request->profile_photo;
+            }
 
-            // Confirmar transacción
+            $user = User::create($userData);
+
             DB::commit();
 
             return response()->json([
                 'success' => true,
                 'message' => 'Solicitud de registro enviada. Será revisada por un administrador.',
                 'data' => [
-                    'request_id' => $user->id,
-                    'employee_id' => $employee->id
+                    'user_id' => $user->id,
+                    'email' => $user->email
                 ]
             ], 201);
 
         } catch (\Exception $e) {
-            // Revertir transacción en caso de error
             DB::rollBack();
 
             return response()->json([

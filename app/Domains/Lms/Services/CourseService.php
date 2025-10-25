@@ -5,6 +5,7 @@ namespace App\Domains\Lms\Services;
 use App\Domains\Lms\Models\Course;
 use App\Domains\Lms\Repositories\CourseRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Str;
 
 class CourseService
 {

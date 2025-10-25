@@ -14,8 +14,11 @@ class User extends Authenticatable implements JWTSubject
     public $timestamps = true;
 
     protected $fillable = [
-        'first_name', 'last_name', 'email', 'password', 'phone_number',
-        'role', 'status', 'last_access_ip', 'last_access', 'last_connection'
+        'first_name', 'last_name', 'full_name', 'dni', 'document', 'email',
+        'email_verified_at', 'remember_token', 'password', 'phone_number',
+        'address', 'birth_date', 'role', 'gender', 'country', 'country_location',
+        'timezone', 'profile_photo', 'status', 'synchronized', 'last_access_ip',
+        'last_access', 'last_connection'
     ];
 
     protected $hidden = [
@@ -24,9 +27,11 @@ class User extends Authenticatable implements JWTSubject
 
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'last_access' => 'datetime', 
+        'birth_date' => 'date',
+        'last_access' => 'datetime',
         'last_connection' => 'datetime',
         'role' => 'array',
+        'synchronized' => 'boolean',
     ];
 
     /**
