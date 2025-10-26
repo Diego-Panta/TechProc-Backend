@@ -10,6 +10,11 @@ class Software extends Model
     protected $fillable = ['id','id_software','software_name','version','category','vendor',
     'license_id','installation_date','last_update','created_at'];
 
+    protected $casts = [
+        'installation_date' => 'date',
+        'last_update' => 'date',
+    ];
+
     public function licenses(){
         return $this->hasMany(License::class);
     }
