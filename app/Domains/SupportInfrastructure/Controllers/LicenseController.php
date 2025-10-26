@@ -32,6 +32,14 @@ class LicenseController extends Controller{
             'created_at' =>'nullable|date',
             ]);
 
+        // Convertir fechas del formato ISO 8601 a formato MySQL
+        if (isset($data['purchase_date'])) {
+            $data['purchase_date'] = date('Y-m-d', strtotime($data['purchase_date']));
+        }
+        if (isset($data['expiration_date'])) {
+            $data['expiration_date'] = date('Y-m-d', strtotime($data['expiration_date']));
+        }
+
         $license = License::create($data);
         return response()->json($license, 201);
     }
@@ -46,7 +54,7 @@ class LicenseController extends Controller{
         {
             Log::info('Update request:', $request->all());
             $license = License::findOrFail($id);
-            
+
             $data = $request->validate([
             'software_name' => 'sometimes|string',
             'license_key' => 'sometimes|string',
@@ -62,9 +70,18 @@ class LicenseController extends Controller{
             'responsible_id' => 'nullable|integer',
             'notes' =>'nullable|string'
             ]);
+
+            // Convertir fechas del formato ISO 8601 a formato MySQL
+            if (isset($data['purchase_date'])) {
+                $data['purchase_date'] = date('Y-m-d', strtotime($data['purchase_date']));
+            }
+            if (isset($data['expiration_date'])) {
+                $data['expiration_date'] = date('Y-m-d', strtotime($data['expiration_date']));
+            }
+
             $license->update($data);
-            return response()->json($license);
             Log::info('Updated license:', $license->toArray());
+            return response()->json($license);
         }
 
         public function destroy($id){
