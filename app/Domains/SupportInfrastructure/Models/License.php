@@ -8,7 +8,11 @@ class License extends Model{
     protected $fillable = ['software_name','license_key','license_type','provider','purchase_date',
     'expiration_date','seats_total','seats_used','cost_annual','status','responsible_id','notes',];
 
-    
+    protected $casts = [
+        'purchase_date' => 'date',
+        'expiration_date' => 'date',
+    ];
+
     public $timestamps = FALSE;
     public function software(){
         return $this->belongsTo(Software::class, 'software_id');
