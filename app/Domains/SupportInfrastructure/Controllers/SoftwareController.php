@@ -13,7 +13,7 @@ class SoftwareController extends Controller{
     }
 
     public function store(Request $request){
-        $data = $request->validate([ #qué te parece?
+        $data = $request->validate([
             'id' => 'sometimes|integer',
             'id_software' =>'nullable|integer',
             'software_name' =>'required|string',
@@ -25,6 +25,14 @@ class SoftwareController extends Controller{
             'last_update'=> 'nullable|date',
             'created_at' => 'nullable|date',
         ]);
+
+        // Convertir fechas del formato ISO 8601 a formato MySQL
+        if (isset($data['installation_date'])) {
+            $data['installation_date'] = date('Y-m-d', strtotime($data['installation_date']));
+        }
+        if (isset($data['last_update'])) {
+            $data['last_update'] = date('Y-m-d', strtotime($data['last_update']));
+        }
 
         $software = Software::create($data);
         return response()->json($software, 201);
@@ -39,7 +47,27 @@ class SoftwareController extends Controller{
         public function update(Request $request, $id)
         {
             $software = Software::findOrFail($id);
-            $software->update($request->all());
+
+            $data = $request->validate([
+                'id_software' =>'nullable|integer',
+                'software_name' =>'sometimes|string',
+                'version' => 'nullable|string',
+                'category' => 'nullable|string',
+                'vendor' => 'nullable|string',
+                'license_id' => 'nullable|exists:licenses,id',
+                'installation_date' => 'nullable|date',
+                'last_update'=> 'nullable|date',
+            ]);
+
+            // Convertir fechas del formato ISO 8601 a formato MySQL
+            if (isset($data['installation_date'])) {
+                $data['installation_date'] = date('Y-m-d', strtotime($data['installation_date']));
+            }
+            if (isset($data['last_update'])) {
+                $data['last_update'] = date('Y-m-d', strtotime($data['last_update']));
+            }
+
+            $software->update($data);
             return response()->json($software);
         }
 
