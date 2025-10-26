@@ -31,7 +31,6 @@ class FinancialReportRepository
 
         // Aplicar filtro por fuente de ingresos
         if (!empty($filters['revenue_source_id'])) {
-            // Para transacciones financieras, necesitamos relacionar con invoices
             $revenueQuery->whereHas('invoice', function ($q) use ($filters) {
                 $q->where('revenue_source_id', $filters['revenue_source_id']);
             });
@@ -60,9 +59,9 @@ class FinancialReportRepository
             ->groupBy('revenue_sources.id', 'revenue_sources.name')
             ->get();
 
-        // Tendencia de ingresos (últimos 12 meses por defecto)
+        // Tendencia de ingresos - CORREGIDO PARA MySQL
         $revenueTrend = FinancialTransaction::where('transaction_type', 'income')
-            ->selectRaw("TO_CHAR(transaction_date, 'YYYY-MM') as month, SUM(amount) as revenue")
+            ->selectRaw("DATE_FORMAT(transaction_date, '%Y-%m') as month, SUM(amount) as revenue")
             ->when(!empty($filters['start_date']), function ($q) use ($filters) {
                 $q->whereDate('transaction_date', '>=', $filters['start_date']);
             })
@@ -146,27 +145,28 @@ class FinancialReportRepository
     {
         $period = $filters['period'] ?? 'monthly';
         
+        // Formato MySQL
         $format = match($period) {
-            'daily' => 'YYYY-MM-DD',
-            'weekly' => 'IYYY-IW',
-            'monthly' => 'YYYY-MM',
-            'quarterly' => 'YYYY-Q',
-            'yearly' => 'YYYY',
-            default => 'YYYY-MM'
+            'daily' => '%Y-%m-%d',
+            'weekly' => '%x-%v',
+            'monthly' => '%Y-%m',
+            'quarterly' => '%Y-%q',
+            'yearly' => '%Y',
+            default => '%Y-%m'
         };
 
         $labelFormat = match($period) {
-            'daily' => 'DD/MM/YYYY',
-            'weekly' => 'Semana WW YYYY',
-            'monthly' => 'MM/YYYY',
-            'quarterly' => 'Q YYYY',
-            'yearly' => 'YYYY',
-            default => 'MM/YYYY'
+            'daily' => '%d/%m/%Y',
+            'weekly' => 'Semana %v %Y',
+            'monthly' => '%m/%Y',
+            'quarterly' => 'Q%q %Y',
+            'yearly' => '%Y',
+            default => '%m/%Y'
         };
 
         $query = FinancialTransaction::where('transaction_type', 'income')
-            ->selectRaw("TO_CHAR(transaction_date, '{$format}') as period, 
-                        TO_CHAR(transaction_date, '{$labelFormat}') as period_label,
+            ->selectRaw("DATE_FORMAT(transaction_date, '{$format}') as period, 
+                        DATE_FORMAT(transaction_date, '{$labelFormat}') as period_label,
                         SUM(amount) as revenue")
             ->when(!empty($filters['start_date']), function ($q) use ($filters) {
                 $q->whereDate('transaction_date', '>=', $filters['start_date']);

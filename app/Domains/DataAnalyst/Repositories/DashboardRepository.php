@@ -95,19 +95,18 @@ class DashboardRepository
 
     private function getAttendanceMetrics(array $filters)
     {
-        // Consulta SIMPLE solo con la tabla attendances - CORREGIDO
+        // Consulta SIMPLE solo con la tabla attendances
         $attendanceQuery = Attendance::query();
         
-        // Aplicar filtros - usar created_at en lugar de record_date
+        // Aplicar filtros - usar created_at
         $this->applyDateFilters($attendanceQuery, $filters, 'created_at');
 
         $totalRecords = $attendanceQuery->count();
-        // CORREGIDO: attended es booleano, no string
         $attendedRecords = (clone $attendanceQuery)->where('attended', true)->count();
         
         $averageRate = $totalRecords > 0 ? ($attendedRecords / $totalRecords) * 100 : 0;
         
-        // Calcular tendencia (última semana vs semana anterior) - CORREGIDO
+        // Calcular tendencia (última semana vs semana anterior)
         $currentWeek = now()->startOfWeek();
         $previousWeek = now()->subWeek()->startOfWeek();
         
@@ -199,15 +198,16 @@ class DashboardRepository
             ->whereIn('status', ['abierto', 'en_proceso', 'asignado'])
             ->count();
         
-        // Calcular tiempo promedio de resolución (en horas) para tickets cerrados
+        // Calcular tiempo promedio de resolución (en horas) para tickets cerrados - CORREGIDO para MySQL
         $resolvedTickets = Ticket::where('status', 'cerrado')
             ->whereNotNull('resolution_date')
             ->whereNotNull('creation_date');
             
         $this->applyDateFilters($resolvedTickets, $filters, 'creation_date');
             
+        // CORRECCIÓN: Usar TIMESTAMPDIFF para MySQL en lugar de EXTRACT(EPOCH) de PostgreSQL
         $averageResolutionTime = $resolvedTickets->avg(
-            DB::raw("EXTRACT(EPOCH FROM (resolution_date - creation_date)) / 3600")
+            DB::raw("TIMESTAMPDIFF(HOUR, creation_date, resolution_date)")
         ) ?? 0;
 
         return [
