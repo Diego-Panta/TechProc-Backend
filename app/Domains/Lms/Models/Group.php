@@ -9,7 +9,8 @@ class Group extends Model
 {
     use HasFactory;
 
-    protected $table = 'groups';
+    // 👇 Laravel usa "groups" por convención, pero lo forzamos igual
+    protected $table = "groups"; 
     protected $primaryKey = 'id';
 
     protected $fillable = [
