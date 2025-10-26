@@ -39,7 +39,7 @@ class FinancialReportService
     }
 
     /**
-     * Obtener detalles de pagos pendientes
+     * Obtener detalles de pagos pendientes - CORREGIDO PARA MySQL
      */
     public function getPendingPayments(array $filters = [])
     {
@@ -48,7 +48,7 @@ class FinancialReportService
         $query = Invoice::with(['revenueSource', 'enrollment'])
             ->where('status', 'Pending')
             ->select('invoices.*')
-            ->addSelect(DB::raw("CURRENT_DATE - invoices.issue_date as days_overdue"));
+            ->addSelect(DB::raw("DATEDIFF(CURDATE(), invoices.issue_date) as days_overdue"));
 
         // Aplicar filtros
         if (!empty($filters['start_date'])) {

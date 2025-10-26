@@ -20,7 +20,7 @@ class GroupsSeeder extends Seeder
             foreach ($groupCodes as $codeIndex => $code) {
                 $groups[] = [
                     'course_id' => $course->id,
-                    'code' => $course->course_id . '-' . $code,
+                    'code' => $course->id . '-' . $code,
                     'name' => $course->name . ' - Grupo ' . $code,
                     'start_date' => Carbon::now()->addDays($codeIndex * 7),
                     'end_date' => Carbon::now()->addDays(120 + ($codeIndex * 7)),
