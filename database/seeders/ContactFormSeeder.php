@@ -23,19 +23,6 @@ class ContactFormSeeder extends Seeder
                 'submission_date' => now()->subDays(2)
             ],
             [
-                'id_contact' => 2,
-                'full_name' => 'Carlos Ramírez',
-                'email' => 'carlos.ramirez@empresa.com',
-                'phone' => '+51 987654322',
-                'company' => 'Innovatech Perú',
-                'subject' => 'Solicitud de cotización',
-                'message' => 'Necesito una cotización para el desarrollo de una plataforma educativa con las siguientes características...',
-                'form_type' => 'quote',
-                'status' => 'in_progress',
-                'assigned_to' => 1, // Asignado a Juan Pérez
-                'submission_date' => now()->subDays(1)
-            ],
-            [
                 'id_contact' => 3,
                 'full_name' => 'Laura Mendoza',
                 'email' => 'laura.mendoza@gmail.com',
