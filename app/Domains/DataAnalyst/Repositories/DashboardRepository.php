@@ -25,7 +25,11 @@ class DashboardRepository
             'revenue' => $this->getRevenueMetrics($filters),
             'support' => $this->getSupportMetrics($filters),
             'security' => $this->getSecurityMetrics($filters),
-            'recent_activities' => $this->getRecentActivities($filters)
+            'recent_activities' => $this->getRecentActivities($filters),
+            // Agregar datos adicionales REALES
+            'student_company_distribution' => $this->getStudentCompanyDistribution($filters),
+            'revenue_sources_distribution' => $this->getRevenueSourcesDistribution($filters),
+            'monthly_revenue_trend' => $this->getMonthlyRevenueTrend($filters)
         ];
     }
 
@@ -62,6 +66,112 @@ class DashboardRepository
             'active' => $active,
             'growth_rate' => round($growthRate, 1)
         ];
+    }
+
+    /**
+     * DISTRIBUCIÓN REAL de estudiantes por empresa
+     */
+    public function getStudentCompanyDistribution(array $filters)
+    {
+        $query = Student::join('companies', 'students.company_id', '=', 'companies.id')
+            ->selectRaw('companies.id as company_id, companies.name as company_name, COUNT(*) as student_count')
+            ->groupBy('companies.id', 'companies.name')
+            ->orderBy('student_count', 'desc');
+
+        // Aplicar filtros
+        if (!empty($filters['company_id'])) {
+            $query->where('companies.id', $filters['company_id']);
+        }
+
+        if (!empty($filters['start_date'])) {
+            $query->whereDate('students.created_at', '>=', $filters['start_date']);
+        }
+
+        if (!empty($filters['end_date'])) {
+            $query->whereDate('students.created_at', '<=', $filters['end_date']);
+        }
+
+        return $query->get()->toArray();
+    }
+
+    /**
+     * DISTRIBUCIÓN REAL de fuentes de ingresos
+     */
+    public function getRevenueSourcesDistribution(array $filters)
+    {
+        // Primero obtener el total de ingresos para calcular porcentajes
+        $totalRevenue = Payment::where('status', 'Completed')
+            ->when(!empty($filters['start_date']), function($q) use ($filters) {
+                $q->whereDate('payment_date', '>=', $filters['start_date']);
+            })
+            ->when(!empty($filters['end_date']), function($q) use ($filters) {
+                $q->whereDate('payment_date', '<=', $filters['end_date']);
+            })
+            ->sum('amount') ?? 1; // Evitar división por cero
+
+        $distribution = Payment::join('invoices', 'payments.invoice_id', '=', 'invoices.id')
+            ->join('revenue_sources', 'invoices.revenue_source_id', '=', 'revenue_sources.id')
+            ->where('payments.status', 'Completed')
+            ->selectRaw('
+                revenue_sources.id as source_id, 
+                revenue_sources.name as source_name, 
+                SUM(payments.amount) as amount'
+            )
+            ->groupBy('revenue_sources.id', 'revenue_sources.name')
+            ->orderBy('amount', 'desc');
+
+        // Aplicar filtros de fecha
+        if (!empty($filters['start_date'])) {
+            $distribution->whereDate('payments.payment_date', '>=', $filters['start_date']);
+        }
+
+        if (!empty($filters['end_date'])) {
+            $distribution->whereDate('payments.payment_date', '<=', $filters['end_date']);
+        }
+
+        return $distribution->get()
+            ->map(function($item) use ($totalRevenue) {
+                return [
+                    'source_id' => $item->source_id,
+                    'source_name' => $item->source_name,
+                    'amount' => (float) $item->amount,
+                    'percentage' => $totalRevenue > 0 ? round(($item->amount / $totalRevenue) * 100, 1) : 0
+                ];
+            })
+            ->toArray();
+    }
+
+    /**
+     * TENDENCIA MENSUAL REAL de ingresos
+     */
+    public function getMonthlyRevenueTrend(array $filters)
+    {
+        $query = Payment::where('status', 'Completed')
+            ->selectRaw('
+                DATE_FORMAT(payment_date, "%Y-%m") as month,
+                SUM(amount) as revenue'
+            )
+            ->groupBy('month')
+            ->orderBy('month', 'asc')
+            ->limit(12); // Últimos 12 meses
+
+        // Aplicar filtros de fecha
+        if (!empty($filters['start_date'])) {
+            $query->whereDate('payment_date', '>=', $filters['start_date']);
+        }
+
+        if (!empty($filters['end_date'])) {
+            $query->whereDate('payment_date', '<=', $filters['end_date']);
+        }
+
+        return $query->get()
+            ->map(function($item) {
+                return [
+                    'month' => $item->month,
+                    'revenue' => (float) $item->revenue
+                ];
+            })
+            ->toArray();
     }
 
     private function getCourseMetrics(array $filters)
