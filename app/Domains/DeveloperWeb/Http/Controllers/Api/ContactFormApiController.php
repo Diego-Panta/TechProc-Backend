@@ -64,14 +64,11 @@ class ContactFormApiController
     }
 
     /**
-     * Responder a formulario de contacto (PROTEGIDO)
+     * Responder a formulario de contacto (PROTEGIDO) modificado
      */
-    public function respond(RespondContactFormApiRequest $request, $id): JsonResponse  // ⬅️ Cambiado a $id
+    public function respond(RespondContactFormApiRequest $request, int $id): JsonResponse
     {
         try {
-            // Convertir a integer si viene como string
-            $contactId = (int) $id;
-            
             $user = $request->user();
             
             // Buscar el empleado asociado al usuario autenticado
@@ -86,17 +83,17 @@ class ContactFormApiController
 
             $assignedTo = $employee->id;
 
-            $success = $this->contactFormService->respondToContact($contactId, $request->response, $assignedTo);
+            $success = $this->contactFormService->respondToContact($id, $request->response, $assignedTo);
             
             if ($success) {
                 // Obtener el contacto actualizado para el log
-                $contactForm = $this->contactFormService->getContactFormById($contactId);
+                $contactForm = $this->contactFormService->getContactFormById($id);
                 
-                Log::info('Usuario respondió contacto', [
+                Log::info('Usuario respondió contacto y se envió email', [
                     'user_id' => $user->id,
                     'employee_id' => $employee->id,
-                    'contact_form_id' => $contactId,
-                    'user_email' => $contactForm ? $contactForm->email : 'unknown'
+                    'contact_form_id' => $id,
+                    'user_email' => $contactForm->email
                 ]);
 
                 return response()->json([
