@@ -22,7 +22,9 @@ class AdminUserSeeder extends Seeder
             'dni' => '00000000',
         ]);
 
-        $superAdmin->assignRole('super_admin');
+        // Asignar rol usando el guard correcto
+        $role = \Spatie\Permission\Models\Role::where('name', 'super_admin')->where('guard_name', 'web')->first();
+        $superAdmin->assignRole($role);
 
         $this->command->info('✅ Usuario Super Admin creado exitosamente!');
         $this->command->info('');
