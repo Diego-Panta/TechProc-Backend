@@ -27,8 +27,8 @@ require app_path('Domains/SupportInfrastructure/routes.php');
 // Incluir rutas del dominio AuthenticationSessions
 require app_path('Domains/AuthenticationSessions/routes.php');
 
-// Incluir rutas del dominio Administrator
-require app_path('Domains/Administrator/routes.php');
+// Incluir rutas del dominio Users
+require app_path('Domains/Users/routes.php');
 
 // Incluir rutas del dominio Soporte Técnico
 require base_path('app/Domains/SupportTechnical/routes.php');
