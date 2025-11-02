@@ -30,7 +30,7 @@ class RolesAndPermissionsSeeder extends Seeder
         ];
 
         foreach ($userPermissions as $permission) {
-            Permission::create(['name' => $permission]);
+            Permission::create(['name' => $permission, 'guard_name' => 'web']);
         }
 
         // ========================================
@@ -46,7 +46,7 @@ class RolesAndPermissionsSeeder extends Seeder
         ];
 
         foreach ($rolePermissions as $permission) {
-            Permission::create(['name' => $permission]);
+            Permission::create(['name' => $permission, 'guard_name' => 'web']);
         }
 
         // ========================================
@@ -61,7 +61,7 @@ class RolesAndPermissionsSeeder extends Seeder
         ];
 
         foreach ($permissionPermissions as $permission) {
-            Permission::create(['name' => $permission]);
+            Permission::create(['name' => $permission, 'guard_name' => 'web']);
         }
 
         // ========================================
@@ -69,11 +69,11 @@ class RolesAndPermissionsSeeder extends Seeder
         // ========================================
 
         // ROL: Super Admin (tiene todos los permisos)
-        $superAdmin = Role::create(['name' => 'super_admin']);
+        $superAdmin = Role::create(['name' => 'super_admin', 'guard_name' => 'web']);
         $superAdmin->givePermissionTo(Permission::all());
 
         // ROL: Admin (gestión completa de usuarios, roles y permisos)
-        $admin = Role::create(['name' => 'admin']);
+        $admin = Role::create(['name' => 'admin', 'guard_name' => 'web']);
         $admin->givePermissionTo([
             // Usuarios
             'users.view',
@@ -95,18 +95,18 @@ class RolesAndPermissionsSeeder extends Seeder
         ]);
 
         // ROL: Teacher (profesor - gestión de sus estudiantes)
-        $teacher = Role::create(['name' => 'teacher']);
+        $teacher = Role::create(['name' => 'teacher', 'guard_name' => 'web']);
         $teacher->givePermissionTo([
             'users.view',       // Ver lista de usuarios (sus estudiantes)
             'users.view-any',   // Ver detalles de usuarios
         ]);
 
         // ROL: Student (estudiante - acceso básico)
-        $student = Role::create(['name' => 'student']);
+        $student = Role::create(['name' => 'student', 'guard_name' => 'web']);
         // Sin permisos especiales, solo acceso al sistema
 
         // ROL: Support (soporte técnico - gestión de usuarios y tickets)
-        $support = Role::create(['name' => 'support']);
+        $support = Role::create(['name' => 'support', 'guard_name' => 'web']);
         $support->givePermissionTo([
             'users.view',
             'users.view-any',
@@ -114,7 +114,7 @@ class RolesAndPermissionsSeeder extends Seeder
         ]);
 
         // ROL: Auditor (auditor - solo lectura de todo)
-        $auditor = Role::create(['name' => 'auditor']);
+        $auditor = Role::create(['name' => 'auditor', 'guard_name' => 'web']);
         $auditor->givePermissionTo([
             'users.view',
             'users.view-any',

@@ -13,6 +13,7 @@ class User extends Authenticatable
 
     protected $table = 'users';
     public $timestamps = true;
+    protected $guard_name = 'web';
 
     protected $fillable = [
         // Campos básicos de Laravel
