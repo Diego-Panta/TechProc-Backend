@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "905554f13d9cba0113b6c11721dd6fda",
+    "content-hash": "7659dcaf33c347889dbd426930220cce",
     "packages": [
         {
             "name": "barryvdh/laravel-dompdf",
@@ -1566,17 +1566,17 @@
             "time": "2025-08-22T14:27:06+00:00"
         },
         {
-            "name": "incadev/core",
-            "version": "v1.0.0",
+            "name": "incadev-uns/core-domain",
+            "version": "dev-main",
             "source": {
                 "type": "git",
-                "url": "https://github.com/josevasquezramos/incadev-core.git",
-                "reference": "c4648f02a5abdd44991b4f5c721426f2e203b27d"
+                "url": "https://github.com/incadev-uns/core-domain.git",
+                "reference": "ac88696712c00fb1160389003ea11f831cd3603d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/josevasquezramos/incadev-core/zipball/c4648f02a5abdd44991b4f5c721426f2e203b27d",
-                "reference": "c4648f02a5abdd44991b4f5c721426f2e203b27d",
+                "url": "https://api.github.com/repos/incadev-uns/core-domain/zipball/ac88696712c00fb1160389003ea11f831cd3603d",
+                "reference": "ac88696712c00fb1160389003ea11f831cd3603d",
                 "shasum": ""
             },
             "require": {
@@ -1599,21 +1599,22 @@
                 "phpstan/phpstan-phpunit": "^2.0",
                 "spatie/laravel-ray": "^1.35"
             },
+            "default-branch": true,
             "type": "library",
             "extra": {
                 "laravel": {
                     "aliases": {
-                        "Core": "Incadev\\Core\\Facades\\Core"
+                        "CoreDomain": "IncadevUns\\CoreDomain\\Facades\\CoreDomain"
                     },
                     "providers": [
-                        "Incadev\\Core\\CoreServiceProvider"
+                        "IncadevUns\\CoreDomain\\CoreDomainServiceProvider"
                     ]
                 }
             },
             "autoload": {
                 "psr-4": {
-                    "Incadev\\Core\\": "src/",
-                    "Incadev\\Core\\Database\\Factories\\": "database/factories/"
+                    "IncadevUns\\CoreDomain\\": "src/",
+                    "IncadevUns\\CoreDomain\\Database\\Factories\\": "database/factories/"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -1628,23 +1629,23 @@
                 }
             ],
             "description": "Core package implementing Incadev's business domain",
-            "homepage": "https://github.com/josevasquezramos/incadev-core",
+            "homepage": "https://github.com/incadev-uns/core-domain",
             "keywords": [
-                "core",
-                "incadev",
+                "core-domain",
+                "incadev-uns",
                 "laravel"
             ],
             "support": {
-                "issues": "https://github.com/josevasquezramos/incadev-core/issues",
-                "source": "https://github.com/josevasquezramos/incadev-core/tree/v1.0.0"
+                "issues": "https://github.com/incadev-uns/core-domain/issues",
+                "source": "https://github.com/incadev-uns/core-domain/tree/main"
             },
             "funding": [
                 {
-                    "url": "https://github.com/incadev",
+                    "url": "https://github.com/incadev-uns",
                     "type": "github"
                 }
             ],
-            "time": "2025-11-01T13:11:22+00:00"
+            "time": "2025-11-03T01:49:57+00:00"
         },
         {
             "name": "laravel/framework",
@@ -9918,7 +9919,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": {
+        "incadev-uns/core-domain": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
