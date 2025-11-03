@@ -22,6 +22,7 @@ class AuthController extends Controller
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8',
             'password_confirmation' => 'required|same:password',
+            'role' => 'required|string|exists:roles,name',
             // Campos del vendor
             'dni' => 'nullable|string|max:8|unique:users,dni',
             'fullname' => 'nullable|string|max:255',
@@ -48,6 +49,9 @@ class AuthController extends Controller
                 'phone' => $request->phone,
             ]);
 
+            // Asignar el rol al usuario
+            $user->assignRole($request->role);
+
             $token = $user->createToken('auth_token')->plainTextToken;
 
             return response()->json([
@@ -62,6 +66,8 @@ class AuthController extends Controller
                         'dni' => $user->dni,
                         'phone' => $user->phone,
                         'avatar' => $user->avatar,
+                        'roles' => $user->getRoleNames(),
+                        'permissions' => $user->getAllPermissions()->pluck('name'),
                     ],
                     'token' => $token
                 ]
@@ -84,6 +90,7 @@ class AuthController extends Controller
         $validator = Validator::make($request->all(), [
             'email' => 'required|email',
             'password' => 'required|string',
+            'role' => 'required|string|exists:roles,name',
         ]);
 
         if ($validator->fails()) {
@@ -101,6 +108,14 @@ class AuthController extends Controller
                 'success' => false,
                 'message' => 'Credenciales incorrectas'
             ], 401);
+        }
+
+        // Verificar que el usuario tenga el rol especificado
+        if (!$user->hasRole($request->role)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No tienes permisos para acceder con el rol especificado'
+            ], 403);
         }
 
         // Crear token con Sanctum
