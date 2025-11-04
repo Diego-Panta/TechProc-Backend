@@ -41,11 +41,6 @@ class ContactForm extends Model
     const CREATED_AT = 'submission_date';
     const UPDATED_AT = null; // No hay columna updated_at
 
-    public function assignedTo()
-    {
-        return $this->belongsTo(\App\Domains\Administrator\Models\Employee::class, 'assigned_to');
-    }
-
     /**
      * Accessor seguro para el estado
      */

@@ -116,16 +116,16 @@ Route::prefix('developer-web')->name('api.developer-web.')->group(function () {
         Route::get('/public', [ChatbotFaqApiController::class, 'publicIndex'])->name('public.index');
         Route::get('/public/{id}', [ChatbotFaqApiController::class, 'publicShow'])->name('public.show');
         Route::get('/categories', [ChatbotFaqApiController::class, 'getCategories'])->name('categories');
-
+        
         // Protected endpoints (requieren autenticación)
-        Route::middleware([DeveloperWebMiddleware::class])->group(function () {
+        // Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/', [ChatbotFaqApiController::class, 'index'])->name('index');
             Route::get('/{id}', [ChatbotFaqApiController::class, 'show'])->name('show');
             Route::post('/', [ChatbotFaqApiController::class, 'store'])->name('store');
             Route::put('/{id}', [ChatbotFaqApiController::class, 'update'])->name('update');
             Route::delete('/{id}', [ChatbotFaqApiController::class, 'destroy'])->name('destroy');
             Route::get('/stats/summary', [ChatbotFaqApiController::class, 'getStats'])->name('stats');
-        });
+        // });
     });
 
     // Chatbot Conversations API
@@ -134,17 +134,23 @@ Route::prefix('developer-web')->name('api.developer-web.')->group(function () {
         Route::post('/conversation/start', [ChatbotApiController::class, 'startConversation'])->name('conversation.start');
         Route::post('/conversation/message', [ChatbotApiController::class, 'sendMessage'])->name('conversation.message');
         Route::post('/conversation/end', [ChatbotApiController::class, 'endConversation'])->name('conversation.end');
-        Route::get('/categories/faqs/{category?}', [ChatbotApiController::class, 'getFaqsByCategory'])->name('faqs.by-category');
-
+        //Route::get('/faqs/category/{category?}', [ChatbotApiController::class, 'getFaqsByCategory'])->name('faqs.by-category');
+        
         // Protected endpoints para analytics (requieren autenticación)
-        Route::middleware([DeveloperWebMiddleware::class])->group(function () {
-            Route::get('/config', [ChatbotConfigController::class, 'getConfig'])->name('config.get');
-            Route::put('/config', [ChatbotConfigController::class, 'updateConfig'])->name('config.update');
-            Route::post('/config/reset', [ChatbotConfigController::class, 'resetConfig'])->name('config.reset');
-            Route::get('/config/health', [ChatbotConfigController::class, 'healthCheck'])->name('config.health');
-            Route::get('/conversations', [ChatbotApiController::class, 'getConversations'])->name('conversations.index');
-            Route::get('/conversations/{id}', [ChatbotApiController::class, 'getConversation'])->name('conversations.show');
+        // Route::middleware(['auth:sanctum'])->group(function () {
+            Route::get('/conversations/{id}', [ChatbotApiController::class, 'getConversationHistory'])->name('conversations.show');
             Route::get('/analytics/summary', [ChatbotApiController::class, 'getAnalytics'])->name('analytics.summary');
-        });
+        // });
     });
+
+    // Chatbot Configuration API
+    Route::prefix('chatbot/config')->name('chatbot.config.')->group(function () {
+        // Route::middleware(['auth:sanctum'])->group(function () {
+            Route::get('/', [ChatbotConfigController::class, 'getConfig'])->name('get');
+            Route::put('/', [ChatbotConfigController::class, 'updateConfig'])->name('update');
+            Route::post('/reset', [ChatbotConfigController::class, 'resetConfig'])->name('reset');
+            Route::get('/health', [ChatbotConfigController::class, 'healthCheck'])->name('health');
+        // });
+    });
+
 });

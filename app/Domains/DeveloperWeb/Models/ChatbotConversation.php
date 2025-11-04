@@ -1,42 +1,36 @@
 <?php
-// app/Domains/DeveloperWeb/Models/ChatbotConversation.php
 
-namespace App\Domains\DeveloperWeb\Models;
+namespace Incadev\Core\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ChatbotConversation extends Model
 {
-    use HasFactory;
-
-    protected $table = 'chatbot_conversations';
-    protected $primaryKey = 'id';
-
-    // Deshabilitar timestamps automáticos
-    public $timestamps = false;
-
     protected $fillable = [
-        'id_conversation',
-        'started_date',
-        'ended_date',
+        'started_at',
+        'ended_at',
         'satisfaction_rating',
         'feedback',
         'resolved',
         'handed_to_human',
+        'first_message',
+        'last_bot_response',
+        'message_count',
+        'faq_matched_id',
     ];
 
     protected $casts = [
-        'started_date' => 'datetime',
-        'ended_date' => 'datetime',
+        'started_at' => 'datetime',
+        'ended_at' => 'datetime',
         'satisfaction_rating' => 'integer',
         'resolved' => 'boolean',
         'handed_to_human' => 'boolean',
-        'id_conversation' => 'integer', // Asegurar que sea integer
+        'message_count' => 'integer',
     ];
 
-    public function messages()
+    public function faqMatched(): BelongsTo
     {
-        return $this->hasMany(ChatbotMessage::class, 'conversation_id');
+        return $this->belongsTo(ChatbotFaq::class, 'faq_matched_id');
     }
 }
