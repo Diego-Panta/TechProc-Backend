@@ -1,0 +1,140 @@
+# ROLES Y PERMISOS - TECHPROC BACKEND
+
+================================================================================
+GRUPO 03 - SOPORTE Y ADMINISTRACIÓN
+================================================================================
+1. admin (Administrador)
+   - Gestiona roles y permisos
+   - CRUD completo de usuarios
+
+2. support (Soporte Técnico)
+   - Gestiona tickets de soporte
+   - Solución de problemas técnicos
+   - Atención a usuarios
+
+3. infrastructure (Infraestructura)
+   - Gestiona activos tecnológicos (tech_assets)
+   - Administración de hardware y equipos
+   - Control de inventario tecnológico
+
+4. security (Seguridad)
+   - Gestión de seguridad de usuarios
+   - Encriptación de información
+   - Seguimiento de amenazas y vulnerabilidades
+
+5. academic_analyst (Analista Académico)
+   - Análisis de notas y asistencias
+   - Predicción de deserción estudiantil
+   - Reportes y KPIs académicos
+
+6. web (Desarrollador Web)
+   - Gestión del chatbot
+   - Administración de anuncios y noticias
+   - Contenido del landing page
+
+
+================================================================================
+GRUPO 06 - AUDITORÍA Y ENCUESTAS
+================================================================================
+
+1. survey_admin (Administrador de Encuestas)
+   - Creación y gestión de encuestas
+   - Análisis de resultados
+   - Configuración de preguntas
+
+2. audit_manager (Jefe de Auditores)
+   - Supervisión de auditorías
+   - Asignación de tareas de auditoría
+   - Revisión de hallazgos
+
+3. auditor (Auditor)
+   - Ejecución de auditorías
+   - Registro de hallazgos
+   - Seguimiento de acciones correctivas
+
+
+================================================================================
+GRUPO QUEZADA - RECURSOS HUMANOS Y FINANZAS
+================================================================================
+
+1. human_resources (Administrador de Recursos Humanos)
+   - Gestión de procesos de personal
+   - Contratación y onboarding
+   - Control de asistencia
+   - Administración de nóminas
+   - Actualización de perfiles de empleados
+
+2. financial_manager (Gerente Financiero)
+   - Supervisión de flujos financieros
+   - Validación de pagos académicos y administrativos
+   - Gestión de presupuestos
+   - Emisión de reportes financieros
+   - Gestión documental institucional
+
+3. system_viewer (Visualizador del Sistema)
+   - Acceso al dashboard general
+   - Visualización de información consolidada
+   - Sin permisos de edición (solo lectura)
+   - Rol asignado a todos los usuarios por defecto
+
+4. enrollment_manager (Gerente de Matrículas)
+   - Administración de matrículas y reinscripciones
+   - Validación de procesos de inscripción
+   - Coordinación de pagos estudiantiles
+   - Gestión de información académica
+   - Creación de grupos académicos
+   - Asignación de docentes a grupos
+
+5. data_analyst (Analista de Datos)
+   - Diseño de indicadores de gestión (KPIs)
+   - Análisis de datos de todas las áreas
+   - Mantenimiento de métricas
+   - Generación de reportes estratégicos
+   - Soporte para toma de decisiones
+
+
+================================================================================
+GRUPO HURTADO - MARKETING
+================================================================================
+
+1. marketing (Empleado de Marketing)
+   - Manejo de redes sociales
+   - Análisis de métricas de marketing
+   - Creación de contenido publicitario
+
+2. marketing_admin (Administrador de Marketing)
+   - Administración de campañas de marketing
+   - Supervisión del equipo de marketing
+   - Gestión estratégica de redes sociales
+   - Reportes de métricas y KPIs
+
+
+================================================================================
+GRUPO VÁSQUEZ - ACADÉMICO
+================================================================================
+
+1. teacher (Profesor/Docente)
+   - Crear, editar y eliminar clases
+   - Gestión de materiales educativos
+   - Creación y evaluación de exámenes
+   - Registro de calificaciones
+   - Control de asistencia
+
+2. student (Estudiante)
+   - Ver clases asignadas
+   - Acceso a materiales educativos
+   - Visualización de exámenes
+   - Consulta de calificaciones
+   - Consulta de asistencia
+   - Solo lectura (sin permisos de edición)
+
+
+================================================================================
+NOTAS IMPORTANTES
+================================================================================
+
+- Todos los roles utilizan guard_name: 'web'
+- Los permisos siguen el formato: {modelo}.{acción}
+- Acciones estándar: view, view-any, create, update, delete
+- El rol super_admin tiene todos los permisos del sistema
+- Cada rol debe tener permisos específicos asignados según su función
