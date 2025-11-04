@@ -98,6 +98,57 @@ Servidor disponible en: `http://localhost:8001`
 
 ---
 
+## Credenciales de Usuarios de Prueba
+
+Todos los usuarios tienen la contraseña: `password123`
+
+### GRUPO 03 - SOPORTE Y ADMINISTRACIÓN
+| Rol | Email | DNI |
+|-----|-------|-----|
+| super_admin | super.admin@techproc.com | 10000001 |
+| admin | admin@techproc.com | 10000002 |
+| support | support@techproc.com | 10000003 |
+| infrastructure | infrastructure@techproc.com | 10000004 |
+| security | security@techproc.com | 10000005 |
+| academic_analyst | academic.analyst@techproc.com | 10000006 |
+| web | web@techproc.com | 10000007 |
+
+### GRUPO 06 - AUDITORÍA Y ENCUESTAS
+| Rol | Email | DNI |
+|-----|-------|-----|
+| survey_admin | survey.admin@techproc.com | 10000008 |
+| audit_manager | audit.manager@techproc.com | 10000009 |
+| auditor | auditor@techproc.com | 10000010 |
+
+### GRUPO QUEZADA - RECURSOS HUMANOS Y FINANZAS
+| Rol | Email | DNI |
+|-----|-------|-----|
+| human_resources | human.resources@techproc.com | 10000011 |
+| financial_manager | financial.manager@techproc.com | 10000012 |
+| system_viewer | system.viewer@techproc.com | 10000013 |
+| enrollment_manager | enrollment.manager@techproc.com | 10000014 |
+| data_analyst | data.analyst@techproc.com | 10000015 |
+
+### GRUPO HURTADO - MARKETING
+| Rol | Email | DNI |
+|-----|-------|-----|
+| marketing | marketing@techproc.com | 10000016 |
+| marketing_admin | marketing.admin@techproc.com | 10000017 |
+
+### GRUPO VÁSQUEZ - ACADÉMICO
+| Rol | Email | DNI |
+|-----|-------|-----|
+| teacher | teacher@techproc.com | 10000018 |
+| student | student@techproc.com | 10000019 |
+
+### GRUPO DE LEYTON - TUTORÍAS Y ADMINISTRACIÓN
+| Rol | Email | DNI |
+|-----|-------|-----|
+| tutor | tutor@techproc.com | 10000020 |
+| administrative_clerk | administrative.clerk@techproc.com | 10000021 |
+
+---
+
 ## Para probar
 
 1. Abre Postman

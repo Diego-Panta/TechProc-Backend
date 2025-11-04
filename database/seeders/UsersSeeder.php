@@ -4,225 +4,263 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
+use App\Domains\AuthenticationSessions\Models\User;
 use Illuminate\Support\Facades\Hash;
-use Carbon\Carbon;
 
 class UsersSeeder extends Seeder
 {
     public function run(): void
     {
         $users = [
-            // Estudiantes (más estudiantes para testing)
+            // ========================================
+            // GRUPO 03 - SOPORTE Y ADMINISTRACIÓN
+            // ========================================
             [
-                'first_name' => 'admin',
-                'last_name' => 'Pérez',
-                'full_name' => 'Juan Pérez',
-                'dni' => '12345678',
-                'document' => '12345678',
-                'email' => 'admin@email.com',
-                'phone_number' => '+51987654321',
+                'name' => 'super_admin',
+                'dni' => '10000001',
+                'fullname' => 'Super Admin',
+                'email' => 'super.admin@techproc.com',
+                'phone' => '+51900000001',
                 'password' => Hash::make('password123'),
-                'gender' => 'male',
-                'country' => 'Perú',
-                'role' => json_encode(['admin']),
-                'status' => 'active',
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
+                'role' => 'super_admin',
             ],
             [
-                'first_name' => 'María',
-                'last_name' => 'García',
-                'full_name' => 'María García',
-                'dni' => '87654321',
-                'document' => '87654321',
-                'email' => 'maria.garcia@email.com',
-                'phone_number' => '+51987654322',
+                'name' => 'admin',
+                'dni' => '10000002',
+                'fullname' => 'Admin Principal',
+                'email' => 'admin@techproc.com',
+                'phone' => '+51900000002',
                 'password' => Hash::make('password123'),
-                'gender' => 'female',
-                'country' => 'Perú',
-                'role' => json_encode(['student']),
-                'status' => 'active',
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
+                'role' => 'admin',
             ],
             [
-                'first_name' => 'Carlos',
-                'last_name' => 'López',
-                'full_name' => 'Carlos López',
-                'dni' => '23456789',
-                'document' => '23456789',
-                'email' => 'carlos.lopez@email.com',
-                'phone_number' => '+51987654328',
+                'name' => 'support',
+                'dni' => '10000003',
+                'fullname' => 'Carlos Soporte',
+                'email' => 'support@techproc.com',
+                'phone' => '+51900000003',
                 'password' => Hash::make('password123'),
-                'gender' => 'male',
-                'country' => 'Perú',
-                'role' => json_encode(['student']),
-                'status' => 'active',
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
+                'role' => 'support',
             ],
             [
-                'first_name' => 'Ana',
-                'last_name' => 'Martínez',
-                'full_name' => 'Ana Martínez',
-                'dni' => '34567890',
-                'document' => '34567890',
-                'email' => 'ana.martinez@email.com',
-                'phone_number' => '+51987654329',
+                'name' => 'infrastructure',
+                'dni' => '10000004',
+                'fullname' => 'Luis Infraestructura',
+                'email' => 'infrastructure@techproc.com',
+                'phone' => '+51900000004',
                 'password' => Hash::make('password123'),
-                'gender' => 'female',
-                'country' => 'Perú',
-                'role' => json_encode(['student']),
-                'status' => 'active',
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
+                'role' => 'infrastructure',
             ],
             [
-                'first_name' => 'Luis',
-                'last_name' => 'González',
-                'full_name' => 'Luis González',
-                'dni' => '45678901',
-                'document' => '45678901',
-                'email' => 'luis.gonzalez@email.com',
-                'phone_number' => '+51987654330',
+                'name' => 'security',
+                'dni' => '10000005',
+                'fullname' => 'Ana Seguridad',
+                'email' => 'security@techproc.com',
+                'phone' => '+51900000005',
                 'password' => Hash::make('password123'),
-                'gender' => 'male',
-                'country' => 'Perú',
-                'role' => json_encode(['student']),
-                'status' => 'active',
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
+                'role' => 'security',
             ],
-            // Instructores
             [
-                'first_name' => 'Roberto',
-                'last_name' => 'Rodríguez',
-                'full_name' => 'Roberto Rodríguez',
-                'dni' => '11223344',
-                'document' => '11223344',
-                'email' => 'roberto.rodriguez@email.com',
-                'phone_number' => '+51987654323',
+                'name' => 'academic_analyst',
+                'dni' => '10000006',
+                'fullname' => 'María Analista',
+                'email' => 'academic.analyst@techproc.com',
+                'phone' => '+51900000006',
                 'password' => Hash::make('password123'),
-                'gender' => 'male',
-                'country' => 'Perú',
-                'role' => json_encode(['instructor']),
-                'status' => 'active',
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
+                'role' => 'academic_analyst',
             ],
             [
-                'first_name' => 'Laura',
-                'last_name' => 'Silva',
-                'full_name' => 'Laura Silva',
-                'dni' => '22334455',
-                'document' => '22334455',
-                'email' => 'laura.silva@email.com',
-                'phone_number' => '+51987654325',
+                'name' => 'web',
+                'dni' => '10000007',
+                'fullname' => 'Pedro Web',
+                'email' => 'web@techproc.com',
+                'phone' => '+51900000007',
                 'password' => Hash::make('password123'),
-                'gender' => 'female',
-                'country' => 'Perú',
-                'role' => json_encode(['instructor']),
-                'status' => 'active',
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
+                'role' => 'web',
             ],
-            // Empleados/Técnicos
+
+            // ========================================
+            // GRUPO 06 - AUDITORÍA Y ENCUESTAS
+            // ========================================
             [
-                'first_name' => 'Ana',
-                'last_name' => 'López',
-                'full_name' => 'Ana López',
-                'dni' => '44332211',
-                'document' => '44332211',
-                'email' => 'ana.lopez@email.com',
-                'phone_number' => '+51987654324',
+                'name' => 'survey_admin',
+                'dni' => '10000008',
+                'fullname' => 'Laura Encuestas',
+                'email' => 'survey.admin@techproc.com',
+                'phone' => '+51900000008',
                 'password' => Hash::make('password123'),
-                'gender' => 'female',
-                'country' => 'Perú',
-                'role' => json_encode(['employee', 'technician']),
-                'status' => 'active',
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
+                'role' => 'survey_admin',
             ],
             [
-                'first_name' => 'Pedro',
-                'last_name' => 'Gómez',
-                'full_name' => 'Pedro Gómez',
-                'dni' => '55443322',
-                'document' => '55443322',
-                'email' => 'pedro.gomez@email.com',
-                'phone_number' => '+51987654326',
+                'name' => 'audit_manager',
+                'dni' => '10000009',
+                'fullname' => 'Roberto Auditoría',
+                'email' => 'audit.manager@techproc.com',
+                'phone' => '+51900000009',
                 'password' => Hash::make('password123'),
-                'gender' => 'male',
-                'country' => 'Perú',
-                'role' => json_encode(['employee', 'technician']),
-                'status' => 'active',
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
+                'role' => 'audit_manager',
             ],
             [
-                'first_name' => 'Lucía',
-                'last_name' => 'Ramírez',
-                'full_name' => 'Lucía Ramírez',
-                'dni' => '66554433',
-                'document' => '66554433',
-                'email' => 'lucia.ramirez@email.com',
-                'phone_number' => '+51987654327',
+                'name' => 'auditor',
+                'dni' => '10000010',
+                'fullname' => 'Carmen Auditora',
+                'email' => 'auditor@techproc.com',
+                'phone' => '+51900000010',
                 'password' => Hash::make('password123'),
-                'gender' => 'female',
-                'country' => 'Perú',
-                'role' => json_encode(['employee', 'technician']),
-                'status' => 'active',
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
+                'role' => 'auditor',
+            ],
+
+            // ========================================
+            // GRUPO QUEZADA - RECURSOS HUMANOS Y FINANZAS
+            // ========================================
+            [
+                'name' => 'human_resources',
+                'dni' => '10000011',
+                'fullname' => 'Rosa Recursos Humanos',
+                'email' => 'human.resources@techproc.com',
+                'phone' => '+51900000011',
+                'password' => Hash::make('password123'),
+                'role' => 'human_resources',
             ],
             [
-                'first_name' => 'Desarrollador',
-                'last_name' => 'Web',
-                'full_name' => 'Desarrollador Web',
-                'dni' => '66554436',
-                'document' => '66554436',
-                'email' => 'developer.web@email.com',
-                'phone_number' => '+51987654328',
-                'password' => Hash::make('devweb123'),
-                'gender' => 'male',
-                'country' => 'Perú',
-                'role' => json_encode(['web','employee', 'technician']),
-                'status' => 'active',
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
+                'name' => 'financial_manager',
+                'dni' => '10000012',
+                'fullname' => 'Miguel Finanzas',
+                'email' => 'financial.manager@techproc.com',
+                'phone' => '+51900000012',
+                'password' => Hash::make('password123'),
+                'role' => 'financial_manager',
             ],
             [
-                'first_name' => 'Data',
-                'last_name' => 'Analyst',
-                'full_name' => 'Data Analyst',
-                'dni' => '66554430',
-                'document' => '66554430',
-                'email' => 'data.analyst@email.com',
-                'phone_number' => '+51987654320',
-                'password' => Hash::make('data123'),
-                'gender' => 'male',
-                'country' => 'Perú',
-                'role' => json_encode(['data', 'employee', 'technician']),
-                'status' => 'active',
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ]
+                'name' => 'system_viewer',
+                'dni' => '10000013',
+                'fullname' => 'Sofía Visor',
+                'email' => 'system.viewer@techproc.com',
+                'phone' => '+51900000013',
+                'password' => Hash::make('password123'),
+                'role' => 'system_viewer',
+            ],
+            [
+                'name' => 'enrollment_manager',
+                'dni' => '10000014',
+                'fullname' => 'Diego Matrículas',
+                'email' => 'enrollment.manager@techproc.com',
+                'phone' => '+51900000014',
+                'password' => Hash::make('password123'),
+                'role' => 'enrollment_manager',
+            ],
+            [
+                'name' => 'data_analyst',
+                'dni' => '10000015',
+                'fullname' => 'Elena Datos',
+                'email' => 'data.analyst@techproc.com',
+                'phone' => '+51900000015',
+                'password' => Hash::make('password123'),
+                'role' => 'data_analyst',
+            ],
+
+            // ========================================
+            // GRUPO HURTADO - MARKETING
+            // ========================================
+            [
+                'name' => 'marketing',
+                'dni' => '10000016',
+                'fullname' => 'Javier Marketing',
+                'email' => 'marketing@techproc.com',
+                'phone' => '+51900000016',
+                'password' => Hash::make('password123'),
+                'role' => 'marketing',
+            ],
+            [
+                'name' => 'marketing_admin',
+                'dni' => '10000017',
+                'fullname' => 'Patricia Marketing Admin',
+                'email' => 'marketing.admin@techproc.com',
+                'phone' => '+51900000017',
+                'password' => Hash::make('password123'),
+                'role' => 'marketing_admin',
+            ],
+
+            // ========================================
+            // GRUPO VÁSQUEZ - ACADÉMICO
+            // ========================================
+            [
+                'name' => 'teacher',
+                'dni' => '10000018',
+                'fullname' => 'Fernando Profesor',
+                'email' => 'teacher@techproc.com',
+                'phone' => '+51900000018',
+                'password' => Hash::make('password123'),
+                'role' => 'teacher',
+            ],
+            [
+                'name' => 'student',
+                'dni' => '10000019',
+                'fullname' => 'Daniela Estudiante',
+                'email' => 'student@techproc.com',
+                'phone' => '+51900000019',
+                'password' => Hash::make('password123'),
+                'role' => 'student',
+            ],
+
+            // ========================================
+            // GRUPO DE LEYTON - TUTORÍAS Y ADMINISTRACIÓN
+            // ========================================
+            [
+                'name' => 'tutor',
+                'dni' => '10000020',
+                'fullname' => 'Andrea Tutora',
+                'email' => 'tutor@techproc.com',
+                'phone' => '+51900000020',
+                'password' => Hash::make('password123'),
+                'role' => 'tutor',
+            ],
+            [
+                'name' => 'administrative_clerk',
+                'dni' => '10000021',
+                'fullname' => 'Ricardo Administrativo',
+                'email' => 'administrative.clerk@techproc.com',
+                'phone' => '+51900000021',
+                'password' => Hash::make('password123'),
+                'role' => 'administrative_clerk',
+            ],
         ];
 
-        DB::table('users')->insert($users);
-        
-        // Estadísticas informativas
-        $roles = collect($users)->pluck('role')->map(fn($r) => json_decode($r, true));
-        $countByType = [
-            'student' => $roles->filter(fn($r) => in_array('student', $r))->count(),
-            'instructor' => $roles->filter(fn($r) => in_array('instructor', $r))->count(),
-            'employee' => $roles->filter(fn($r) => in_array('employee', $r))->count(),
-        ];
+        $createdCount = 0;
+        $skippedCount = 0;
 
-        $this->command->info('Usuarios creados: ' . count($users));
-        $this->command->info(' - Estudiantes: ' . $countByType['student']);
-        $this->command->info(' - Instructores: ' . $countByType['instructor']);
-        $this->command->info(' - Empleados: ' . $countByType['employee']);
+        foreach ($users as $userData) {
+            $role = $userData['role'];
+            unset($userData['role']);
+
+            // Verificar si el usuario ya existe
+            $existingUser = User::where('email', $userData['email'])->first();
+
+            if ($existingUser) {
+                $this->command->warn("⚠️  Usuario {$userData['email']} ya existe, saltando...");
+                $skippedCount++;
+                continue;
+            }
+
+            $user = User::create($userData);
+            $user->assignRole($role);
+            $createdCount++;
+        }
+
+        $this->command->info('✅ Proceso completado!');
+        $this->command->info('');
+        $this->command->info('Usuarios creados: ' . $createdCount);
+        $this->command->info('Usuarios omitidos (ya existían): ' . $skippedCount);
+        $this->command->info('Total de usuarios en el seeder: ' . count($users));
+        $this->command->info('');
+        $this->command->info('👤 GRUPO 03 - SOPORTE Y ADMINISTRACIÓN: 7 usuarios');
+        $this->command->info('👤 GRUPO 06 - AUDITORÍA Y ENCUESTAS: 3 usuarios');
+        $this->command->info('👤 GRUPO QUEZADA - RECURSOS HUMANOS Y FINANZAS: 5 usuarios');
+        $this->command->info('👤 GRUPO HURTADO - MARKETING: 2 usuarios');
+        $this->command->info('👤 GRUPO VÁSQUEZ - ACADÉMICO: 2 usuarios');
+        $this->command->info('👤 GRUPO DE LEYTON - TUTORÍAS Y ADMINISTRACIÓN: 2 usuarios');
+        $this->command->info('');
+        $this->command->info('📧 Todos los usuarios tienen la contraseña: password123');
+        $this->command->info('📧 Formato de email: {rol}@techproc.com');
     }
 }
