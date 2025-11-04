@@ -20,16 +20,17 @@ class ChatbotApiController
     public function startConversation(): JsonResponse
     {
         try {
-            $conversation = $this->chatbotService->startConversation();
+            $result = $this->chatbotService->startConversation();
 
             return response()->json([
-                'success' => true,
-                'data' => $conversation
+                'success' => $result['success'],
+                'data' => $result
             ]);
 
         } catch (\Exception $e) {
             Log::error('API Error starting chatbot conversation', [
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
 
             return response()->json([
@@ -51,14 +52,15 @@ class ChatbotApiController
             );
 
             return response()->json([
-                'success' => true,
+                'success' => $response['success'],
                 'data' => $response
             ]);
 
         } catch (\Exception $e) {
             Log::error('API Error sending chatbot message', [
                 'conversation_id' => $request->conversation_id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
 
             return response()->json([
@@ -74,27 +76,21 @@ class ChatbotApiController
         try {
             $validated = $request->validated();
 
-            $success = $this->chatbotService->endConversation(
+            $result = $this->chatbotService->endConversation(
                 $validated['conversation_id'],
                 $request->input('feedback', [])
             );
 
-            if ($success) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Conversación finalizada'
-                ]);
-            }
-
             return response()->json([
-                'success' => false,
-                'message' => 'No se pudo finalizar la conversación'
-            ], 500);
+                'success' => $result['success'],
+                'message' => $result['message']
+            ]);
 
         } catch (\Exception $e) {
             Log::error('API Error ending chatbot conversation', [
                 'conversation_id' => $request->conversation_id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
 
             return response()->json([
@@ -123,12 +119,44 @@ class ChatbotApiController
         } catch (\Exception $e) {
             Log::error('API Error getting FAQs by category', [
                 'category' => $category,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
 
             return response()->json([
                 'success' => false,
                 'message' => 'Error al obtener las preguntas frecuentes',
+                'error' => config('app.debug') ? $e->getMessage() : null
+            ], 500);
+        }
+    }
+
+    public function getConversationHistory(int $conversationId): JsonResponse
+    {
+        try {
+            $history = $this->chatbotService->getConversationHistory($conversationId);
+
+            if (!$history) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Conversación no encontrada'
+                ], 404);
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $history
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('API Error getting conversation history', [
+                'conversation_id' => $conversationId,
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener el historial de conversación',
                 'error' => config('app.debug') ? $e->getMessage() : null
             ], 500);
         }
@@ -146,7 +174,8 @@ class ChatbotApiController
 
         } catch (\Exception $e) {
             Log::error('API Error getting chatbot analytics', [
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
 
             return response()->json([

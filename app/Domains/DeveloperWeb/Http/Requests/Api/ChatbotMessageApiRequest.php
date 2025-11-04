@@ -26,6 +26,18 @@ class ChatbotMessageApiRequest extends FormRequest
         ];
     }
 
+    public function messages(): array
+    {
+        return [
+            'message.required' => 'El mensaje es obligatorio',
+            'message.max' => 'El mensaje no puede tener más de 1000 caracteres',
+            'conversation_id.required' => 'El ID de conversación es obligatorio',
+            'conversation_id.exists' => 'La conversación no existe',
+            'feedback.rating.between' => 'La calificación debe estar entre 1 y 5',
+            'feedback.comment.max' => 'El comentario no puede tener más de 500 caracteres',
+        ];
+    }
+
     protected function failedValidation(Validator $validator)
     {
         throw new HttpResponseException(response()->json([
