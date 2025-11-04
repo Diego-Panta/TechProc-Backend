@@ -45,8 +45,9 @@ APP_KEY=base64:LA_APP_KEY_DEL_GRUPO
 ### 4. Ejecutar seeders (EN ESTE ORDEN)
 
 ```bash
-php artisan db:seed --class=RolesAndPermissionsSeeder
-php artisan db:seed --class=AdminUserSeeder
+php artisan db:seed --class=PermissionsSeeder
+php artisan db:seed --class=RolesSeeder
+php artisan db:seed --class=UsersSeeder
 ```
 
 ### 5. Ejecutar el servidor
@@ -62,16 +63,42 @@ Servidor disponible en: `http://localhost:8001`
 
 ## Roles Disponibles
 
+### GRUPO 03 - SOPORTE Y ADMINISTRACIÓN
 - `super_admin` - Super administrador (todos los permisos)
-- `admin` - Administrador
-- `teacher` - Profesor
-- `student` - Estudiante
-- `support` - Soporte técnico
-- `auditor` - Auditor
+- `admin` - Administrador (gestión completa de usuarios, roles y permisos)
+- `support` - Soporte técnico (gestión de tickets)
+- `infrastructure` - Infraestructura (gestión de activos tecnológicos)
+- `security` - Seguridad (gestión de seguridad de usuarios)
+- `academic_analyst` - Analista académico (análisis de notas y asistencias)
+- `web` - Desarrollador web (gestión del chatbot y contenido web)
+
+### GRUPO 06 - AUDITORÍA Y ENCUESTAS
+- `survey_admin` - Administrador de encuestas
+- `audit_manager` - Jefe de auditores
+- `auditor` - Auditor (solo lectura)
+
+### GRUPO QUEZADA - RECURSOS HUMANOS Y FINANZAS
+- `human_resources` - Recursos humanos (gestión de personal)
+- `financial_manager` - Gerente financiero (gestión de flujos financieros)
+- `system_viewer` - Visualizador del sistema (solo lectura)
+- `enrollment_manager` - Gerente de matrículas
+- `data_analyst` - Analista de datos (diseño de KPIs)
+
+### GRUPO HURTADO - MARKETING
+- `marketing` - Empleado de marketing (manejo de redes sociales)
+- `marketing_admin` - Administrador de marketing (supervisión de campañas)
+
+### GRUPO VÁSQUEZ - ACADÉMICO
+- `teacher` - Profesor/Docente (gestión de clases y evaluaciones)
+- `student` - Estudiante (acceso básico)
+
+### GRUPO DE LEYTON - TUTORÍAS Y ADMINISTRACIÓN
+- `tutor` - Instructor/Profesor/Psicólogo (manejo de tutorías)
+- `administrative_clerk` - Empleado administrativo (trámites documentarios)
 
 ---
 
-## Importar Colección de Postman
+## Para probar
 
 1. Abre Postman
 2. Importa el archivo (que se encuentra en este repositorio: ./TechProc-API.postman_collection.json): `TechProc-API.postman_collection.json`
@@ -90,7 +117,7 @@ php artisan route:list
 
 # Refrescar base de datos (elimina todos los datos)
 php artisan migrate:fresh
-php artisan db:seed --class=RolesAndPermissionsSeeder && php artisan db:seed --class=AdminUserSeeder
+php artisan db:seed --class=PermissionsSeeder && php artisan db:seed --class=RolesSeeder && php artisan db:seed --class=UsersSeeder
 ```
 
 ---

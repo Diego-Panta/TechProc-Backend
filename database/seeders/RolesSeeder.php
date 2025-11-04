@@ -396,6 +396,16 @@ class RolesSeeder extends Seeder
             'tickets.create',
             'tickets.update',
         ]);
+        
+        // ========================================
+        // GRUPO DE LEYTON - TUTORÍAS Y ADMINISTRACIÓN
+        // ========================================
+
+        // ROL: Tutor (instructor/profesor/psicólogo - manejo de tutorías)
+        $tutor = Role::firstOrCreate(['name' => 'tutor', 'guard_name' => 'web']);
+
+        // ROL: Administrative Clerk (empleado administrativo - trámites documentarios)
+        $administrativeClerk = Role::firstOrCreate(['name' => 'administrative_clerk', 'guard_name' => 'web']);
 
         $this->command->info('✅ Roles creados exitosamente!');
         $this->command->info('');
@@ -428,6 +438,10 @@ class RolesSeeder extends Seeder
         $this->command->info('  🎓 GRUPO VÁSQUEZ - ACADÉMICO:');
         $this->command->info('    - teacher (profesor)');
         $this->command->info('    - student (estudiante)');
+        $this->command->info('');
+        $this->command->info('  🎯 GRUPO DE LEYTON - TUTORÍAS Y ADMINISTRACIÓN:');
+        $this->command->info('    - tutor (instructor/profesor/psicólogo)');
+        $this->command->info('    - administrative_clerk (empleado administrativo)');
         $this->command->info('');
         $this->command->info('Total de roles: ' . Role::count());
     }

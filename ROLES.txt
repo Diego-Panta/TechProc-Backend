@@ -130,6 +130,23 @@ GRUPO VÁSQUEZ - ACADÉMICO
 
 
 ================================================================================
+GRUPO DE LEYTON - TUTORÍAS Y ADMINISTRACIÓN
+================================================================================
+
+
+1. tutor (Instructor/Profesor/Psicólogo)
+   - Manejo de tutorías estudiantiles
+   - Seguimiento y apoyo psicopedagógico
+   - Orientación académica y personal
+   - Registro de sesiones de tutoría
+
+2. administrative_clerk (Empleado Administrativo)
+   - Realización de trámites documentarios
+   - Gestión de documentación administrativa
+   - Nota: Esta función será transferida a otro grupo
+
+
+================================================================================
 NOTAS IMPORTANTES
 ================================================================================
 
