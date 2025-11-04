@@ -15,7 +15,7 @@ class AdminUserSeeder extends Seeder
     {
         // Crear usuario Super Admin
         $superAdmin = User::create([
-            'name' => 'Super Admin',
+            'name' => 'super_admin',
             'email' => 'admin@techproc.com',
             'password' => Hash::make('password123'),
             'fullname' => 'Super Admin',
