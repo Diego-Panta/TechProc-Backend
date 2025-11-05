@@ -11,6 +11,14 @@ class User extends Authenticatable
 {
     use HasFactory, HasApiTokens, HasRoles;
 
+    /**
+     * Create a new factory instance for the model.
+     */
+    protected static function newFactory()
+    {
+        return \Database\Factories\UserFactory::new();
+    }
+
     protected $table = 'users';
     public $timestamps = true;
     protected $guard_name = 'web';
