@@ -16,6 +16,8 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
+        $this->authorize('viewAny', User::class);
+
         $perPage = $request->get('per_page', 15);
         $search = $request->get('search');
 
@@ -38,6 +40,8 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorize('create', User::class);
+
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
@@ -99,6 +103,8 @@ class UserController extends Controller
         try {
             $user = User::with('roles', 'permissions')->findOrFail($id);
 
+            $this->authorize('view', $user);
+
             return response()->json([
                 'success' => true,
                 'data' => $user
@@ -118,6 +124,8 @@ class UserController extends Controller
     {
         try {
             $user = User::findOrFail($id);
+
+            $this->authorize('update', $user);
 
             $validator = Validator::make($request->all(), [
                 'name' => 'sometimes|string|max:255',
@@ -183,6 +191,9 @@ class UserController extends Controller
     {
         try {
             $user = User::findOrFail($id);
+
+            $this->authorize('delete', $user);
+
             $user->delete();
 
             return response()->json([
@@ -218,6 +229,9 @@ class UserController extends Controller
 
         try {
             $user = User::findOrFail($id);
+
+            $this->authorize('assignRoles', $user);
+
             $user->syncRoles($request->roles);
             $user->load('roles', 'permissions');
 
@@ -255,6 +269,9 @@ class UserController extends Controller
 
         try {
             $user = User::findOrFail($id);
+
+            $this->authorize('assignPermissions', $user);
+
             $user->syncPermissions($request->permissions);
             $user->load('roles', 'permissions');
 
