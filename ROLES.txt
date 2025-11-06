@@ -128,7 +128,6 @@ GRUPO VÁSQUEZ - ACADÉMICO
    - Consulta de asistencia
    - Solo lectura (sin permisos de edición)
 
-
 ================================================================================
 GRUPO DE LEYTON - TUTORÍAS Y ADMINISTRACIÓN
 ================================================================================
@@ -147,6 +146,15 @@ GRUPO DE LEYTON - TUTORÍAS Y ADMINISTRACIÓN
 
 
 ================================================================================
+GRUPO DE BUSTAMANTE
+================================================================================
+- planner_admin
+- planner
+- auditor
+- continuous_improvement: Mejora continua.
+
+
+================================================================================
 NOTAS IMPORTANTES
 ================================================================================
 
@@ -155,3 +163,4 @@ NOTAS IMPORTANTES
 - Acciones estándar: view, view-any, create, update, delete
 - El rol super_admin tiene todos los permisos del sistema
 - Cada rol debe tener permisos específicos asignados según su función
+

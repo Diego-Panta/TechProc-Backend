@@ -14,6 +14,8 @@ class PermissionController extends Controller
      */
     public function index()
     {
+        $this->authorize('viewAny', Permission::class);
+
         $permissions = Permission::all();
 
         return response()->json([
@@ -27,6 +29,8 @@ class PermissionController extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorize('create', Permission::class);
+
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|unique:permissions,name',
         ]);
@@ -64,6 +68,8 @@ class PermissionController extends Controller
         try {
             $permission = Permission::findOrFail($id);
 
+            $this->authorize('view', $permission);
+
             return response()->json([
                 'success' => true,
                 'data' => $permission
@@ -83,6 +89,8 @@ class PermissionController extends Controller
     {
         try {
             $permission = Permission::findOrFail($id);
+
+            $this->authorize('update', $permission);
 
             $validator = Validator::make($request->all(), [
                 'name' => 'required|string|unique:permissions,name,' . $permission->id,
@@ -120,6 +128,9 @@ class PermissionController extends Controller
     {
         try {
             $permission = Permission::findOrFail($id);
+
+            $this->authorize('delete', $permission);
+
             $permission->delete();
 
             return response()->json([

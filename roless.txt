@@ -1,0 +1,37 @@
+🧩 GRUPO 03 - SOPORTE Y ADMINISTRACIÓN
+admin
+support
+infrastructure
+security
+academic_analyst
+web
+
+📋 GRUPO 06 - AUDITORÍA Y ENCUESTAS
+survey_admin
+audit_manager
+auditor
+
+💼 GRUPO QUEZADA - RECURSOS HUMANOS Y FINANZAS
+human_resources
+financial_manager
+system_viewer
+enrollment_manager
+data_analyst
+
+📢 GRUPO HURTADO - MARKETING
+marketing
+marketing_admin
+
+🎓 GRUPO VÁSQUEZ - ACADÉMICO
+teacher
+student
+
+🧠 GRUPO DE LEYTON - TUTORÍAS Y ADMINISTRACIÓN
+tutor
+administrative_clerk
+
+⚙️ GRUPO DE BUSTAMANTE
+planner_admin
+planner
+auditor
+continuous_improvement
