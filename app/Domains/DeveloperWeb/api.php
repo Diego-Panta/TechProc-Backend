@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Route;
 
 // API Routes for DeveloperWeb module
 Route::prefix('developer-web')->name('api.developer-web.')->group(function () {
-
+    
     // Dashboard Statistics API
     Route::prefix('dashboard')->name('dashboard.')->group(function () {
         // Public endpoints (sin autenticación)
