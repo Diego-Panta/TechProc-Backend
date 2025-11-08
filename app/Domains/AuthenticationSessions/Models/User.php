@@ -2,14 +2,16 @@
 
 namespace App\Domains\AuthenticationSessions\Models;
 
+use App\Domains\AuthenticationSessions\Notifications\ResetPasswordNotification;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasFactory, HasApiTokens, HasRoles;
+    use HasFactory, HasApiTokens, HasRoles, Notifiable;
 
     /**
      * Create a new factory instance for the model.
@@ -54,5 +56,13 @@ class User extends Authenticatable
     public function activeSessions()
     {
         return $this->hasMany(ActiveSession::class, 'user_id');
+    }
+
+    /**
+     * Enviar notificación de reseteo de contraseña
+     */
+    public function sendPasswordResetNotification($token)
+    {
+        $this->notify(new ResetPasswordNotification($token));
     }
 }
