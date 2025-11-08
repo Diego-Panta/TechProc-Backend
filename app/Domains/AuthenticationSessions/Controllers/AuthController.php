@@ -178,4 +178,77 @@ class AuthController extends Controller
             ]
         ], 200);
     }
+
+    /**
+     * Update authenticated user profile
+     */
+    public function updateProfile(Request $request)
+    {
+        $user = $request->user();
+
+        $validator = Validator::make($request->all(), [
+            'name' => 'sometimes|string|max:255',
+            'email' => 'sometimes|email|unique:users,email,' . $user->id,
+            'password' => 'sometimes|string|min:8|confirmed',
+            'dni' => 'sometimes|string|max:8|unique:users,dni,' . $user->id,
+            'fullname' => 'sometimes|string|max:255',
+            'avatar' => 'sometimes|string|max:500',
+            'phone' => 'sometimes|string|max:20',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error de validación',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            // Preparar datos para actualizar
+            $dataToUpdate = $request->only([
+                'name',
+                'email',
+                'dni',
+                'fullname',
+                'avatar',
+                'phone'
+            ]);
+
+            // Si se proporciona password, encriptarlo
+            if ($request->has('password')) {
+                $dataToUpdate['password'] = Hash::make($request->password);
+            }
+
+            // Actualizar usuario
+            $user->update($dataToUpdate);
+
+            // Refrescar usuario para obtener datos actualizados
+            $user->refresh();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Perfil actualizado exitosamente',
+                'data' => [
+                    'user' => [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'fullname' => $user->fullname,
+                        'email' => $user->email,
+                        'dni' => $user->dni,
+                        'phone' => $user->phone,
+                        'avatar' => $user->avatar,
+                        'roles' => $user->getRoleNames(),
+                        'permissions' => $user->getAllPermissions()->pluck('name'),
+                    ]
+                ]
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al actualizar perfil',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

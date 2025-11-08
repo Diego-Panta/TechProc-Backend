@@ -144,6 +144,37 @@
 					"response": []
 				},
 				{
+					"name": "Update Authenticated User Profile",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Updated Name\",\n    \"fullname\": \"Updated Fullname\",\n    \"email\": \"updated@techproc.com\",\n    \"dni\": \"12345678\",\n    \"phone\": \"+51987654321\",\n    \"avatar\": \"https://example.com/avatar.png\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/profile",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"profile"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Logout",
 					"request": {
 						"method": "POST",
