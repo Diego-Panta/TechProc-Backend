@@ -254,6 +254,302 @@
 			]
 		},
 		{
+			"name": "Recovery Email",
+			"item": [
+				{
+					"name": "Add Recovery Email",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"recovery_email\": \"recovery@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/recovery-email/add",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"recovery-email",
+								"add"
+							]
+						},
+						"description": "Agrega un email de recuperación externo (diferente al email de registro). Envía automáticamente un código de verificación de 6 dígitos al email proporcionado."
+					},
+					"response": []
+				},
+				{
+					"name": "Verify Recovery Email",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"code\": \"123456\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/recovery-email/verify",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"recovery-email",
+								"verify"
+							]
+						},
+						"description": "Verifica el email de recuperación con el código de 6 dígitos recibido. El código expira en 15 minutos."
+					},
+					"response": []
+				},
+				{
+					"name": "Resend Recovery Email Code",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/recovery-email/resend-code",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"recovery-email",
+								"resend-code"
+							]
+						},
+						"description": "Reenvía un nuevo código de verificación al email de recuperación. Útil cuando el código anterior expiró."
+					},
+					"response": []
+				},
+				{
+					"name": "Remove Recovery Email",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/auth/recovery-email/remove",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"recovery-email",
+								"remove"
+							]
+						},
+						"description": "Elimina el email de recuperación y toda su información de verificación asociada."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Two-Factor Authentication (2FA)",
+			"item": [
+				{
+					"name": "Enable 2FA",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/2fa/enable",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"2fa",
+								"enable"
+							]
+						},
+						"description": "Inicia el proceso de habilitar 2FA. Genera un secreto, códigos de recuperación y devuelve una URL de QR code para escanear con Google Authenticator."
+					},
+					"response": []
+				},
+				{
+					"name": "Verify and Activate 2FA",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"code\": \"123456\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/2fa/verify",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"2fa",
+								"verify"
+							]
+						},
+						"description": "Verifica el código de 6 dígitos de Google Authenticator y activa completamente el 2FA para el usuario."
+					},
+					"response": []
+				},
+				{
+					"name": "Verify 2FA on Login",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"user@example.com\",\n    \"password\": \"password123\",\n    \"code\": \"123456\",\n    \"role\": \"admin\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/2fa/verify-login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"2fa",
+								"verify-login"
+							]
+						},
+						"description": "Completa el login cuando el usuario tiene 2FA habilitado. Se usa después de recibir requires_2fa=true en el login normal. Acepta código de Google Authenticator o código de recuperación."
+					},
+					"response": []
+				},
+				{
+					"name": "Disable 2FA",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/2fa/disable",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"2fa",
+								"disable"
+							]
+						},
+						"description": "Deshabilita completamente el 2FA. Requiere la contraseña del usuario para confirmar."
+					},
+					"response": []
+				},
+				{
+					"name": "Regenerate Recovery Codes",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/2fa/recovery-codes/regenerate",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"2fa",
+								"recovery-codes",
+								"regenerate"
+							]
+						},
+						"description": "Genera nuevos códigos de recuperación de 2FA. Los códigos anteriores quedan invalidados. Requiere contraseña para confirmar."
+					},
+					"response": []
+				}
+			]
+		},
+		{
 			"name": "Users",
 			"item": [
 				{
