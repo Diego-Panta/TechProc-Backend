@@ -38,5 +38,4 @@ class TechAsset extends Model
     public function hardwares(): HasMany {
         return $this->hasMany(Hardware::class, 'asset_id');
     }
-
 }
