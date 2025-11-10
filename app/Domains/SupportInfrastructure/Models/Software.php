@@ -12,7 +12,7 @@ class Software extends Model
     protected $table = 'softwares';
     protected $fillable = [
         'asset_id',
-        'name',
+        'software_name',
         'version',
         'type'];
 

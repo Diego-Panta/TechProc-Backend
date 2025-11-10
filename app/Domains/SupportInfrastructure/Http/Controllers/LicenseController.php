@@ -15,7 +15,7 @@ class LicenseController extends Controller{
         $this->service = $service;
     }
     public function index(){
-        return response()->json($this->service->getAllHardwares());
+        return response()->json($this->service->getAllLicenses());
     }
 
     public function store(Request $request){
