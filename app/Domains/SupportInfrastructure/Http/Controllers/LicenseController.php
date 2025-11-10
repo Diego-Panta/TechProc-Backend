@@ -1,35 +1,32 @@
 <?php
 
-namespace App\Domains\SupportInfrastructure\Controllers;
+namespace App\Domains\SupportInfrastructure\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Domains\SupportInfrastructure\Models\License;
+use App\Domains\SupportInfrastructure\Services\LicenseService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+#no está usando los servicios
 class LicenseController extends Controller{
+    protected $service;
+
+    public function __construct(LicenseService $service) {
+        $this->service = $service;
+    }
     public function index(){
-        return response()->json(License::with(['software','responsible'])->get());
+        return response()->json($this->service->getAllLicenses());
     }
 
     public function store(Request $request){
         $data = $request->validate([
-            'id' => 'sometimes|integer',
-            'id_license' => 'nullable|integer',
-            'software_name' => 'required|string',
-            'license_key' => 'required|string',
-            'license_type'=> 'nullable|string',
-            'provider'=> 'nullable|string',
+            'software_id' => 'required|integer|exists:software,id',
+            'key_code' => 'nullable|string',
+            'provider' => 'nullable|string',
             'purchase_date' => 'nullable|date',
             'expiration_date' => 'nullable|date',
-            'seats_total' => 'nullable|integer',
-            'seats_used' =>'nullable|integer',
-            'cost_annual' =>'nullable|numeric',
-            'status' =>'nullable|string',
-        #'responsible_id' =>'nullable|exists:employees,id',
-            'responsible_id' => 'nullable|integer',
-            'notes' =>'nullable|string',
-            'created_at' =>'nullable|date',
+            'cost' => 'nullable|numeric',
+            'status' => 'required|string'
             ]);
 
         // Convertir fechas del formato ISO 8601 a formato MySQL
@@ -40,52 +37,53 @@ class LicenseController extends Controller{
             $data['expiration_date'] = date('Y-m-d', strtotime($data['expiration_date']));
         }
 
-        $license = License::create($data);
+        $license = $this->service->createLicense($data);
         return response()->json($license, 201);
     }
-        public function show($id){
-            return response()->json(
-                License::with(['software', 'responsible'])->findOrFail($id)
-            );
+    public function show($id){
+        try{
+            $license = $this->service->getLicenseById($id);
+            return response()->json($license);
+        } catch(ModelNotFoundException $e){
+            return response()->json(['message' => 'License no encontrada'], 404);
         }
+    }
 
-        #no me funciona este método update, no actualiza nada
-        public function update(Request $request, $id)
-        {
-            Log::info('Update request:', $request->all());
-            $license = License::findOrFail($id);
-
-            $data = $request->validate([
-            'software_name' => 'sometimes|string',
-            'license_key' => 'sometimes|string',
-            'license_type'=> 'nullable|string',
-            'provider'=> 'nullable|string',
+    #no me funciona este método update, no actualiza nada
+    public function update(Request $request, $id)
+    {
+        $data = $request->validate([
+            'software_id' => 'sometimes|integer|exists:software,id',
+            'key_code' => 'nullable|string',
+            'provider' => 'nullable|string',
             'purchase_date' => 'nullable|date',
             'expiration_date' => 'nullable|date',
-            'seats_total' => 'nullable|integer',
-            'seats_used' =>'nullable|integer',
-            'cost_annual' =>'nullable|numeric',
-            'status' =>'nullable|string',
-        #'responsible_id' =>'nullable|exists:employees,id',
-            'responsible_id' => 'nullable|integer',
-            'notes' =>'nullable|string'
-            ]);
+            'cost' => 'nullable|numeric',
+            'status' => 'required|string'
+        ]);
 
-            // Convertir fechas del formato ISO 8601 a formato MySQL
-            if (isset($data['purchase_date'])) {
-                $data['purchase_date'] = date('Y-m-d', strtotime($data['purchase_date']));
-            }
-            if (isset($data['expiration_date'])) {
-                $data['expiration_date'] = date('Y-m-d', strtotime($data['expiration_date']));
-            }
+        // Convertir fechas del formato ISO 8601 a formato MySQL
+        if (isset($data['purchase_date'])) {
+            $data['purchase_date'] = date('Y-m-d', strtotime($data['purchase_date']));
+        }
+        if (isset($data['expiration_date'])) {
+            $data['expiration_date'] = date('Y-m-d', strtotime($data['expiration_date']));
+        }
 
-            $license->update($data);
-            Log::info('Updated license:', $license->toArray());
+        try{
+            $license = $this->service->updateLicense($id, $data);
             return response()->json($license);
-        }
+        } catch(ModelNotFoundException $e){
+            return response()->json(['message' => 'Licencia no encontrada'], 404);
+        }   
+    }
 
-        public function destroy($id){
-            License::findOrFail($id)->delete();
-            return response()->json(null, 204);
+    public function destroy($id){
+        try{
+            $this->service->deleteLicense($id);
+            return response()->noContent();
+        }catch(ModelNotFoundException $e){
+            return response()->json(['message' => 'Licencia no encontrada'], 404);
         }
+    }
 }

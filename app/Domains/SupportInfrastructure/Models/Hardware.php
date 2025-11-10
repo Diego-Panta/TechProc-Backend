@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Databas\Eloquent\Relations\BelongsTo;
 
-class TechAsset extends Model
+class Hardware extends Model
 {
     use HasFactory;
 
