@@ -31,6 +31,7 @@ class TechAsset extends Model
         return $this->belongsTo(config('auth.providers.users.model', 'App\Models\User'));
     }
 
+    #me faltaría agregar estas líneas en el Incadev/CoreDomain
     public function softwares(): HasMany{
         return $this->hasMany(Software::class, 'asset_id');
     }
