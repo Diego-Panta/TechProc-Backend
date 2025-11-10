@@ -1,7 +1,7 @@
 <?php
 
-#namespace App\Domains\SupportInfrastructure\Models;
-namespace IncadevUns\CoreDomain\Models;
+namespace App\Domains\SupportInfrastructure\Models;
+#namespace IncadevUns\CoreDomain\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

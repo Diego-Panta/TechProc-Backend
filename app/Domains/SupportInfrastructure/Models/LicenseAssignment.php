@@ -2,6 +2,7 @@
 
 namespace App\Domains\SupportInfrastructure\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -9,7 +10,7 @@ class LicenseAssignment extends Model{
 
     use HasFactory;
 
-    protected $table = 'license_assignments'
+    protected $table = 'license_assignments';
 
     protected $fillable = [
         'license_id',
