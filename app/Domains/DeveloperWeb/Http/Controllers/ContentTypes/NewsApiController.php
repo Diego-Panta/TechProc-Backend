@@ -1,9 +1,10 @@
 <?php
 
-namespace App\Domains\DeveloperWeb\Http\Controllers\Api\ContentTypes;
+namespace App\Domains\DeveloperWeb\Http\Controllers\ContentTypes;
 
 use App\Domains\DeveloperWeb\Services\ContentTypes\NewsService;
-use App\Domains\DeveloperWeb\Http\Requests\Api\ContentTypes\StoreNewsRequest;
+use App\Domains\DeveloperWeb\Http\Requests\ContentTypes\StoreNewsRequest;
+use App\Domains\DeveloperWeb\Http\Requests\ContentTypes\UpdateNewsRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -88,7 +89,7 @@ class NewsApiController
         }
     }
 
-    public function update(StoreNewsRequest $request, int $id): JsonResponse
+    public function update(UpdateNewsRequest $request, int $id): JsonResponse // CAMBIADO
     {
         try {
             $success = $this->newsService->update($id, $request->validated());
@@ -214,6 +215,34 @@ class NewsApiController
             return response()->json([
                 'success' => false,
                 'message' => 'Error al obtener las categorías'
+            ], 500);
+        }
+    }
+
+    /**
+     * Obtener estadísticas de noticias
+     */
+    public function getStats(): JsonResponse
+    {
+        try {
+            $stats = $this->newsService->getStats();
+
+            Log::info('Estadísticas de noticias consultadas');
+
+            return response()->json([
+                'success' => true,
+                'data' => $stats
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error obteniendo estadísticas de noticias', [
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener las estadísticas de noticias',
+                'error' => config('app.debug') ? $e->getMessage() : null
             ], 500);
         }
     }

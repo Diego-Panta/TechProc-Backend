@@ -5,6 +5,7 @@ namespace App\Domains\DeveloperWeb\Services\ContentTypes;
 use App\Domains\DeveloperWeb\Services\ContentService;
 use App\Domains\DeveloperWeb\Repositories\ContentItemRepository;
 use App\Domains\DeveloperWeb\Enums\ContentType;
+use App\Domains\DeveloperWeb\Enums\AnnouncementItemType;
 
 class AnnouncementService extends ContentService
 {
@@ -26,7 +27,7 @@ class AnnouncementService extends ContentService
             'start_date' => $this->formatDateTime($data['start_date']),
             'end_date' => $this->formatDateTime($data['end_date']),
             'priority' => $data['priority'] ?? 1,
-            'item_type' => $data['item_type'] ?? 'banner',
+            'item_type' => $data['item_type'] ?? AnnouncementItemType::BANNER->value,
             'target_page' => $data['target_page'] ?? null,
             'link_url' => $data['link_url'] ?? null,
             'button_text' => $data['button_text'] ?? null,
@@ -59,7 +60,7 @@ class AnnouncementService extends ContentService
         return $updateData;
     }
 
-    // 📢 MÉTODOS ESPECÍFICOS SOLICITADOS
+    // MÉTODOS ESPECÍFICOS SOLICITADOS
     
     public function getPublishedAnnouncements(int $perPage = 15)
     {
@@ -76,5 +77,10 @@ class AnnouncementService extends ContentService
         }
 
         return $this->contentItemRepository->resetViews($announcement);
+    }
+
+    public function getStats(): array
+    {
+        return $this->contentItemRepository->getAnnouncementStats();
     }
 }

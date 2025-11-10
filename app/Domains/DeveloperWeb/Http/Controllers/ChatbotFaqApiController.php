@@ -1,11 +1,11 @@
 <?php
 // app/Domains/DeveloperWeb/Http/Controllers/Api/ChatbotFaqApiController.php
 
-namespace App\Domains\DeveloperWeb\Http\Controllers\Api;
+namespace App\Domains\DeveloperWeb\Http\Controllers;
 
 use App\Domains\DeveloperWeb\Services\ChatbotFaqService;
-use App\Domains\DeveloperWeb\Http\Requests\Api\StoreFaqApiRequest;
-use App\Domains\DeveloperWeb\Http\Requests\Api\UpdateFaqApiRequest;
+use App\Domains\DeveloperWeb\Http\Requests\StoreFaqApiRequest;
+use App\Domains\DeveloperWeb\Http\Requests\UpdateFaqApiRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;

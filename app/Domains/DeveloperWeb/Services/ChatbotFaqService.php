@@ -4,7 +4,7 @@
 namespace App\Domains\DeveloperWeb\Services;
 
 use App\Domains\DeveloperWeb\Repositories\ChatbotRepository;
-use Incadev\Core\Models\ChatbotFaq;
+use App\Domains\DeveloperWeb\Models\ChatbotFaq;
 use App\Domains\DeveloperWeb\Enums\FaqCategory;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Log;

@@ -1,16 +1,22 @@
 <?php
 
-use App\Domains\DeveloperWeb\Http\Controllers\Api\ContentTypes\AnnouncementApiController;
-use App\Domains\DeveloperWeb\Http\Controllers\Api\ContentTypes\AlertApiController;
-use App\Domains\DeveloperWeb\Http\Controllers\Api\ContentTypes\NewsApiController;
-use App\Domains\DeveloperWeb\Http\Controllers\Api\ChatbotFaqApiController;
-use App\Domains\DeveloperWeb\Http\Controllers\Api\ChatbotApiController;
-use App\Domains\DeveloperWeb\Http\Controllers\Api\ChatbotConfigController;
+use App\Domains\DeveloperWeb\Http\Controllers\ContentTypes\AnnouncementApiController;
+use App\Domains\DeveloperWeb\Http\Controllers\ContentTypes\AlertApiController;
+use App\Domains\DeveloperWeb\Http\Controllers\ContentTypes\NewsApiController;
+use App\Domains\DeveloperWeb\Http\Controllers\ChatbotFaqApiController;
+use App\Domains\DeveloperWeb\Http\Controllers\ChatbotApiController;
+use App\Domains\DeveloperWeb\Http\Controllers\ChatbotConfigController;
+use App\Domains\DeveloperWeb\Http\Controllers\ContentStatsController;
 
 use Illuminate\Support\Facades\Route;
 
 // API Routes for DeveloperWeb module
 Route::prefix('developer-web')->name('api.developer-web.')->group(function () {
+
+    // ESTADÍSTICAS GENERALES
+    Route::prefix('stats')->name('stats.')->group(function () {
+        Route::get('/overall', [ContentStatsController::class, 'getOverallStats'])->name('overall');
+    });
 
     // NEWS
     Route::prefix('news')->name('news.')->group(function () {
@@ -25,6 +31,7 @@ Route::prefix('developer-web')->name('api.developer-web.')->group(function () {
         Route::get('/list/published', [NewsApiController::class, 'getPublished'])->name('published');
         Route::post('/{id}/reset-views', [NewsApiController::class, 'resetViews'])->name('reset-views');
         Route::get('/list/categories', [NewsApiController::class, 'getCategories'])->name('categories');
+        Route::get('/stats/summary', [NewsApiController::class, 'getStats'])->name('stats');
     });
 
     // ANNOUNCEMENTS
@@ -39,6 +46,7 @@ Route::prefix('developer-web')->name('api.developer-web.')->group(function () {
         // Métodos específicos SOLICITADOS - CAMBIAR NOMBRE
         Route::get('/list/published', [AnnouncementApiController::class, 'getPublished'])->name('published');
         Route::post('/{id}/reset-views', [AnnouncementApiController::class, 'resetViews'])->name('reset-views');
+        Route::get('/stats/summary', [AnnouncementApiController::class, 'getStats'])->name('stats');
     });
 
     // ALERTS
@@ -52,6 +60,7 @@ Route::prefix('developer-web')->name('api.developer-web.')->group(function () {
         
         // Métodos específicos SOLICITADOS - CAMBIAR NOMBRE
         Route::get('/list/published', [AlertApiController::class, 'getPublished'])->name('published');
+        Route::get('/stats/summary', [AlertApiController::class, 'getStats'])->name('stats');
     });
 
     // Chatbot FAQs API

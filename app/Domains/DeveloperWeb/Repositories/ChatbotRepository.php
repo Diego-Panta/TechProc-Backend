@@ -3,8 +3,8 @@
 
 namespace App\Domains\DeveloperWeb\Repositories;
 
-use Incadev\Core\Models\ChatbotConversation;
-use Incadev\Core\Models\ChatbotFaq;
+use App\Domains\DeveloperWeb\Models\ChatbotConversation;
+use App\Domains\DeveloperWeb\Models\ChatbotFaq;
 use App\Domains\DeveloperWeb\Enums\FaqCategory;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
