@@ -1,22 +1,26 @@
 <?php
-namespace App\Domains\SupportInfrastructure\Models;
-
+namespace IncadevUns\CoreDomain\Models;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Software extends Model
 {
+    use HasFactory;
     protected $table = 'softwares';
-    public $timestamps = FALSE;
-    protected $fillable = ['id','id_software','software_name','version','category','vendor',
-    'license_id','installation_date','last_update','created_at'];
+    protected $fillable = [
+        'asset_id',
+        'name',
+        'version',
+        'type'];
 
-    protected $casts = [
-        'installation_date' => 'date',
-        'last_update' => 'date',
-    ];
+    public function licenses(): HasMany{
+        return $this->hasMany(License::class, 'software_id');
+    }
 
-    public function licenses(){
-        return $this->hasMany(License::class);
+    public function asset(): BelongsTo{
+        return $this->belongsTo(TechAsset::class, 'asset_id');
     }
 
 

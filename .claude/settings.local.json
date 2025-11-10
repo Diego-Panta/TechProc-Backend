@@ -1,7 +1,13 @@
 {
   "permissions": {
     "allow": [
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(php artisan:*)",
+      "Bash(/mnt/c/Users/anton/Documents/GitHub/TechProc-Backend/.env)",
+      "Bash(tree:*)",
+      "Bash(composer require:*)",
+      "Bash(composer update:*)",
+      "Bash(php -l:*)"
     ],
     "deny": [],
     "ask": []
