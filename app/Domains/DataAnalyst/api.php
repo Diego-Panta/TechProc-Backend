@@ -1,179 +1,84 @@
 <?php
 
-use App\Domains\DataAnalyst\Http\Controllers\Api\StudentReportApiController;
-use App\Domains\DataAnalyst\Http\Controllers\Api\CourseReportApiController;
-use App\Domains\DataAnalyst\Http\Controllers\Api\AttendanceReportApiController;
-use App\Domains\DataAnalyst\Http\Controllers\Api\GradeReportApiController;
-use App\Domains\DataAnalyst\Http\Controllers\Api\FinancialReportApiController;
-use App\Domains\DataAnalyst\Http\Controllers\Api\TicketReportApiController;
-use App\Domains\DataAnalyst\Http\Controllers\Api\SecurityReportApiController;
-use App\Domains\DataAnalyst\Http\Controllers\Api\DashboardApiController;
-use App\Domains\DataAnalyst\Http\Controllers\Api\ExportReportApiController;
-
+use App\Domains\DataAnalyst\Http\Controllers\DashboardApiController;
+use App\Domains\DataAnalyst\Http\Controllers\ExportReportApiController;
+use App\Domains\DataAnalyst\Http\Controllers\RiskPredictionController;
+use App\Domains\DataAnalyst\Http\Controllers\AnalyticsDashboardController;
 use App\Domains\DataAnalyst\Middleware\DataAnalystMiddleware;
-
+use App\Domains\DataAnalyst\Http\Controllers\AttendanceAnalyticsController;
+use App\Domains\DataAnalyst\Http\Controllers\ProgressAnalyticsController;
+use App\Domains\DataAnalyst\Http\Controllers\PerformanceAnalyticsController;
 use Illuminate\Support\Facades\Route;
 
 // API Routes for DataAnalyst module
 Route::prefix('data-analyst')->name('api.data-analyst.')->group(function () {
 
-    // Student Reports API
-    Route::prefix('students')->name('students.')->group(function () {
-        // Public endpoints (si se necesitan en el futuro)
-        // Route::get('/public', [StudentReportApiController::class, 'publicIndex'])->name('public.index');
-
-        // Protected endpoints (requieren autenticación y rol data analyst)
-        Route::middleware([DataAnalystMiddleware::class])->group(function () {
-            // Listado de estudiantes con filtros
-            Route::get('/', [StudentReportApiController::class, 'index'])->name('index');
-
-            // Detalle de estudiante específico
-            Route::get('/{studentId}', [StudentReportApiController::class, 'show'])->name('show');
-
-            // Estadísticas de estudiantes
-            Route::get('/stats/summary', [StudentReportApiController::class, 'getStatistics'])->name('statistics');
-
-            // Reporte avanzado con múltiples métricas
-            Route::get('/reports/advanced', [StudentReportApiController::class, 'getAdvancedReport'])->name('advanced-report');
-
-            // Exportación de datos (futura implementación)
-            // Route::post('/export', [StudentReportApiController::class, 'export'])->name('export');
-        });
+    // Rutas de predicción de riesgo
+    Route::prefix('risk-prediction')->name('risk-prediction.')->group(function () {
+        Route::get('student/{enrollmentId}', [RiskPredictionController::class, 'getStudentRisk'])
+            ->name('student');
+        Route::get('students', [RiskPredictionController::class, 'getAtRiskStudents'])
+            ->name('students');
+        Route::post('calculate-all', [RiskPredictionController::class, 'calculateAllRisks'])
+            ->name('calculate-all');
+        Route::get('statistics', [RiskPredictionController::class, 'getRiskStatistics'])
+            ->name('statistics');
     });
 
-    // Course Reports API
-    Route::prefix('courses')->name('courses.')->group(function () {
-        // Protected endpoints
-        Route::middleware([DataAnalystMiddleware::class])->group(function () {
-            // Listado de cursos con filtros
-            Route::get('/', [CourseReportApiController::class, 'index'])->name('index');
-
-            // Detalle de curso específico
-            Route::get('/{courseId}', [CourseReportApiController::class, 'show'])->name('show');
-
-            // Estadísticas de cursos
-            Route::get('/stats/summary', [CourseReportApiController::class, 'getStatistics'])->name('statistics');
-
-            // Exportación de datos (futura implementación)
-            // Route::post('/export', [CourseReportApiController::class, 'export'])->name('export');
-        });
-    });
-
-    // Attendance Reports API
     Route::prefix('attendance')->name('attendance.')->group(function () {
-        // Protected endpoints
-        Route::middleware([DataAnalystMiddleware::class])->group(function () {
-
-            // Listado de registros de asistencia con filtros
-            Route::get('/', [AttendanceReportApiController::class, 'index'])->name('index');
-
-            // Estadísticas de asistencia
-            Route::get('/stats/summary', [AttendanceReportApiController::class, 'getStatistics'])->name('statistics');
-
-            // Tendencia de asistencia por fecha
-            Route::get('/trend', [AttendanceReportApiController::class, 'getTrend'])->name('trend');
-
-            // Opciones para los filtros
-            Route::get('/filters/options', [AttendanceReportApiController::class, 'getFilterOptions'])->name('filter-options');
-
-            // Exportación de datos (futura implementación)
-            // Route::post('/export', [AttendanceReportApiController::class, 'export'])->name('export');
-        });
+        Route::get('student/{enrollmentId}', [AttendanceAnalyticsController::class, 'getStudentAttendance'])
+            ->name('student');
+        Route::get('issues', [AttendanceAnalyticsController::class, 'getAttendanceIssues'])
+            ->name('issues');
+        Route::get('group/{groupId}', [AttendanceAnalyticsController::class, 'getGroupAttendance'])
+            ->name('group');
+        Route::get('statistics', [AttendanceAnalyticsController::class, 'getAttendanceStatistics'])
+            ->name('statistics');
+        Route::post('calculate-all', [AttendanceAnalyticsController::class, 'calculateAllAttendance'])
+            ->name('calculate-all');
     });
 
-    // Grade Reports API
-    Route::prefix('grades')->name('grades.')->group(function () {
-        // Protected endpoints (descomentar cuando tengas autenticación)
-        Route::middleware([DataAnalystMiddleware::class])->group(function () {
-
-            // Listado de calificaciones con filtros
-            Route::get('/', [GradeReportApiController::class, 'index'])->name('index');
-
-            // Estadísticas generales de calificaciones
-            Route::get('/stats/summary', [GradeReportApiController::class, 'getStatistics'])->name('statistics');
-
-            // Estudiantes con mejor rendimiento
-            Route::get('/top-performers', [GradeReportApiController::class, 'getTopPerformers'])->name('top-performers');
-
-            // Opciones de filtro disponibles
-            Route::get('/filter-options', [GradeReportApiController::class, 'getFilterOptions'])->name('filter-options');
-        });
+    Route::prefix('progress')->name('progress.')->group(function () {
+        Route::get('student/{enrollmentId}', [ProgressAnalyticsController::class, 'getStudentProgress'])
+            ->name('student');
+        Route::get('issues', [ProgressAnalyticsController::class, 'getProgressIssues'])
+            ->name('issues');
     });
 
-    // Financial Reports API
-    Route::prefix('financial')->name('financial.')->group(function () {
-        // Protected endpoints
-        Route::middleware([DataAnalystMiddleware::class])->group(function () {
-
-            // Estadísticas financieras completas
-            Route::get('/statistics', [FinancialReportApiController::class, 'getStatistics'])->name('statistics');
-
-            // Tendencia de ingresos
-            Route::get('/revenue-trend', [FinancialReportApiController::class, 'getRevenueTrend'])->name('revenue-trend');
-
-            // Fuentes de ingresos disponibles
-            Route::get('/revenue-sources', [FinancialReportApiController::class, 'getRevenueSources'])->name('revenue-sources');
-
-            // Pagos pendientes con detalles
-            Route::get('/pending-payments', [FinancialReportApiController::class, 'getPendingPayments'])->name('pending-payments');
-        });
+    Route::prefix('performance')->name('performance.')->group(function () {
+        // Análisis principal
+        Route::get('group/{groupId}', [PerformanceAnalyticsController::class, 'getGroupPerformance'])
+            ->name('group');
+        Route::get('issues', [PerformanceAnalyticsController::class, 'getPerformanceIssues'])
+            ->name('issues');
+        Route::get('group/{groupId}/grade-distribution', [PerformanceAnalyticsController::class, 'getGradeDistribution'])
+            ->name('grade-distribution');
+        Route::get('group/{groupId}/instructor-effectiveness', [PerformanceAnalyticsController::class, 'getInstructorEffectiveness'])
+            ->name('instructor-effectiveness');
+        Route::get('group/{groupId}/module-performance', [PerformanceAnalyticsController::class, 'getModulePerformance'])
+            ->name('module-performance');
     });
 
-    // Tickets Reports API
-    Route::prefix('tickets')->name('tickets.')->group(function () {
-        // Protected endpoints
-        Route::middleware([DataAnalystMiddleware::class])->group(function () {
-
-            // Listado de tickets con filtros
-            Route::get('/', [TicketReportApiController::class, 'index'])->name('index');
-
-            // Estadísticas completas de tickets
-            Route::get('/stats/summary', [TicketReportApiController::class, 'getStatistics'])->name('statistics.summary');
-
-            // Estadísticas detalladas por categoría
-            Route::get('/stats/categories', [TicketReportApiController::class, 'getCategoryStats'])->name('statistics.categories');
-
-            // Ranking de técnicos por rendimiento
-            Route::get('/stats/technicians', [TicketReportApiController::class, 'getTechnicianRanking'])->name('statistics.technicians');
-
-            // Exportación de datos (futura implementación)
-            // Route::post('/export', [TicketReportApiController::class, 'export'])->name('export');
-        });
-    });
-
-    // Security Reports API
-    Route::prefix('security')->name('security.')->group(function () {
-        // Protected endpoints
-        Route::middleware([DataAnalystMiddleware::class])->group(function () {
-
-            // Análisis completo de seguridad
-            Route::get('/analysis', [SecurityReportApiController::class, 'getAnalysis'])->name('analysis');
-
-            // Listado de eventos de seguridad
-            Route::get('/events', [SecurityReportApiController::class, 'getEvents'])->name('events');
-
-            // Listado de alertas de seguridad
-            Route::get('/alerts', [SecurityReportApiController::class, 'getAlerts'])->name('alerts');
-
-            // Datos para dashboard
-            Route::get('/dashboard', [SecurityReportApiController::class, 'getDashboardData'])->name('dashboard');
-        });
+    // Rutas del dashboard
+    Route::prefix('dashboard')->name('dashboard.')->group(function () {
+        Route::get('overview', [AnalyticsDashboardController::class, 'getOverview'])
+            ->name('overview');
+        Route::get('risk-trends', [AnalyticsDashboardController::class, 'getRiskTrends'])
+            ->name('risk-trends');
+        Route::get('component-analysis', [AnalyticsDashboardController::class, 'getComponentAnalysis'])
+            ->name('component-analysis');
     });
 
     // Dashboard API Endpoints
     Route::prefix('dashboard')->name('dashboard.')->group(function () {
         // Protected endpoints (descomentar cuando tengas autenticación)
         Route::middleware([DataAnalystMiddleware::class])->group(function () {
-
             // Resumen completo del dashboard
             Route::get('/summary', [DashboardApiController::class, 'getSummary'])->name('summary');
-
             // Métricas específicas de estudiantes
             Route::get('/metrics/students', [DashboardApiController::class, 'getStudentMetrics'])->name('metrics.students');
-
             // Métricas financieras
             Route::get('/metrics/financial', [DashboardApiController::class, 'getFinancialMetrics'])->name('metrics.financial');
-
             // Actividades recientes
             Route::get('/activities/recent', [DashboardApiController::class, 'getRecentActivities'])->name('activities.recent');
 
@@ -187,26 +92,17 @@ Route::prefix('data-analyst')->name('api.data-analyst.')->group(function () {
 
     // API Routes for DataAnalyst Export module
     Route::prefix('export')->name('export.')->group(function () {
-
         // Descargar reporte (ruta pública con token)
         Route::get('/download/{token}', [ExportReportApiController::class, 'downloadReport'])->name('download');
-
         Route::middleware([DataAnalystMiddleware::class])->group(function () {
-
             // Generar y guardar reporte
             Route::post('/generate', [ExportReportApiController::class, 'generateReport'])->name('generate');
-
             // Listar reportes del usuario
             Route::get('/reports', [ExportReportApiController::class, 'listReports'])->name('reports.list');
-
             // Obtener estadísticas
             Route::get('/reports/stats', [ExportReportApiController::class, 'getStats'])->name('reports.stats');
-
             // Eliminar reporte
             Route::delete('/reports/{token}', [ExportReportApiController::class, 'deleteReport'])->name('reports.delete');
-
-
-
             // Rutas existentes
             Route::get('/filter-options/{reportType}', [ExportReportApiController::class, 'getFilterOptions'])->name('filter-options');
             Route::get('/report-types', [ExportReportApiController::class, 'getReportTypes'])->name('report-types');
