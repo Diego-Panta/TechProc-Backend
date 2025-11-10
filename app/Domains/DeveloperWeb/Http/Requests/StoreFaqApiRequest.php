@@ -1,14 +1,14 @@
 <?php
-// app/Domains/DeveloperWeb/Http/Requests/Api/UpdateFaqApiRequest.php
+// app/Domains/DeveloperWeb/Http/Requests/Api/StoreFaqApiRequest.php
 
-namespace App\Domains\DeveloperWeb\Http\Requests\Api;
+namespace App\Domains\DeveloperWeb\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Contracts\Validation\Validator;
 use App\Domains\DeveloperWeb\Enums\FaqCategory;
 
-class UpdateFaqApiRequest extends FormRequest
+class StoreFaqApiRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -18,9 +18,9 @@ class UpdateFaqApiRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'question' => 'sometimes|string|max:1000',
-            'answer' => 'sometimes|string|max:5000',
-            'category' => 'sometimes|string|in:' . implode(',', FaqCategory::values()),
+            'question' => 'required|string|max:1000',
+            'answer' => 'required|string|max:5000',
+            'category' => 'required|string|in:' . implode(',', FaqCategory::values()),
             'keywords' => 'sometimes|array',
             'keywords.*' => 'string|max:50',
             'active' => 'sometimes|boolean',
@@ -30,6 +30,9 @@ class UpdateFaqApiRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'question.required' => 'La pregunta es obligatoria',
+            'answer.required' => 'La respuesta es obligatoria',
+            'category.required' => 'La categoría es obligatoria',
             'category.in' => 'La categoría seleccionada no es válida. Categorías permitidas: ' . implode(', ', FaqCategory::values()),
             'keywords.array' => 'Las palabras clave deben ser un array válido',
         ];
@@ -54,8 +57,8 @@ class UpdateFaqApiRequest extends FormRequest
             }
         }
 
-        // Si se proporciona categoría pero está vacía, usar la por defecto
-        if ($this->has('category') && empty($this->category)) {
+        // Si no se proporciona categoría, usar la por defecto
+        if (!$this->has('category') || empty($this->category)) {
             $this->merge([
                 'category' => FaqCategory::getDefault()->value
             ]);

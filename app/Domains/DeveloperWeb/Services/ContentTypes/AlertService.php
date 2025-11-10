@@ -5,6 +5,7 @@ namespace App\Domains\DeveloperWeb\Services\ContentTypes;
 use App\Domains\DeveloperWeb\Services\ContentService;
 use App\Domains\DeveloperWeb\Repositories\ContentItemRepository;
 use App\Domains\DeveloperWeb\Enums\ContentType;
+use App\Domains\DeveloperWeb\Enums\AlertItemType;
 
 class AlertService extends ContentService
 {
@@ -25,7 +26,7 @@ class AlertService extends ContentService
             'start_date' => $this->formatDateTime($data['start_date']),
             'end_date' => $this->formatDateTime($data['end_date']),
             'priority' => $data['priority'] ?? 1,
-            'item_type' => $data['item_type'], // info, warning, error, success
+            'item_type' => $data['item_type'] ?? AlertItemType::INFORMATION->value,
             'link_url' => $data['link_url'] ?? null,
             'link_text' => $data['link_text'] ?? null,
             
@@ -57,12 +58,17 @@ class AlertService extends ContentService
         return $updateData;
     }
 
-    // ⚠️ MÉTODOS ESPECÍFICOS SOLICITADOS
+    // MÉTODOS ESPECÍFICOS SOLICITADOS
     
     public function getPublishedAlerts(int $perPage = 15)
     {
         // CORREGIDO: Usar el repository para obtener datos paginados
         return $this->contentItemRepository->getPublishedByType($this->contentType->value, $perPage);
+    }
+
+    public function getStats(): array
+    {
+        return $this->contentItemRepository->getAlertStats();
     }
     
 }

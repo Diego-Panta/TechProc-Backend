@@ -1,9 +1,10 @@
 <?php
 
-namespace App\Domains\DeveloperWeb\Http\Controllers\Api\ContentTypes;
+namespace App\Domains\DeveloperWeb\Http\Controllers\ContentTypes;
 
 use App\Domains\DeveloperWeb\Services\ContentTypes\AnnouncementService;
-use App\Domains\DeveloperWeb\Http\Requests\Api\ContentTypes\StoreAnnouncementRequest;
+use App\Domains\DeveloperWeb\Http\Requests\ContentTypes\StoreAnnouncementRequest;
+use App\Domains\DeveloperWeb\Http\Requests\ContentTypes\UpdateAnnouncementRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -87,7 +88,7 @@ class AnnouncementApiController
         }
     }
 
-    public function update(StoreAnnouncementRequest $request, int $id): JsonResponse
+    public function update(UpdateAnnouncementRequest $request, int $id): JsonResponse // CAMBIADO
     {
         try {
             $success = $this->announcementService->update($id, $request->validated());
@@ -193,6 +194,34 @@ class AnnouncementApiController
             return response()->json([
                 'success' => false,
                 'message' => 'Error al resetear vistas'
+            ], 500);
+        }
+    }
+
+    /**
+     * Obtener estadísticas de anuncios
+     */
+    public function getStats(): JsonResponse
+    {
+        try {
+            $stats = $this->announcementService->getStats();
+
+            Log::info('Estadísticas de anuncios consultadas');
+
+            return response()->json([
+                'success' => true,
+                'data' => $stats
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error obteniendo estadísticas de anuncios', [
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener las estadísticas de anuncios',
+                'error' => config('app.debug') ? $e->getMessage() : null
             ], 500);
         }
     }

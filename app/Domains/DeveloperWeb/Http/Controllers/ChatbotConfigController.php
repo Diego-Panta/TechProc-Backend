@@ -1,7 +1,7 @@
 <?php
 // app/Domains/DeveloperWeb/Http/Controllers/Api/ChatbotConfigController.php
 
-namespace App\Domains\DeveloperWeb\Http\Controllers\Api;
+namespace App\Domains\DeveloperWeb\Http\Controllers;
 
 use App\Domains\DeveloperWeb\Services\ChatbotConfigService;
 use Illuminate\Http\JsonResponse;

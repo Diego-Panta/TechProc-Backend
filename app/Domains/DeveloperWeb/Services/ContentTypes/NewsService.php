@@ -6,6 +6,7 @@ use App\Domains\DeveloperWeb\Services\ContentService;
 use App\Domains\DeveloperWeb\Repositories\ContentItemRepository;
 use App\Domains\DeveloperWeb\Enums\ContentType;
 use App\Domains\DeveloperWeb\Enums\ContentStatus;
+use App\Domains\DeveloperWeb\Enums\NewsItemType;
 use Illuminate\Support\Str;
 
 class NewsService extends ContentService
@@ -27,18 +28,18 @@ class NewsService extends ContentService
             'title' => $data['title'],
             'content' => $data['content'],
             'status' => $data['status'],
-            
+
             // Campos EXCLUSIVOS de NEWS
             'slug' => $data['slug'],
             'summary' => $data['summary'],
             'image_url' => $data['image_url'] ?? null,
-            'published_date' => $this->formatDateTime($data['published_date'] ?? null) ?? 
-                               ($data['status'] === ContentStatus::PUBLISHED->value ? now()->format('Y-m-d H:i:s') : null),
+            'published_date' => $this->formatDateTime($data['published_date'] ?? null) ??
+                ($data['status'] === ContentStatus::PUBLISHED->value ? now()->format('Y-m-d H:i:s') : null),
             'category' => $data['category'],
-            'item_type' => $data['item_type'] ?? 'article',
+            'item_type' => $data['item_type'] ?? NewsItemType::ARTICLE->value,
             'seo_title' => $data['seo_title'] ?? null,
             'seo_description' => $data['seo_description'] ?? null,
-            
+
             // Metadata
             'metadata' => $this->prepareMetadata($data),
         ];
@@ -50,8 +51,17 @@ class NewsService extends ContentService
 
         // Campos que NEWS puede actualizar
         $newsFields = [
-            'title', 'slug', 'content', 'summary', 'image_url', 'status',
-            'published_date', 'category', 'item_type', 'seo_title', 'seo_description'
+            'title',
+            'slug',
+            'content',
+            'summary',
+            'image_url',
+            'status',
+            'published_date',
+            'category',
+            'item_type',
+            'seo_title',
+            'seo_description'
         ];
 
         foreach ($newsFields as $field) {
@@ -91,8 +101,8 @@ class NewsService extends ContentService
         return $slug;
     }
 
-    // 📰 MÉTODOS ESPECÍFICOS SOLICITADOS
-    
+    // MÉTODOS ESPECÍFICOS SOLICITADOS
+
     public function getPublishedNews(int $perPage = 15)
     {
         // CORREGIDO: Usar el repository para obtener datos paginados
@@ -102,7 +112,7 @@ class NewsService extends ContentService
     public function resetViews(int $id): bool
     {
         $news = $this->contentItemRepository->findByIdAndType($id, $this->contentType->value);
-        
+
         if (!$news) {
             return false;
         }
@@ -113,5 +123,10 @@ class NewsService extends ContentService
     public function getCategories(): array
     {
         return $this->contentItemRepository->getCategoryCounts($this->contentType->value);
+    }
+
+    public function getStats(): array
+    {
+        return $this->contentItemRepository->getNewsStats();
     }
 }

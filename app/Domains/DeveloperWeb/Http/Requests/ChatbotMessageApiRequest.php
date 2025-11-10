@@ -1,7 +1,7 @@
 <?php
 // app/Domains/DeveloperWeb/Http/Requests/Api/ChatbotMessageApiRequest.php
 
-namespace App\Domains\DeveloperWeb\Http\Requests\Api;
+namespace App\Domains\DeveloperWeb\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;

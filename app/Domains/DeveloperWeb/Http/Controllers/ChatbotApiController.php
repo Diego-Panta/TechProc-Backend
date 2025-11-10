@@ -1,11 +1,11 @@
 <?php
 // app/Domains/DeveloperWeb/Http/Controllers/Api/ChatbotApiController.php
 
-namespace App\Domains\DeveloperWeb\Http\Controllers\Api;
+namespace App\Domains\DeveloperWeb\Http\Controllers;
 
 use App\Domains\DeveloperWeb\Services\GeminiChatbotService;
 use App\Domains\DeveloperWeb\Services\ChatbotFaqService;
-use App\Domains\DeveloperWeb\Http\Requests\Api\ChatbotMessageApiRequest;
+use App\Domains\DeveloperWeb\Http\Requests\ChatbotMessageApiRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;

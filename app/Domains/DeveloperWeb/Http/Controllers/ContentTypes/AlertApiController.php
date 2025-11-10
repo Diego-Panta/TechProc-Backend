@@ -1,9 +1,10 @@
 <?php
 
-namespace App\Domains\DeveloperWeb\Http\Controllers\Api\ContentTypes;
+namespace App\Domains\DeveloperWeb\Http\Controllers\ContentTypes;
 
 use App\Domains\DeveloperWeb\Services\ContentTypes\AlertService;
-use App\Domains\DeveloperWeb\Http\Requests\Api\ContentTypes\StoreAlertRequest;
+use App\Domains\DeveloperWeb\Http\Requests\ContentTypes\StoreAlertRequest;
+use App\Domains\DeveloperWeb\Http\Requests\ContentTypes\UpdateAlertRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -87,7 +88,7 @@ class AlertApiController
         }
     }
 
-    public function update(StoreAlertRequest $request, int $id): JsonResponse
+    public function update(UpdateAlertRequest $request, int $id): JsonResponse // CAMBIADO
     {
         try {
             $success = $this->alertService->update($id, $request->validated());
@@ -164,6 +165,34 @@ class AlertApiController
             return response()->json([
                 'success' => false,
                 'message' => 'Error al obtener alertas publicadas'
+            ], 500);
+        }
+    }
+
+    /**
+     * Obtener estadísticas de alertas
+     */
+    public function getStats(): JsonResponse
+    {
+        try {
+            $stats = $this->alertService->getStats();
+
+            Log::info('Estadísticas de alertas consultadas');
+
+            return response()->json([
+                'success' => true,
+                'data' => $stats
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error obteniendo estadísticas de alertas', [
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener las estadísticas de alertas',
+                'error' => config('app.debug') ? $e->getMessage() : null
             ], 500);
         }
     }
