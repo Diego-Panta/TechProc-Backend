@@ -8,13 +8,29 @@ use App\Domains\DataAnalyst\Middleware\DataAnalystMiddleware;
 use App\Domains\DataAnalyst\Http\Controllers\AttendanceAnalyticsController;
 use App\Domains\DataAnalyst\Http\Controllers\ProgressAnalyticsController;
 use App\Domains\DataAnalyst\Http\Controllers\PerformanceAnalyticsController;
+use App\Domains\DataAnalyst\Http\Controllers\AnalyticsController;
+use App\Domains\DataAnalyst\Http\Controllers\DropoutPredictionController;
 use Illuminate\Support\Facades\Route;
 
 // API Routes for DataAnalyst module
 Route::prefix('data-analyst')->name('api.data-analyst.')->group(function () {
 
+    Route::get('/attendance', [AnalyticsController::class, 'getAttendanceMetrics']);
+    Route::get('/attendance/simple', [AnalyticsController::class, 'getSimpleAttendance']);
+    Route::get('/progress', [AnalyticsController::class, 'getProgressMetrics']);
+    Route::get('/performance', [AnalyticsController::class, 'getPerformanceMetrics']);
+
+    Route::get('/students/active', [AnalyticsController::class, 'getActiveStudents']);
+
+    /*Route::prefix('dropout-prediction')->group(function () {
+        Route::get('/predictions', [DropoutPredictionController::class, 'getPredictions']);
+        Route::get('/model/metrics', [DropoutPredictionController::class, 'getModelMetrics']);
+        Route::get('/training-dataset', [DropoutPredictionController::class, 'getTrainingDataset']);
+        Route::post('/train-model', [DropoutPredictionController::class, 'trainModel']);
+    });*/
+
     // Rutas de predicción de riesgo
-    Route::prefix('risk-prediction')->name('risk-prediction.')->group(function () {
+    /*Route::prefix('risk-prediction')->name('risk-prediction.')->group(function () {
         Route::get('student/{enrollmentId}', [RiskPredictionController::class, 'getStudentRisk'])
             ->name('student');
         Route::get('students', [RiskPredictionController::class, 'getAtRiskStudents'])
@@ -108,5 +124,5 @@ Route::prefix('data-analyst')->name('api.data-analyst.')->group(function () {
             Route::get('/report-types', [ExportReportApiController::class, 'getReportTypes'])->name('report-types');
             Route::post('/preview', [ExportReportApiController::class, 'previewReport'])->name('preview');
         });
-    });
+    });*/
 });
