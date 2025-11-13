@@ -183,7 +183,7 @@ class UserController extends Controller
             ], 500);
         }
     }
-
+    
     /**
      * Remove the specified user
      */
