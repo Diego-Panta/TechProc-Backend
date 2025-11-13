@@ -7,7 +7,11 @@
       "Bash(tree:*)",
       "Bash(composer require:*)",
       "Bash(composer update:*)",
-      "Bash(php -l:*)"
+      "Bash(php -l:*)",
+      "Bash(dir /s \"c:\\Users\\anton\\Documents\\GitHub\\TechProc-Backend\\resources\")",
+      "Bash(test:*)",
+      "Bash(dir /s /b \"c:\\Users\\anton\\Documents\\GitHub\\TechProc-Backend\\vendor\\incadev-uns\")",
+      "Bash(mv:*)"
     ],
     "deny": [],
     "ask": []
