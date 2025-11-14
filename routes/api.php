@@ -21,6 +21,35 @@ Route::get('/test-public', function () {
     ]);
 });
 
+// Verificar token (solo desarrollo) - Requiere autenticación
+Route::middleware('auth:sanctum')->get('/check-token', function (Request $request) {
+    $user = $request->user();
+    $token = $request->user()->currentAccessToken();
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Token válido',
+        'data' => [
+            'token' => [
+                'id' => $token->id,
+                'name' => $token->name,
+                'tokenable_type' => $token->tokenable_type,
+                'tokenable_id' => $token->tokenable_id,
+                'abilities' => $token->abilities,
+                'created_at' => $token->created_at,
+                'last_used_at' => $token->last_used_at,
+                'expires_at' => $token->expires_at,
+            ],
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'class' => get_class($user),
+            ],
+        ]
+    ]);
+});
+
 //Incluir rutas del dominio Infraestructura
 require app_path('Domains/SupportInfrastructure/routes.php');
 

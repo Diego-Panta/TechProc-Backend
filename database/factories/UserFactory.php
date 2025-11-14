@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Domains\AuthenticationSessions\Models\User>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\User>
  */
 class UserFactory extends Factory
 {
@@ -16,7 +16,7 @@ class UserFactory extends Factory
      *
      * @var class-string<\Illuminate\Database\Eloquent\Model>
      */
-    protected $model = \App\Domains\AuthenticationSessions\Models\User::class;
+    protected $model = \App\Models\User::class;
 
     /**
      * The current password being used by the factory.
