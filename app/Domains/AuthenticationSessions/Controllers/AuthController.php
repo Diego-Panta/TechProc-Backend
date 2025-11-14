@@ -2,7 +2,7 @@
 
 namespace App\Domains\AuthenticationSessions\Controllers;
 
-use App\Domains\AuthenticationSessions\Models\User;
+use App\Models\User;
 use App\Domains\AuthenticationSessions\Models\ActiveSession;
 use App\Domains\AuthenticationSessions\Notifications\VerifyEmailNotification;
 use App\Http\Controllers\Controller;

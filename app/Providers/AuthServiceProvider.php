@@ -2,7 +2,7 @@
 
 namespace App\Providers;
 
-use App\Domains\AuthenticationSessions\Models\User;
+use App\Models\User;
 use App\Domains\Users\Policies\UserPolicy;
 use App\Domains\Users\Policies\RolePolicy;
 use App\Domains\Users\Policies\PermissionPolicy;

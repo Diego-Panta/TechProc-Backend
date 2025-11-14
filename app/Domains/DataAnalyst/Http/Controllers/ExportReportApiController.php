@@ -419,7 +419,7 @@ class ExportReportApiController
         }
 
         // Si no hay usuario autenticado, usar usuario por defecto
-        $defaultUser = \App\Domains\AuthenticationSessions\Models\User::first();
+        $defaultUser = \App\Models\User::first();
         return $defaultUser ? $defaultUser->id : 1;
     }
 }

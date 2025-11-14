@@ -2,7 +2,7 @@
 
 namespace App\Domains\Users\Policies;
 
-use App\Domains\AuthenticationSessions\Models\User;
+use App\Models\User;
 
 class UserPolicy
 {

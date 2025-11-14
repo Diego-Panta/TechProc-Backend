@@ -2,7 +2,7 @@
 
 namespace App\Domains\Users\Controllers;
 
-use App\Domains\AuthenticationSessions\Models\User;
+use App\Models\User;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;

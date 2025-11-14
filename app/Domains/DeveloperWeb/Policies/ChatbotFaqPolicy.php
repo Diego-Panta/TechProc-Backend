@@ -2,7 +2,7 @@
 
 namespace App\Domains\DeveloperWeb\Policies;
 
-use App\Domains\AuthenticationSessions\Models\User;
+use App\Models\User;
 use App\Domains\DeveloperWeb\Models\ChatbotFaq;
 use Illuminate\Auth\Access\Response;
 

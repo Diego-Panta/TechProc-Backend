@@ -4,7 +4,7 @@ namespace App\Domains\DataAnalyst\Middleware;
 
 use Closure;
 use App\Domains\AuthenticationSessions\Services\JwtService;
-use App\Domains\AuthenticationSessions\Models\User;
+use App\Models\User;
 
 class DataAnalystMiddleware
 {
