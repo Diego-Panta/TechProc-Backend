@@ -374,12 +374,12 @@ class AuthController extends Controller
     }
 
     /**
-     * Send password reset link
+     * Send password reset link using recovery email
      */
     public function forgotPassword(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'email' => 'required|email|exists:users,email',
+            'email' => 'required|email',
         ]);
 
         if ($validator->fails()) {
@@ -391,15 +391,27 @@ class AuthController extends Controller
         }
 
         try {
-            // Generar token de reseteo
-            $status = Password::sendResetLink(
-                $request->only('email')
-            );
+            $email = $request->email;
+
+            // Buscar usuario por recovery_email verificado
+            $user = User::where('recovery_email', $email)
+                        ->whereNotNull('recovery_email_verified_at')
+                        ->first();
+
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No existe una cuenta con este correo de recuperación o no ha sido verificado.'
+                ], 404);
+            }
+
+            // Generar token de reseteo para el usuario encontrado
+            $status = Password::sendResetLink(['email' => $user->email]);
 
             if ($status === Password::RESET_LINK_SENT) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Se ha enviado un enlace de recuperación a tu correo electrónico'
+                    'message' => 'Se ha enviado un enlace de recuperación a tu correo de recuperación.'
                 ], 200);
             }
 
