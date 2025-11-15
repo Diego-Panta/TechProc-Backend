@@ -94,6 +94,13 @@ class User extends Authenticatable
             return $this->recovery_email;
         }
 
+        // Si es reseteo de contraseña Y tiene recovery_email verificado, enviar ahí
+        if ($notification instanceof \App\Domains\AuthenticationSessions\Notifications\ResetPasswordNotification) {
+            if ($this->recovery_email && $this->recovery_email_verified_at) {
+                return $this->recovery_email;
+            }
+        }
+
         // Para otras notificaciones, usar el email principal
         return $this->email;
     }
