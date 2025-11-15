@@ -80,12 +80,8 @@ class TicketReplyPolicy
         }
 
         // Solo el autor puede actualizar su respuesta
+        // La validación de 24 horas se hace en el Service para dar mensaje personalizado
         if ($reply->user_id === $user->id) {
-            // Verificar que no hayan pasado más de 24 horas
-            $hoursSinceCreation = $reply->created_at->diffInHours(now());
-            if ($hoursSinceCreation > 24) {
-                return false;
-            }
             return true;
         }
 

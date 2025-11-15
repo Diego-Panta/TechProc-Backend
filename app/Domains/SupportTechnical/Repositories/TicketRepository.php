@@ -8,6 +8,7 @@ use IncadevUns\CoreDomain\Models\ReplyAttachment;
 use IncadevUns\CoreDomain\Enums\TicketStatus;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class TicketRepository implements TicketRepositoryInterface
 {
@@ -163,8 +164,8 @@ class TicketRepository implements TicketRepositoryInterface
         $attachment = ReplyAttachment::findOrFail($attachmentId);
         
         // Delete the physical file
-        if (\Storage::disk('public')->exists($attachment->path)) {
-            \Storage::disk('public')->delete($attachment->path);
+        if (Storage::disk('public')->exists($attachment->path)) {
+            Storage::disk('public')->delete($attachment->path);
         }
         
         return $attachment->delete();
