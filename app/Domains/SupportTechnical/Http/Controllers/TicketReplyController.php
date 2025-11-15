@@ -74,6 +74,7 @@ class TicketReplyController extends Controller
     public function update(UpdateReplyRequest $request, int $ticketId, int $replyId): JsonResponse
     {
         try {
+            $user = $request->user();
             $reply = $this->replyService->getReplyById($replyId);
 
             if (!$reply) {
@@ -83,22 +84,38 @@ class TicketReplyController extends Controller
                 ], 404);
             }
 
-            // Authorize
+            // Authorize - si falla, lanza AuthorizationException (403)
             $this->authorize('update', $reply);
 
+            // Verificar si es soporte/admin (puede editar sin límite de tiempo)
+            $isSupport = $user->hasPermissionTo('ticket-replies.update') && 
+                        $user->hasRole(['support', 'admin']);
+
             $data = $request->validated();
-            $updatedReply = $this->replyService->updateReply($replyId, $data);
+            $updatedReply = $this->replyService->updateReply(
+                $replyId, 
+                $data, 
+                $user->id,
+                $isSupport
+            );
 
             return response()->json([
                 'status' => 'success',
                 'message' => 'Respuesta actualizada exitosamente',
                 'data' => ['reply' => new TicketReplyResource($updatedReply)]
             ]);
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            // Error de autorización (403)
+            return response()->json([
+                'status' => 'error',
+                'message' => 'No tienes permiso para editar esta respuesta'
+            ], 403);
         } catch (\Exception $e) {
+            // Errores de validación de negocio (400)
             return response()->json([
                 'status' => 'error',
                 'message' => $e->getMessage()
-            ], 403);
+            ], 400);
         }
     }
 

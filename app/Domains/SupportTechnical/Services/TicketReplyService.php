@@ -56,12 +56,24 @@ class TicketReplyService
     /**
      * Update a reply
      */
-    public function updateReply(int $replyId, array $data): TicketReply
+    public function updateReply(int $replyId, array $data, int $userId, bool $isSupport = false): TicketReply
     {
         $reply = $this->repository->findReplyById($replyId);
         
         if (!$reply) {
             throw new \Exception('Respuesta no encontrada');
+        }
+
+        // Si es el autor (no soporte), verificar límite de 24 horas
+        if (!$isSupport && $reply->user_id === $userId) {
+            $hoursSinceCreation = $reply->created_at->diffInHours(now());
+            
+            if ($hoursSinceCreation > 24) {
+                throw new \Exception(
+                    "No puedes editar esta respuesta porque han pasado más de 24 horas desde su creación. " .
+                    "Tiempo transcurrido: " . round($hoursSinceCreation, 1) . " horas."
+                );
+            }
         }
 
         return $this->repository->updateReply($replyId, [

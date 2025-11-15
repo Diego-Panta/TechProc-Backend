@@ -8,6 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class AttachmentController extends Controller
 {
@@ -22,7 +23,7 @@ class AttachmentController extends Controller
      * Download an attachment
      * GET /api/support/attachments/{id}/download
      */
-    public function download(Request $request, int $id): StreamedResponse|JsonResponse
+    public function download(Request $request, int $id): BinaryFileResponse|JsonResponse
     {
         try {
             $user = $request->user();
