@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Domains\AuthenticationSessions\Models\User;
+use App\Models\User;
 use IncadevUns\CoreDomain\Models\Ticket;
 use IncadevUns\CoreDomain\Models\TicketReply;
 use IncadevUns\CoreDomain\Enums\TicketStatus;
@@ -20,36 +20,24 @@ class SupportTechnicalSampleDataSeeder extends Seeder
     {
         $this->command->info('Generando datos de muestra para SupportTechnical...');
 
-        // Get users with student role
-        $regularUsers = User::whereHas('roles', function($query) {
-            $query->where('name', 'student');
-        })->get();
+        // Get users with different roles
+        // Regular users: all users except admin, super_admin, and support
+        $regularUsers = User::whereDoesntHave('roles', function ($query) {
+            $query->whereIn('name', ['admin', 'super_admin', 'support']);
+        })->limit(5)->get();
+        $supportUsers = User::role(['support', 'admin'])->limit(2)->get();
 
-        // If no users with student role, get any active users
         if ($regularUsers->isEmpty()) {
-            $this->command->warn('No se encontraron usuarios con rol "student", usando cualquier usuario activo...');
-            $regularUsers = User::where('email', '!=', 'admin@incadev.com')->limit(10)->get();
-            
-            if ($regularUsers->isEmpty()) {
-                $this->command->error('No se encontraron usuarios disponibles');
-                $this->command->warn('Por favor, ejecuta primero los seeders necesarios:');
-                $this->command->info('  php artisan db:seed --class="IncadevUns\\CoreDomain\\Database\\Seeders\\UserSeeder"');
-                return;
-            }
+            $this->command->error('✗ No se encontraron usuarios regulares (sin roles admin, super_admin o support)');
+            $this->command->warn('Por favor, ejecuta primero el seeder de usuarios:');
+            $this->command->info('  php artisan db:seed --class="IncadevUns\CoreDomain\Database\Seeders\IncadevSeeder"');
+            return;
         }
-
-        // Get support users (support or admin roles)
-        $supportUsers = User::whereHas('roles', function($query) {
-            $query->whereIn('name', ['support', 'admin']);
-        })->get();
 
         if ($supportUsers->isEmpty()) {
-            $this->command->warn('No se encontraron usuarios con rol "support" o "admin"');
+            $this->command->warn('⚠ No se encontraron usuarios con rol "support" o "admin"');
             $this->command->info('Los tickets se crearán sin respuestas de soporte.');
         }
-
-        $this->command->info("Encontrados {$regularUsers->count()} usuarios regulares");
-        $this->command->info("Encontrados {$supportUsers->count()} usuarios de soporte");
 
         DB::transaction(function () use ($regularUsers, $supportUsers) {
             $ticketsCreated = 0;
@@ -57,7 +45,7 @@ class SupportTechnicalSampleDataSeeder extends Seeder
 
             // Ticket samples data
             $ticketSamples = [
-                // OPEN tickets - Technical issues
+                // OPEN tickets
                 [
                     'title' => 'No puedo acceder al sistema LMS',
                     'description' => 'Desde esta mañana no puedo ingresar al sistema LMS. Me aparece un error de "Credenciales inválidas" aunque estoy usando mi contraseña correcta.',
@@ -67,24 +55,6 @@ class SupportTechnicalSampleDataSeeder extends Seeder
                     'replies_count' => 0,
                 ],
                 [
-                    'title' => 'Error al subir tarea en formato PDF',
-                    'description' => 'Cuando intento subir mi tarea en PDF, el sistema muestra "Formato no válido". He intentado con diferentes archivos PDF.',
-                    'type' => TicketType::Technical,
-                    'priority' => TicketPriority::Medium,
-                    'status' => TicketStatus::Open,
-                    'replies_count' => 1,
-                ],
-                [
-                    'title' => 'Video de clase no se reproduce',
-                    'description' => 'El video de la clase del módulo 2 no se reproduce, se queda cargando indefinidamente.',
-                    'type' => TicketType::Technical,
-                    'priority' => TicketPriority::Medium,
-                    'status' => TicketStatus::Open,
-                    'replies_count' => 0,
-                ],
-
-                // OPEN tickets - Academic
-                [
                     'title' => 'Solicitud de certificado académico',
                     'description' => 'Necesito un certificado de estudios para presentar en mi nuevo trabajo. ¿Cómo puedo solicitarlo?',
                     'type' => TicketType::Academic,
@@ -93,12 +63,12 @@ class SupportTechnicalSampleDataSeeder extends Seeder
                     'replies_count' => 1,
                 ],
                 [
-                    'title' => 'Consulta sobre fecha de examen final',
-                    'description' => '¿Podrían confirmarme la fecha exacta del examen final del curso de IA? No la encuentro en el calendario.',
-                    'type' => TicketType::Academic,
+                    'title' => '¿Cómo exportar reportes a Excel?',
+                    'description' => 'Necesito saber cómo puedo exportar los reportes del módulo de análisis de datos a formato Excel. No encuentro la opción.',
+                    'type' => TicketType::Inquiry,
                     'priority' => TicketPriority::Low,
                     'status' => TicketStatus::Open,
-                    'replies_count' => 1,
+                    'replies_count' => 2,
                 ],
 
                 // PENDING tickets
@@ -108,7 +78,7 @@ class SupportTechnicalSampleDataSeeder extends Seeder
                     'type' => TicketType::Technical,
                     'priority' => TicketPriority::High,
                     'status' => TicketStatus::Pending,
-                    'replies_count' => 2,
+                    'replies_count' => 3,
                 ],
                 [
                     'title' => 'Actualización de datos personales',
@@ -116,17 +86,17 @@ class SupportTechnicalSampleDataSeeder extends Seeder
                     'type' => TicketType::Administrative,
                     'priority' => TicketPriority::Low,
                     'status' => TicketStatus::Pending,
-                    'replies_count' => 1,
+                    'replies_count' => 2,
                 ],
 
-                // CLOSED tickets - Resolved issues
+                // CLOSED tickets
                 [
                     'title' => 'No recibo notificaciones por correo',
                     'description' => 'Configuré las notificaciones pero no me llegan los correos. Ya revisé mi bandeja de spam.',
                     'type' => TicketType::Technical,
                     'priority' => TicketPriority::Medium,
                     'status' => TicketStatus::Closed,
-                    'replies_count' => 3,
+                    'replies_count' => 4,
                 ],
                 [
                     'title' => 'Solicitud de constancia de matrícula',
@@ -145,7 +115,7 @@ class SupportTechnicalSampleDataSeeder extends Seeder
                     'replies_count' => 1,
                 ],
 
-                // More tickets for variety
+                // More OPEN tickets for variety
                 [
                     'title' => 'Dashboard no carga las estadísticas',
                     'description' => 'El dashboard principal se queda en blanco cuando intento ver las estadísticas del mes.',
@@ -161,14 +131,6 @@ class SupportTechnicalSampleDataSeeder extends Seeder
                     'priority' => TicketPriority::Low,
                     'status' => TicketStatus::Open,
                     'replies_count' => 1,
-                ],
-                [
-                    'title' => 'Problema con la plataforma de pago',
-                    'description' => 'Al intentar realizar el pago de la matrícula, la plataforma me muestra un error de conexión.',
-                    'type' => TicketType::Technical,
-                    'priority' => TicketPriority::High,
-                    'status' => TicketStatus::Pending,
-                    'replies_count' => 2,
                 ],
             ];
 
@@ -192,7 +154,7 @@ class SupportTechnicalSampleDataSeeder extends Seeder
                 $ticketsCreated++;
 
                 // Create initial reply (ticket description)
-                TicketReply::create([
+                $initialReply = TicketReply::create([
                     'ticket_id' => $ticket->id,
                     'user_id' => $user->id,
                     'content' => $ticketData['description'],
@@ -222,21 +184,14 @@ class SupportTechnicalSampleDataSeeder extends Seeder
 
                         $repliesCreated++;
                     }
-
-                    // Update ticket status based on replies
-                    if ($ticketData['status'] === TicketStatus::Closed) {
-                        $ticket->update([
-                            'updated_at' => $ticket->created_at->addHours(($repliesCount + 1) * 3)
-                        ]);
-                    }
                 }
             }
 
-            $this->command->info("{$ticketsCreated} tickets creados");
-            $this->command->info("{$repliesCreated} respuestas creadas");
+            $this->command->info("✓ {$ticketsCreated} tickets creados");
+            $this->command->info("✓ {$repliesCreated} respuestas creadas");
         });
 
-        $this->command->info('Datos de muestra generados exitosamente');
+        $this->command->info('✓ Datos de muestra generados exitosamente');
     }
 
     /**
@@ -247,38 +202,34 @@ class SupportTechnicalSampleDataSeeder extends Seeder
         if ($isFromSupport) {
             $supportReplies = [
                 TicketType::Technical->value => [
-                    'Gracias por reportar el problema. Nuestro equipo técnico está investigando el caso.',
-                    'Hemos identificado la causa del problema y estamos trabajando en la solución.',
-                    'El problema ha sido resuelto. Por favor, verifica si ahora funciona correctamente.',
-                    'Hemos aplicado una solución temporal mientras trabajamos en la corrección permanente.',
+                    'Gracias por reportar el problema técnico. Nuestro equipo está investigando el caso.',
+                    'Hemos identificado la causa del problema. Estamos trabajando en la solución.',
+                    'El problema ha sido resuelto. Por favor, confirma si ahora funciona correctamente.',
                 ],
                 TicketType::Academic->value => [
-                    'Recibimos tu solicitud académica. Está siendo procesada por el área correspondiente.',
-                    'Tu solicitud ha sido aprobada. Te enviaremos la documentación en los próximos días.',
-                    'La solicitud ha sido completada. Puedes descargar el documento desde tu panel.',
+                    'Recibimos tu solicitud académica. Estamos procesándola.',
+                    'Tu solicitud ha sido aprobada y está en proceso.',
+                    'La solicitud ha sido completada. Por favor, verifica.',
                 ],
                 TicketType::Administrative->value => [
-                    'Tu solicitud administrativa está siendo revisada.',
-                    'Hemos procesado tu solicitud. Recibirás un correo de confirmación.',
-                    'Necesitamos que completes el formulario adjunto para proceder con tu solicitud.',
+                    'Tu solicitud administrativa está siendo revisada por el área correspondiente.',
+                    'Hemos procesado tu solicitud. Te enviaremos la documentación por correo.',
                 ],
                 TicketType::Inquiry->value => [
-                    'Gracias por tu consulta. Te proporcionamos la siguiente información:',
-                    'Para realizar esa acción, sigue estos pasos: 1) Ve al menú principal, 2) Selecciona la opción correspondiente, 3) Completa los datos requeridos.',
-                    'La información que solicitas está disponible en la sección "Ayuda" del sistema.',
+                    'Gracias por tu consulta. Te proporciono la siguiente información:',
+                    'Para realizar eso, debes seguir estos pasos: 1) Ir al menú principal, 2) Seleccionar la opción correspondiente.',
                 ],
             ];
 
-            $replies = $supportReplies[$type->value] ?? ['Gracias por contactarnos. Estamos procesando tu solicitud.'];
+            $replies = $supportReplies[$type->value] ?? ['Gracias por contactarnos.'];
             return $replies[$replyIndex % count($replies)];
         } else {
             $userReplies = [
-                'Gracias por la respuesta. Voy a probar la solución.',
-                'Perfecto, ya funciona correctamente. Muchas gracias.',
-                '¿Podrían darme más información sobre el plazo de solución?',
-                'El problema persiste, aún no puedo acceder.',
-                'Muchas gracias por la ayuda, todo solucionado.',
-                '¿Hay algún número de referencia para mi caso?',
+                'Gracias por la respuesta. Entiendo.',
+                'Perfecto, ya probé y funciona correctamente.',
+                '¿Podrían darme más detalles sobre esto?',
+                'Muchas gracias por la ayuda.',
+                'El problema persiste, aún no funciona.',
             ];
 
             return $userReplies[$replyIndex % count($userReplies)];

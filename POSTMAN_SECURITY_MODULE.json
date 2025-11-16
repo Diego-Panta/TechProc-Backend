@@ -1,0 +1,480 @@
+{
+	"info": {
+		"_postman_id": "security-module-techproc-v2",
+		"name": "TechProc API - Security Module (Consolidated)",
+		"description": "Módulo de seguridad consolidado: gestión de sesiones (tokens Sanctum), eventos de seguridad y detección de anomalías",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000/api",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string",
+			"description": "Token de autenticación (auto-guardado en login)"
+		},
+		{
+			"key": "user_id",
+			"value": "",
+			"type": "string",
+			"description": "ID del usuario autenticado"
+		},
+		{
+			"key": "session_id",
+			"value": "",
+			"type": "string",
+			"description": "ID de sesión/token para operaciones"
+		}
+	],
+	"item": [
+		{
+			"name": "1. Authentication",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"token\", jsonData.data.token);",
+									"    pm.collectionVariables.set(\"user_id\", jsonData.data.user.id);",
+									"    console.log(\"✅ Token guardado: \" + jsonData.data.token);",
+									"    console.log(\"✅ User ID: \" + jsonData.data.user.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"admin@incadev.com\",\n    \"password\": \"password\",\n    \"role\": \"admin\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/login",
+							"host": ["{{base_url}}"],
+							"path": ["login"]
+						},
+						"description": "Login con credenciales. Automáticamente guarda el token y user_id."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "2. Sessions - Personal View",
+			"description": "Endpoints para gestionar tus propias sesiones",
+			"item": [
+				{
+					"name": "Ver Mis Sesiones Activas",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data && jsonData.data.length > 0) {",
+									"        pm.collectionVariables.set(\"session_id\", jsonData.data[0].id);",
+									"        console.log(\"✅ Session ID guardado: \" + jsonData.data[0].id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/security/sessions",
+							"host": ["{{base_url}}"],
+							"path": ["security", "sessions"]
+						},
+						"description": "Ver todas tus sesiones activas (tokens Sanctum activos)"
+					},
+					"response": []
+				},
+				{
+					"name": "Ver Mis Sesiones Sospechosas",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/security/sessions/suspicious",
+							"host": ["{{base_url}}"],
+							"path": ["security", "sessions", "suspicious"]
+						},
+						"description": "Detecta si tienes múltiples IPs activas simultáneamente (posible compromiso de cuenta)"
+					},
+					"response": []
+				},
+				{
+					"name": "Terminar Sesión Específica",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/security/sessions/{{session_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["security", "sessions", "{{session_id}}"]
+						},
+						"description": "Termina (revoca) una sesión/token específico. Usa {{session_id}} obtenido de 'Ver Mis Sesiones Activas'."
+					},
+					"response": []
+				},
+				{
+					"name": "Cerrar Todas Mis Sesiones (Excepto Actual)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/security/sessions/terminate-all",
+							"host": ["{{base_url}}"],
+							"path": ["security", "sessions", "terminate-all"]
+						},
+						"description": "Cierra todas tus sesiones EXCEPTO la actual (útil si sospechas que alguien tiene acceso a tu cuenta)"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "3. Sessions - Security Role (Admin)",
+			"description": "Endpoints administrativos para rol 'security'",
+			"item": [
+				{
+					"name": "Ver TODAS las Sesiones del Sistema",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/security/sessions/all",
+							"host": ["{{base_url}}"],
+							"path": ["security", "sessions", "all"]
+						},
+						"description": "🔒 SOLO ROL SECURITY\n\nVer todas las sesiones activas del sistema, agrupadas por usuario."
+					},
+					"response": []
+				},
+				{
+					"name": "Ver Sesiones de Usuario Específico",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data && jsonData.data.length > 0) {",
+									"        pm.collectionVariables.set(\"session_id\", jsonData.data[0].id);",
+									"        console.log(\"✅ Session ID guardado: \" + jsonData.data[0].id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/security/sessions?user_id=1",
+							"host": ["{{base_url}}"],
+							"path": ["security", "sessions"],
+							"query": [
+								{
+									"key": "user_id",
+									"value": "1",
+									"description": "ID del usuario a consultar"
+								}
+							]
+						},
+						"description": "🔒 SOLO ROL SECURITY\n\nVer sesiones activas de un usuario específico."
+					},
+					"response": []
+				},
+				{
+					"name": "Ver Sesiones Sospechosas de TODOS",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/security/sessions/suspicious",
+							"host": ["{{base_url}}"],
+							"path": ["security", "sessions", "suspicious"]
+						},
+						"description": "🔒 SOLO ROL SECURITY\n\nVer sesiones sospechosas de TODOS los usuarios (múltiples IPs activas)."
+					},
+					"response": []
+				},
+				{
+					"name": "Terminar Sesión de Otro Usuario",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/security/sessions/{{session_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["security", "sessions", "{{session_id}}"]
+						},
+						"description": "🔒 SOLO ROL SECURITY\n\nTerminar una sesión específica de CUALQUIER usuario."
+					},
+					"response": []
+				},
+				{
+					"name": "Cerrar TODAS las Sesiones de un Usuario",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/security/sessions/terminate-all?user_id=2",
+							"host": ["{{base_url}}"],
+							"path": ["security", "sessions", "terminate-all"],
+							"query": [
+								{
+									"key": "user_id",
+									"value": "2",
+									"description": "ID del usuario objetivo"
+								}
+							]
+						},
+						"description": "🔒 SOLO ROL SECURITY\n\n⚠️ ACCIÓN CRÍTICA: Cierra TODAS las sesiones de un usuario (excepto la tuya si eres tú). El usuario será expulsado completamente del sistema."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "4. Security Events",
+			"item": [
+				{
+					"name": "Ver Mis Eventos de Seguridad",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/security/events?per_page=20",
+							"host": ["{{base_url}}"],
+							"path": ["security", "events"],
+							"query": [
+								{
+									"key": "per_page",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Ver tus eventos de seguridad (logins, cambios de contraseña, etc.)"
+					},
+					"response": []
+				},
+				{
+					"name": "Ver Eventos Recientes del Sistema",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/security/events/recent?hours=24",
+							"host": ["{{base_url}}"],
+							"path": ["security", "events", "recent"],
+							"query": [
+								{
+									"key": "hours",
+									"value": "24"
+								}
+							]
+						},
+						"description": "🔒 SOLO ROL SECURITY\n\nVer eventos recientes del sistema (últimas 24 horas por defecto)"
+					},
+					"response": []
+				},
+				{
+					"name": "Ver Eventos Críticos",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/security/events/critical?days=7",
+							"host": ["{{base_url}}"],
+							"path": ["security", "events", "critical"],
+							"query": [
+								{
+									"key": "days",
+									"value": "7"
+								}
+							]
+						},
+						"description": "🔒 SOLO ROL SECURITY\n\nVer eventos críticos (anomalías, intentos de intrusión, etc.)"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "5. Dashboard",
+			"item": [
+				{
+					"name": "Dashboard de Seguridad",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/security/dashboard",
+							"host": ["{{base_url}}"],
+							"path": ["security", "dashboard"]
+						},
+						"description": "Resumen de seguridad: sesiones activas, eventos recientes, alertas, etc."
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
