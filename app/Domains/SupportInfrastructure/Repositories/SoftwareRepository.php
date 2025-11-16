@@ -1,7 +1,7 @@
 <?php
 namespace App\Domains\SupportInfrastructure\Repositories;
 
-use App\Domains\SupportInfrastructure\Models\Software;
+use IncadevUns\CoreDomain\Models\Software;
 
 class SoftwareRepository {
     protected $model;

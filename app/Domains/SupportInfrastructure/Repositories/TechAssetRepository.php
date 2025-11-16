@@ -1,7 +1,7 @@
 <?php
 namespace App\Domains\SupportInfrastructure\Repositories;
 
-use App\Domains\SupportInfrastructure\Models\TechAsset;
+use IncadevUns\CoreDomain\Models\TechAsset;
 
 class TechAssetRepository {
     protected $model;
