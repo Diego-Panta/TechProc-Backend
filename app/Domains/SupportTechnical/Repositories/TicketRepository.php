@@ -2,16 +2,29 @@
 
 namespace App\Domains\SupportTechnical\Repositories;
 
-use App\Domains\SupportTechnical\Models\Ticket;
-use App\Domains\SupportTechnical\Models\TicketTracking;
+use IncadevUns\CoreDomain\Models\Ticket;
+use IncadevUns\CoreDomain\Models\TicketReply;
+use IncadevUns\CoreDomain\Models\ReplyAttachment;
+use IncadevUns\CoreDomain\Enums\TicketStatus;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class TicketRepository implements TicketRepositoryInterface
 {
-    public function getAll(array $filters = [], int $perPage = 20): LengthAwarePaginator
+    /**
+     * Get all tickets with filters and pagination
+     */
+    public function getAll(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
-        $query = Ticket::with(['user', 'assignedTechnician']);
+        $query = Ticket::with(['user', 'replies' => function ($query) {
+            $query->with('user')->latest()->take(1);
+        }]);
+
+        // Apply filters
+        if (isset($filters['user_id'])) {
+            $query->where('user_id', $filters['user_id']);
+        }
 
         if (isset($filters['status'])) {
             $query->where('status', $filters['status']);
@@ -21,116 +34,268 @@ class TicketRepository implements TicketRepositoryInterface
             $query->where('priority', $filters['priority']);
         }
 
-        if (isset($filters['category'])) {
-            $query->where('category', $filters['category']);
-        }
-
-        if (isset($filters['user_id'])) {
-            $query->where('user_id', $filters['user_id']);
-        }
-
-        if (isset($filters['assigned_technician'])) {
-            $query->where('assigned_technician', $filters['assigned_technician']);
+        if (isset($filters['type'])) {
+            $query->where('type', $filters['type']);
         }
 
         if (isset($filters['search'])) {
             $search = $filters['search'];
-            $query->where(function ($q) use ($search) {
-                $q->where('title', 'LIKE', "%{$search}%")
-                  ->orWhere('description', 'LIKE', "%{$search}%");
-            });
+            $query->where('title', 'LIKE', "%{$search}%");
         }
 
-        return $query->orderBy('creation_date', 'desc')->paginate($perPage);
+        // Sorting
+        $sortBy = $filters['sort_by'] ?? 'updated_at';
+        $sortOrder = $filters['sort_order'] ?? 'desc';
+        $query->orderBy($sortBy, $sortOrder);
+
+        // Add replies count
+        $query->withCount('replies');
+
+        return $query->paginate($perPage);
     }
 
+    /**
+     * Find a ticket by ID
+     */
     public function findById(int $ticketId): ?Ticket
     {
-        return Ticket::with(['user', 'assignedTechnician', 'ticketTrackings'])
-            ->where('ticket_id', $ticketId)
-            ->orWhere('id', $ticketId)
-            ->first();
+        return Ticket::with(['user', 'replies.user', 'replies.attachments'])
+            ->find($ticketId);
     }
 
+    /**
+     * Create a new ticket
+     */
     public function create(array $data): Ticket
     {
         return Ticket::create($data);
     }
 
+    /**
+     * Update an existing ticket
+     */
     public function update(int $ticketId, array $data): Ticket
     {
-        $ticket = Ticket::where('ticket_id', $ticketId)
-            ->orWhere('id', $ticketId)
-            ->firstOrFail();
-        
+        $ticket = Ticket::findOrFail($ticketId);
         $ticket->update($data);
         
-        return $ticket->fresh(['user', 'assignedTechnician']);
+        return $ticket->fresh(['user', 'replies']);
     }
 
-    public function delete(int $ticketId): bool
+    /**
+     * Close a ticket
+     */
+    public function close(int $ticketId): Ticket
     {
-        $ticket = Ticket::where('ticket_id', $ticketId)
-            ->orWhere('id', $ticketId)
-            ->firstOrFail();
+        $ticket = Ticket::findOrFail($ticketId);
+        $ticket->update(['status' => TicketStatus::Closed]);
         
-        return $ticket->delete();
+        return $ticket->fresh();
     }
 
-    public function createTracking(int $ticketId, array $data): TicketTracking
+    /**
+     * Reopen a ticket
+     */
+    public function reopen(int $ticketId): Ticket
+    {
+        $ticket = Ticket::findOrFail($ticketId);
+        $ticket->update(['status' => TicketStatus::Open]);
+        
+        return $ticket->fresh();
+    }
+
+    /**
+     * Create a reply for a ticket
+     */
+    public function createReply(int $ticketId, array $data): TicketReply
     {
         $data['ticket_id'] = $ticketId;
-        $data['tracking_date'] = now();
-        return TicketTracking::create($data);
+        return TicketReply::create($data);
     }
 
+    /**
+     * Update a reply
+     */
+    public function updateReply(int $replyId, array $data): TicketReply
+    {
+        $reply = TicketReply::findOrFail($replyId);
+        $reply->update($data);
+        
+        return $reply->fresh(['user', 'attachments']);
+    }
+
+    /**
+     * Delete a reply
+     */
+    public function deleteReply(int $replyId): bool
+    {
+        $reply = TicketReply::findOrFail($replyId);
+        
+        // Delete associated attachments
+        foreach ($reply->attachments as $attachment) {
+            $this->deleteAttachment($attachment->id);
+        }
+        
+        return $reply->delete();
+    }
+
+    /**
+     * Find a reply by ID
+     */
+    public function findReplyById(int $replyId): ?TicketReply
+    {
+        return TicketReply::with(['user', 'ticket', 'attachments'])->find($replyId);
+    }
+
+    /**
+     * Create an attachment for a reply
+     */
+    public function createAttachment(int $replyId, array $data): ReplyAttachment
+    {
+        $data['ticket_reply_id'] = $replyId;
+        return ReplyAttachment::create($data);
+    }
+
+    /**
+     * Delete an attachment
+     */
+    public function deleteAttachment(int $attachmentId): bool
+    {
+        $attachment = ReplyAttachment::findOrFail($attachmentId);
+        
+        // Delete the physical file
+        if (Storage::disk('public')->exists($attachment->path)) {
+            Storage::disk('public')->delete($attachment->path);
+        }
+        
+        return $attachment->delete();
+    }
+
+    /**
+     * Find an attachment by ID
+     */
+    public function findAttachmentById(int $attachmentId): ?ReplyAttachment
+    {
+        return ReplyAttachment::with('ticketReply.ticket')->find($attachmentId);
+    }
+
+    /**
+     * Get statistics
+     */
     public function getStats(array $filters = []): array
     {
         $query = Ticket::query();
 
-        if (isset($filters['start_date'])) {
-            $query->where('creation_date', '>=', $filters['start_date']);
-        }
+        // Apply period filter
+        $period = $filters['period'] ?? 'month';
+        $startDate = match($period) {
+            'today' => now()->startOfDay(),
+            'week' => now()->startOfWeek(),
+            'month' => now()->startOfMonth(),
+            'year' => now()->startOfYear(),
+            default => now()->startOfMonth(),
+        };
 
-        if (isset($filters['end_date'])) {
-            $query->where('creation_date', '<=', $filters['end_date']);
-        }
+        $queryForPeriod = (clone $query)->where('created_at', '>=', $startDate);
 
+        // Total tickets
         $totalTickets = $query->count();
+        
+        // By status
+        $openTickets = $query->where('status', TicketStatus::Open)->count();
+        $pendingTickets = $query->where('status', TicketStatus::Pending)->count();
+        $closedTickets = $query->where('status', TicketStatus::Closed)->count();
 
-        $byStatus = Ticket::select('status', DB::raw('count(*) as count'))
-            ->groupBy('status')
-            ->pluck('count', 'status')
-            ->toArray();
-
-        $byPriority = Ticket::select('priority', DB::raw('count(*) as count'))
+        // By priority
+        $byPriority = $query->select('priority', DB::raw('count(*) as count'))
             ->groupBy('priority')
             ->pluck('count', 'priority')
             ->toArray();
 
-        $byCategory = Ticket::select('category', DB::raw('count(*) as count'))
-            ->groupBy('category')
-            ->pluck('count', 'category')
+        // By type
+        $byType = $query->select('type', DB::raw('count(*) as count'))
+            ->whereNotNull('type')
+            ->groupBy('type')
+            ->pluck('count', 'type')
             ->toArray();
 
-        $avgResolutionTime = Ticket::whereNotNull('resolution_date')
-            ->whereNotNull('creation_date')
-            ->get()
-            ->avg(function ($ticket) {
-                return $ticket->creation_date->diffInHours($ticket->resolution_date);
-            });
+        // Tickets created today
+        $ticketsCreatedToday = Ticket::whereDate('created_at', today())->count();
 
-        $pendingEscalations = DB::table('escalations')
-            ->where('approved', false)
+        // Tickets resolved today (closed today)
+        $ticketsResolvedToday = Ticket::where('status', TicketStatus::Closed)
+            ->whereDate('updated_at', today())
             ->count();
+
+        // Average response time (time until first reply by support)
+        $avgResponseTime = $this->calculateAverageResponseTime();
+
+        // Average resolution time (time until ticket closed)
+        $avgResolutionTime = $this->calculateAverageResolutionTime();
 
         return [
             'total_tickets' => $totalTickets,
-            'by_status' => $byStatus,
+            'open_tickets' => $openTickets,
+            'pending_tickets' => $pendingTickets,
+            'closed_tickets' => $closedTickets,
             'by_priority' => $byPriority,
-            'by_category' => $byCategory,
-            'average_resolution_time_hours' => round($avgResolutionTime ?? 0, 2),
-            'pending_escalations' => $pendingEscalations,
+            'by_type' => $byType,
+            'average_response_time' => $avgResponseTime,
+            'average_resolution_time' => $avgResolutionTime,
+            'tickets_created_today' => $ticketsCreatedToday,
+            'tickets_resolved_today' => $ticketsResolvedToday,
         ];
+    }
+
+    /**
+     * Calculate average response time
+     */
+    private function calculateAverageResponseTime(): string
+    {
+        $tickets = Ticket::with('replies')->get();
+        $responseTimes = [];
+
+        foreach ($tickets as $ticket) {
+            if ($ticket->replies->count() >= 2) {
+                $firstReply = $ticket->replies->first();
+                $secondReply = $ticket->replies->skip(1)->first();
+                
+                if ($firstReply && $secondReply) {
+                    $responseTimes[] = $firstReply->created_at->diffInMinutes($secondReply->created_at);
+                }
+            }
+        }
+
+        if (empty($responseTimes)) {
+            return 'N/A';
+        }
+
+        $avgMinutes = array_sum($responseTimes) / count($responseTimes);
+        $hours = floor($avgMinutes / 60);
+        $minutes = round($avgMinutes % 60);
+
+        return "{$hours} hours {$minutes} minutes";
+    }
+
+    /**
+     * Calculate average resolution time
+     */
+    private function calculateAverageResolutionTime(): string
+    {
+        $closedTickets = Ticket::where('status', TicketStatus::Closed)->get();
+        
+        if ($closedTickets->isEmpty()) {
+            return 'N/A';
+        }
+
+        $resolutionTimes = $closedTickets->map(function ($ticket) {
+            return $ticket->created_at->diffInMinutes($ticket->updated_at);
+        });
+
+        $avgMinutes = $resolutionTimes->avg();
+        $hours = floor($avgMinutes / 60);
+        $minutes = round($avgMinutes % 60);
+
+        return "{$hours} hours {$minutes} minutes";
     }
 }

@@ -10,17 +10,22 @@ class TicketCollection extends ResourceCollection
     /**
      * Transform the resource collection into an array.
      *
-     * @return array<string, mixed>
+     * @return array<int|string, mixed>
      */
     public function toArray(Request $request): array
     {
         return [
-            'tickets' => TicketResource::collection($this->collection),
+            'tickets' => $this->collection,
             'pagination' => [
+                'total' => $this->total(),
+                'count' => $this->count(),
+                'per_page' => $this->perPage(),
                 'current_page' => $this->currentPage(),
                 'total_pages' => $this->lastPage(),
-                'total_records' => $this->total(),
-                'per_page' => $this->perPage(),
+                'links' => [
+                    'next' => $this->nextPageUrl(),
+                    'prev' => $this->previousPageUrl(),
+                ],
             ],
         ];
     }
