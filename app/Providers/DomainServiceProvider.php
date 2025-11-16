@@ -63,14 +63,8 @@ class DomainServiceProvider extends ServiceProvider
         $this->app->bind(EscalationRepositoryInterface::class, EscalationRepository::class);
         
         // Registrar bindings para DeveloperWeb
-        $this->app->bind(ContactFormRepository::class, function ($app) {
-            return new ContactFormRepository();
-        });
-
-        $this->app->bind(ContactFormService::class, function ($app) {
-            return new ContactFormService(
-                $app->make(ContactFormRepository::class)
-            );
+        $this->app->singleton(ContactFormService::class, function ($app) {
+            return new ContactFormService();
         });
 
         // Registrar bindings para DataAnalyst

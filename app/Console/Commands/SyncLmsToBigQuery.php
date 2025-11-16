@@ -59,7 +59,7 @@ class SyncLmsToBigQuery extends Command
             : [
                 'attendances', 'class_sessions', 'enrollments', 'groups',
                 'grades', 'exams', 'enrollment_results', 'modules', 'course_versions',
-                'courses', 'users',
+                'courses', 'users', 'group_teachers', 'teacher_profiles'
             ];
 
         foreach ($tables as $table) {
