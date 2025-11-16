@@ -1,7 +1,7 @@
 <?php
 namespace App\Domains\SupportInfrastructure\Repositories;
 
-use App\Domains\SupportInfrastructure\Models\License;
+use IncadevUns\CoreDomain\Models\License;
 
 class LicenseRepository {
     protected $model;

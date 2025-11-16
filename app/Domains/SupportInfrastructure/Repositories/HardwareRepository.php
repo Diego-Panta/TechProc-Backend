@@ -1,7 +1,7 @@
 <?php
 namespace App\Domains\SupportInfrastructure\Repositories;
 
-use App\Domains\SupportInfrastructure\Models\Hardware;
+use IncadevUns\CoreDomain\Models\Hardware;
 
 class HardwareRepository {
     protected $model;
@@ -23,12 +23,10 @@ class HardwareRepository {
     }
 
     public function update(int $id, array $data){
-        $hardware = $this->model->find($id);
-        if ($hardware){
-            $hardware->update($data);
-            return $hardware;
-        }
-        return null;
+        $hardware = $this->model->findOrFail($id);
+        $hardware->update($data);
+        return $hardware;
+    
     }
 
     public function delete(int $id){
