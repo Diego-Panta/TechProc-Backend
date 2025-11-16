@@ -17,7 +17,8 @@
       "Bash(dir:*)",
       "Bash(cat:*)",
       "Bash(taskkill:*)",
-      "Bash(nul)"
+      "Bash(nul)",
+      "Bash(mysql:*)"
     ],
     "deny": [],
     "ask": []
