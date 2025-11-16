@@ -5,6 +5,8 @@ namespace App\Domains\AuthenticationSessions\Controllers;
 use App\Models\User;
 use App\Domains\AuthenticationSessions\Models\ActiveSession;
 use App\Domains\AuthenticationSessions\Notifications\VerifyEmailNotification;
+use App\Domains\Security\Services\SecurityEventService;
+use App\Domains\Security\Services\AnomalyDetectionService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -16,6 +18,16 @@ use Carbon\Carbon;
 
 class AuthController extends Controller
 {
+    protected SecurityEventService $securityEventService;
+    protected AnomalyDetectionService $anomalyDetectionService;
+
+    public function __construct(
+        SecurityEventService $securityEventService,
+        AnomalyDetectionService $anomalyDetectionService
+    ) {
+        $this->securityEventService = $securityEventService;
+        $this->anomalyDetectionService = $anomalyDetectionService;
+    }
     /**
      * Register a new user
      */
@@ -56,7 +68,12 @@ class AuthController extends Controller
             // Asignar el rol al usuario
             $user->assignRole($request->role);
 
-            $token = $user->createToken('auth_token')->plainTextToken;
+            // Crear token con metadata
+            $tokenResult = $user->createToken('auth_token', [
+                'ip' => $request->ip(),
+                'user_agent' => $request->userAgent()
+            ]);
+            $token = $tokenResult->plainTextToken;
 
             return response()->json([
                 'success' => true,
@@ -108,6 +125,27 @@ class AuthController extends Controller
         $user = User::where('email', $request->email)->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
+            // Registrar intento de login fallido
+            $this->securityEventService->logLoginFailed(
+                $request->email,
+                $request->ip(),
+                $request->userAgent(),
+                'invalid_credentials'
+            );
+
+            // Detectar fuerza bruta
+            $bruteForce = $this->anomalyDetectionService->detectBruteForce(
+                $request->email,
+                $request->ip()
+            );
+
+            if ($bruteForce) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Demasiados intentos fallidos. Tu IP ha sido bloqueada temporalmente.'
+                ], 429);
+            }
+
             return response()->json([
                 'success' => false,
                 'message' => 'Credenciales incorrectas'
@@ -135,8 +173,26 @@ class AuthController extends Controller
             ], 200);
         }
 
-        // Crear token con Sanctum
-        $token = $user->createToken('auth_token')->plainTextToken;
+        // Crear token con Sanctum y guardar metadata (IP y user agent)
+        $tokenResult = $user->createToken('auth_token', [
+            'ip' => $request->ip(),
+            'user_agent' => $request->userAgent()
+        ]);
+        $token = $tokenResult->plainTextToken;
+
+        // Registrar login exitoso
+        $this->securityEventService->logLoginSuccess(
+            $user->id,
+            $request->ip(),
+            $request->userAgent()
+        );
+
+        // Detectar anomalías (múltiples IPs)
+        $this->anomalyDetectionService->runAllDetections(
+            $user->id,
+            $request->ip(),
+            $request->userAgent()
+        );
 
         return response()->json([
             'success' => true,

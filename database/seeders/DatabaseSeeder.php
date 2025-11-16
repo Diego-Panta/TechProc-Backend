@@ -37,6 +37,10 @@ class DatabaseSeeder extends Seeder
         $this->command->info('🎭 Generando datos de muestra para Soporte Técnico...');
         $this->call(SupportTechnicalSampleDataSeeder::class);
 
+        // 6. Módulo de Seguridad
+        $this->command->info('🔐 Configurando módulo de Seguridad...');
+        $this->call(SecurityPermissionsSeeder::class);
+
         $this->command->info('✅ Proceso de seed completado exitosamente!');
     }
 }
