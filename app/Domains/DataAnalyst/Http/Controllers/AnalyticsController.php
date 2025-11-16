@@ -7,15 +7,20 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
 use App\Domains\DataAnalyst\Services\BigQueryAnalyticsService;
+use App\Domains\DataAnalyst\Services\ExportService;
 use Illuminate\Support\Facades\Log;
 
 class AnalyticsController extends Controller
 {
     private BigQueryAnalyticsService $analyticsService;
+    private ExportService $exportService;
 
-    public function __construct(BigQueryAnalyticsService $analyticsService)
-    {
+    public function __construct(
+        BigQueryAnalyticsService $analyticsService,
+        ExportService $exportService
+    ) {
         $this->analyticsService = $analyticsService;
+        $this->exportService = $exportService;
     }
 
     /**
@@ -40,7 +45,6 @@ class AnalyticsController extends Controller
                 'data' => $metrics,
                 'filters' => $filters
             ]);
-
         } catch (\Exception $e) {
             Log::error('Error en getAttendanceMetrics: ' . $e->getMessage(), [
                 'filters' => $request->all(),
@@ -50,36 +54,6 @@ class AnalyticsController extends Controller
             return response()->json([
                 'success' => false,
                 'error' => 'Error obteniendo métricas de asistencia: ' . $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * Métricas simples de asistencia (como tu ejemplo)
-     */
-    public function getSimpleAttendance(Request $request): JsonResponse
-    {
-        try {
-            $filters = $request->validate([
-                'group_id' => 'sometimes|integer',
-                'start_date' => 'sometimes|date',
-                'end_date' => 'sometimes|date'
-            ]);
-
-            $results = $this->analyticsService->getSimpleAttendanceByGroup($filters);
-
-            return response()->json([
-                'success' => true,
-                'data' => $results,
-                'filters' => $filters
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('Error en getSimpleAttendance: ' . $e->getMessage());
-
-            return response()->json([
-                'success' => false,
-                'error' => 'Error obteniendo métricas simples de asistencia: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -104,7 +78,6 @@ class AnalyticsController extends Controller
                 'data' => $metrics,
                 'filters' => $filters
             ]);
-
         } catch (\Exception $e) {
             Log::error('Error en getProgressMetrics: ' . $e->getMessage());
 
@@ -135,7 +108,6 @@ class AnalyticsController extends Controller
                 'data' => $metrics,
                 'filters' => $filters
             ]);
-
         } catch (\Exception $e) {
             Log::error('Error en getPerformanceMetrics: ' . $e->getMessage());
 
@@ -147,33 +119,93 @@ class AnalyticsController extends Controller
     }
 
     /**
-     * Estudiantes con matrícula activa
+     * Exportar métricas de asistencia
      */
-    public function getActiveStudents(Request $request): JsonResponse
+    public function exportAttendance(Request $request)
     {
         try {
             $filters = $request->validate([
                 'group_id' => 'sometimes|integer',
-                'course_id' => 'sometimes|integer',
                 'course_version_id' => 'sometimes|integer',
-                'payment_status' => 'sometimes|string',
+                'user_id' => 'sometimes|integer',
                 'start_date' => 'sometimes|date',
-                'end_date' => 'sometimes|date'
+                'end_date' => 'sometimes|date',
+                'module_id' => 'sometimes|integer',
+                'format' => 'required|in:pdf,excel'
             ]);
 
-            $metrics = $this->analyticsService->getActiveStudentsMetrics($filters);
+            $format = $filters['format'];
+            unset($filters['format']);
 
-            return response()->json([
-                'success' => true,
-                'data' => $metrics,
-                'filters' => $filters
-            ]);
+            $filePath = $this->exportService->exportAttendance($filters, $format);
 
+            return $this->exportService->downloadFile($filePath);
         } catch (\Exception $e) {
-            Log::error('Error en getActiveStudents: ' . $e->getMessage());
+            Log::error('Error en exportAttendance: ' . $e->getMessage());
+
             return response()->json([
                 'success' => false,
-                'error' => 'Error obteniendo métricas de estudiantes activos: ' . $e->getMessage()
+                'error' => 'Error exportando métricas de asistencia: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Exportar métricas de progreso
+     */
+    public function exportProgress(Request $request)
+    {
+        try {
+            $filters = $request->validate([
+                'group_id' => 'sometimes|integer',
+                'user_id' => 'sometimes|integer',
+                'start_date' => 'sometimes|date',
+                'end_date' => 'sometimes|date',
+                'format' => 'required|in:pdf,excel'
+            ]);
+
+            $format = $filters['format'];
+            unset($filters['format']);
+
+            $filePath = $this->exportService->exportProgress($filters, $format);
+
+            return $this->exportService->downloadFile($filePath);
+        } catch (\Exception $e) {
+            Log::error('Error en exportProgress: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Error exportando métricas de progreso: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Exportar métricas de rendimiento
+     */
+    public function exportPerformance(Request $request)
+    {
+        try {
+            $filters = $request->validate([
+                'group_id' => 'sometimes|integer',
+                'course_version_id' => 'sometimes|integer',
+                'start_date' => 'sometimes|date',
+                'end_date' => 'sometimes|date',
+                'format' => 'required|in:pdf,excel'
+            ]);
+
+            $format = $filters['format'];
+            unset($filters['format']);
+
+            $filePath = $this->exportService->exportPerformance($filters, $format);
+
+            return $this->exportService->downloadFile($filePath);
+        } catch (\Exception $e) {
+            Log::error('Error en exportPerformance: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Error exportando métricas de rendimiento: ' . $e->getMessage()
             ], 500);
         }
     }

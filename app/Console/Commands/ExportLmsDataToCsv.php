@@ -17,7 +17,7 @@ class ExportLmsDataToCsv extends Command
             'attendances', 'class_sessions', 'enrollments', 'groups',
             'grades', 'exams', 'enrollment_results', 'modules','course_versions',
             'courses', 'users', 'enrollment_payments', 'survey_responses', 'response_details',
-            'tickets', 'appointments'
+            'tickets', 'appointments', 'group_teachers', 'teacher_profiles'
         ];
 
         foreach ($tables as $table) {

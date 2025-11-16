@@ -7,6 +7,7 @@ use App\Domains\DeveloperWeb\Http\Controllers\ChatbotFaqApiController;
 use App\Domains\DeveloperWeb\Http\Controllers\ChatbotApiController;
 use App\Domains\DeveloperWeb\Http\Controllers\ChatbotConfigController;
 use App\Domains\DeveloperWeb\Http\Controllers\ContentStatsController;
+use App\Domains\DeveloperWeb\Http\Controllers\ContactFormApiController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -61,6 +62,16 @@ Route::prefix('developer-web')->name('api.developer-web.')->group(function () {
         // Métodos específicos SOLICITADOS - CAMBIAR NOMBRE
         Route::get('/list/published', [AlertApiController::class, 'getPublished'])->name('published');
         Route::get('/stats/summary', [AlertApiController::class, 'getStats'])->name('stats');
+    });
+
+    Route::prefix('contact-forms')->name('contact-forms.')->group(function () {
+        // Public endpoint to submit contact forms
+        Route::post('/', [ContactFormApiController::class, 'store'])->name('store');
+        
+        // Protected endpoints
+        /*Route::middleware([DeveloperWebMiddleware::class])->group(function () {
+            Route::post('/respond', [ContactFormApiController::class, 'respond'])->name('respond');
+        });*/
     });
 
     // Chatbot FAQs API
