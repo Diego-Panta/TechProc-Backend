@@ -8,8 +8,8 @@ use App\Domains\Lms\Models\Enrollment;
 use App\Domains\Lms\Models\Attendance;
 use App\Domains\Lms\Models\FinalGrade;
 use App\Domains\SupportTechnical\Models\Ticket;
-use App\Domains\SupportSecurity\Models\SecurityAlert;
-use App\Domains\SupportSecurity\Models\BlockedIp;
+// use App\Domains\SupportSecurity\Models\SecurityAlert; // DEPRECATED: SupportSecurity eliminado, usar Security
+// use App\Domains\SupportSecurity\Models\BlockedIp; // DEPRECATED: SupportSecurity eliminado, usar Security
 use App\Domains\DataAnalyst\Models\Payment;
 use Illuminate\Support\Facades\DB;
 
