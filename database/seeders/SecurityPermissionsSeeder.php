@@ -59,17 +59,17 @@ class SecurityPermissionsSeeder extends Seeder
         $securityRole->syncPermissions($allPermissions);
         $this->command->info('✅ Rol "security" creado con acceso global a TODO');
 
-        // Asignar TODOS los permisos al rol admin (acceso completo al módulo de seguridad)
+        // Asignar permisos al rol admin (AGREGAR, no reemplazar)
         $adminRole = Role::where('name', 'admin')->first();
         if ($adminRole) {
-            $adminRole->syncPermissions($allPermissions);
+            $adminRole->givePermissionTo($allPermissions);
             $this->command->info('✅ Rol "admin" tiene acceso completo al módulo de seguridad');
         }
 
-        // Asignar TODOS los permisos al rol super_admin
+        // Asignar permisos al rol super_admin (AGREGAR, no reemplazar)
         $superAdminRole = Role::where('name', 'super_admin')->first();
         if ($superAdminRole) {
-            $superAdminRole->syncPermissions($allPermissions);
+            $superAdminRole->givePermissionTo($allPermissions);
             $this->command->info('✅ Rol "super_admin" tiene acceso completo al módulo de seguridad');
         }
     }
