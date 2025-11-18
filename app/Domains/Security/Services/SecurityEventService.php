@@ -2,10 +2,10 @@
 
 namespace App\Domains\Security\Services;
 
-use App\Domains\Security\Enums\SecurityEventSeverity;
-use App\Domains\Security\Enums\SecurityEventType;
-use App\Domains\Security\Models\SecurityEvent;
 use App\Domains\Security\Repositories\SecurityEventRepository;
+use IncadevUns\CoreDomain\Enums\SecurityEventSeverity;
+use IncadevUns\CoreDomain\Enums\SecurityEventType;
+use IncadevUns\CoreDomain\Models\SecurityEvent;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 
