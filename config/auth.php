@@ -14,7 +14,7 @@ return [
     */
 
     'defaults' => [
-        'guard' => 'api',
+        'guard' => 'web',
         'passwords' => 'users',
     ],
 
@@ -42,9 +42,8 @@ return [
         ],
 
         'api' => [
-            'driver' => 'jwt',
+            'driver' => 'sanctum',
             'provider' => 'users',
-            'hash' => false,
         ],
     ],
 
@@ -68,7 +67,7 @@ return [
     'providers' => [
         'users' => [
             'driver' => 'eloquent',
-            'model' => App\Domains\AuthenticationSessions\Models\User::class,
+            'model' => App\Models\User::class,
         ],
 
         // 'users' => [
@@ -101,7 +100,7 @@ return [
             'provider' => 'users',
             'table' => 'password_reset_tokens',
             'expire' => 60,
-            'throttle' => 60,
+            'throttle' => 10, // Reducido a 10 segundos para desarrollo (usa 60 en producción)
         ],
 
         'password_timeout' => 10800,

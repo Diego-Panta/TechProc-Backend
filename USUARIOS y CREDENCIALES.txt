@@ -1,0 +1,105 @@
+CREDENCIALES DE USUARIOS - TECHPROC BACKEND
+==============================================
+
+Contraseña para todos: password
+
+-----------------------------------------------
+USUARIOS DEL SISTEMA
+-----------------------------------------------
+
+1. admin@incadev.com - SUPER ADMINISTRATOR
+   Roles: admin, student
+
+2. ana@incadev.com - ANA SALAS GARCIA
+   Roles: teacher, student
+
+3. dante@incadev.com - DANTE GANOZA UGARTE
+   Roles: teacher, student
+
+4. antonio@incadev.com - ANTONIO CRUZ REYES
+   Roles: teacher, student
+
+5. liliana@incadev.com - LILIANA GUERRA SALAS
+   Roles: student
+
+6. pedro@incadev.com - PEDRO BRAVO GUTIERREZ
+   Roles: student
+
+7. sofia@incadev.com - SOFIA LUNA SANCHEZ
+   Roles: student
+
+8. javier@incadev.com - JAVIER MENDOZA RUIZ
+   Roles: student
+
+9. valentina@incadev.com - VALENTINA RIOS SILVA
+   Roles: student
+
+10. martin@incadev.com - MARTIN CASTILLO LEON
+    Roles: support, student
+
+11. lucia@incadev.com - LUCIA FLORES MENDOZA
+    Roles: support, student
+
+12. luis@incadev.com - LUIS SANDOVAL VASQUEZ
+    Roles: auditor, student
+
+13. carlos.tech@incadev.com - CARLOS VEGA TORRES
+    Roles: infrastructure
+
+14. maria.security@incadev.com - MARIA ROJAS CAMPOS
+    Roles: security
+
+15. roberto.analyst@incadev.com - ROBERTO DIAZ MORALES
+    Roles: academic_analyst
+
+16. paula.web@incadev.com - PAULA HERRERA SOTO
+    Roles: web
+
+17. carmen.survey@incadev.com - CARMEN TORRES RAMIREZ
+    Roles: survey_admin
+
+18. sergio.audit@incadev.com - SERGIO PONCE VILLEGAS
+    Roles: audit_manager
+
+19. patricia.hr@incadev.com - PATRICIA GOMEZ VIDAL
+    Roles: human_resources
+
+20. ricardo.finance@incadev.com - RICARDO PAREDES CASTRO
+    Roles: financial_manager
+
+21. elena.viewer@incadev.com - ELENA ORTIZ PEREZ
+    Roles: system_viewer
+
+22. gabriela.enrollment@incadev.com - GABRIELA SUAREZ MORENO
+    Roles: enrollment_manager
+
+23. fernando.data@incadev.com - FERNANDO RAMOS SILVA
+    Roles: data_analyst
+
+24. isabela.marketing@incadev.com - ISABELA CASTRO REYES
+    Roles: marketing
+
+25. diego.marketing@incadev.com - DIEGO VARGAS MUNOZ
+    Roles: marketing_admin
+
+26. beatriz.tutor@incadev.com - BEATRIZ NAVARRO JIMENEZ
+    Roles: tutor
+
+27. jorge.clerk@incadev.com - JORGE DELGADO SANTOS
+    Roles: administrative_clerk
+
+28. andrea.planner@incadev.com - ANDREA BUSTAMANTE LOPEZ
+    Roles: planner_admin
+
+29. miguel.planner@incadev.com - MIGUEL CORDERO RUIZ
+    Roles: planner
+
+30. laura.improvement@incadev.com - LAURA MEDINA FLORES
+    Roles: continuous_improvement
+
+-----------------------------------------------
+RESUMEN
+-----------------------------------------------
+Total de usuarios: 30
+Total de roles: 22
+Total de permisos: 283

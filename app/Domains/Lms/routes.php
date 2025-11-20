@@ -18,7 +18,18 @@ use App\Domains\Lms\Http\Controllers\ClassMaterialController;
 // Route::middleware(['auth:api'])->group(function () {
 
 Route::prefix('lms')->group(function () {
-    
+
+    // ========================================
+    // RUTAS PÚBLICAS (sin autenticación)
+    // ========================================
+
+    // Obtener cursos del último período académico publicado
+    Route::get('/course-offerings/public/latest-period', [CourseOfferingController::class, 'publicLatestPeriod']);
+
+    // ========================================
+    // RUTAS PROTEGIDAS
+    // ========================================
+
     // Gestión de Cursos
     Route::get('/courses', [CourseController::class, 'index']);
     Route::get('/courses/{course_id}', [CourseController::class, 'show']);

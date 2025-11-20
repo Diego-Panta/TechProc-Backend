@@ -3,6 +3,8 @@
 namespace App\Domains\SupportTechnical\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use IncadevUns\CoreDomain\Enums\TicketPriority;
+use IncadevUns\CoreDomain\Enums\TicketType;
 
 class CreateTicketRequest extends FormRequest
 {
@@ -11,7 +13,7 @@ class CreateTicketRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true; // TODO: Implementar lógica de autorización cuando el módulo de autenticación esté disponible
+        return true; // La autorización se maneja en el controlador/middleware
     }
 
     /**
@@ -22,11 +24,10 @@ class CreateTicketRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'user_id' => 'required|integer|exists:users,id',
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'priority' => 'required|in:baja,media,alta,critica',
-            'category' => 'required|string|max:100',
+            'title' => ['required', 'string', 'max:255'],
+            'type' => ['nullable', 'string', 'in:' . implode(',', TicketType::values())],
+            'priority' => ['required', 'string', 'in:' . implode(',', TicketPriority::values())],
+            'content' => ['required', 'string', 'min:10'],
         ];
     }
 
@@ -38,13 +39,13 @@ class CreateTicketRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'user_id.required' => 'El ID del usuario es obligatorio',
-            'user_id.exists' => 'El usuario especificado no existe',
-            'title.required' => 'El título del ticket es obligatorio',
-            'description.required' => 'La descripción del ticket es obligatoria',
-            'priority.required' => 'La prioridad es obligatoria',
-            'priority.in' => 'La prioridad debe ser: baja, media, alta o critica',
-            'category.required' => 'La categoría es obligatoria',
+            'title.required' => 'El título del ticket es requerido',
+            'title.max' => 'El título no puede exceder los 255 caracteres',
+            'type.in' => 'El tipo de ticket no es válido',
+            'priority.required' => 'La prioridad del ticket es requerida',
+            'priority.in' => 'La prioridad seleccionada no es válida',
+            'content.required' => 'El contenido del ticket es requerido',
+            'content.min' => 'El contenido debe tener al menos 10 caracteres',
         ];
     }
 }

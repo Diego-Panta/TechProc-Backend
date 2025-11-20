@@ -8,7 +8,7 @@ use App\Domains\Lms\Models\Attendance;
 use App\Domains\Lms\Models\GradeRecord;
 use App\Domains\DataAnalyst\Models\FinancialTransaction;
 use App\Domains\SupportTechnical\Models\Ticket;
-use App\Domains\SupportSecurity\Models\SecurityLog;
+// use App\Domains\SupportSecurity\Models\SecurityLog; // DEPRECATED: SupportSecurity eliminado, usar app/Domains/Security/Models/SecurityEvent
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 

@@ -4,11 +4,11 @@
 namespace App\Domains\DeveloperWeb\Repositories;
 
 use App\Domains\DeveloperWeb\Models\ChatbotConversation;
-use App\Domains\DeveloperWeb\Models\ChatbotMessage;
 use App\Domains\DeveloperWeb\Models\ChatbotFaq;
 use App\Domains\DeveloperWeb\Enums\FaqCategory;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ChatbotRepository
 {
@@ -37,7 +37,7 @@ class ChatbotRepository
         }
 
         return $query->orderBy('usage_count', 'desc')
-            ->orderBy('created_date', 'desc')
+            ->orderBy('created_at', 'desc')
             ->paginate($perPage);
     }
 
@@ -48,14 +48,22 @@ class ChatbotRepository
 
     public function createFaq(array $data): ChatbotFaq
     {
-        $data['id_faq'] = $this->getNextFaqId();
-        return ChatbotFaq::create($data);
+        try {
+            return ChatbotFaq::create($data);
+        } catch (\Exception $e) {
+            Log::error('Error creating FAQ: ' . $e->getMessage());
+            throw new \Exception('No se pudo crear la FAQ: ' . $e->getMessage());
+        }
     }
 
     public function updateFaq(ChatbotFaq $faq, array $data): bool
     {
-        $data['updated_date'] = now();
-        return $faq->update($data);
+        try {
+            return $faq->update($data);
+        } catch (\Exception $e) {
+            Log::error('Error updating FAQ: ' . $e->getMessage());
+            throw new \Exception('No se pudo actualizar la FAQ: ' . $e->getMessage());
+        }
     }
 
     public function deleteFaq(ChatbotFaq $faq): bool
@@ -63,9 +71,9 @@ class ChatbotRepository
         try {
             DB::beginTransaction();
 
-            // Paso 1: Establecer faq_matched a NULL en todos los mensajes que referencian esta FAQ
-            ChatbotMessage::where('faq_matched', $faq->id)
-                ->update(['faq_matched' => null]);
+            // Paso 1: Establecer faq_matched_id a NULL en todas las conversaciones que referencian esta FAQ
+            ChatbotConversation::where('faq_matched_id', $faq->id)
+                ->update(['faq_matched_id' => null]);
 
             // Paso 2: Eliminar la FAQ
             $deleted = $faq->delete();
@@ -74,24 +82,23 @@ class ChatbotRepository
             return $deleted;
         } catch (\Exception $e) {
             DB::rollBack();
-            throw $e;
+            Log::error('Error deleting FAQ: ' . $e->getMessage());
+            throw new \Exception('No se pudo eliminar la FAQ: ' . $e->getMessage());
         }
     }
 
     public function incrementFaqUsage(int $faqId): bool
     {
-        return ChatbotFaq::where('id', $faqId)->increment('usage_count');
-    }
-
-    public function getNextFaqId(): int
-    {
-        $lastFaq = ChatbotFaq::orderBy('id_faq', 'desc')->first();
-        return $lastFaq ? $lastFaq->id_faq + 1 : 1;
+        try {
+            return ChatbotFaq::where('id', $faqId)->increment('usage_count');
+        } catch (\Exception $e) {
+            Log::error('Error incrementing FAQ usage: ' . $e->getMessage());
+            return false;
+        }
     }
 
     public function getCategories(): array
     {
-        // Ahora devolvemos las categorías del enum
         return FaqCategory::values();
     }
 
@@ -107,74 +114,107 @@ class ChatbotRepository
 
     public function findMatchingFaq(string $question): ?ChatbotFaq
     {
-        $faqs = $this->getActiveFaqs();
+        try {
+            $faqs = $this->getActiveFaqs();
 
-        foreach ($faqs as $faq) {
-            $similarity = $this->calculateSimilarity($question, $faq->question);
+            foreach ($faqs as $faq) {
+                $similarity = $this->calculateSimilarity($question, $faq->question);
 
-            if ($similarity > 0.6) { // 60% de similitud
-                return $faq;
+                if ($similarity > 0.6) { // 60% de similitud
+                    return $faq;
+                }
             }
-        }
 
-        return null;
+            return null;
+        } catch (\Exception $e) {
+            Log::error('Error finding matching FAQ: ' . $e->getMessage());
+            return null;
+        }
     }
 
     private function calculateSimilarity(string $text1, string $text2): float
     {
-        $words1 = array_count_values(str_word_count(mb_strtolower($text1), 1));
-        $words2 = array_count_values(str_word_count(mb_strtolower($text2), 1));
+        try {
+            $words1 = array_count_values(str_word_count(mb_strtolower($text1), 1));
+            $words2 = array_count_values(str_word_count(mb_strtolower($text2), 1));
 
-        $intersection = array_intersect_key($words1, $words2);
-        $dotProduct = array_sum($intersection);
+            $intersection = array_intersect_key($words1, $words2);
+            $dotProduct = array_sum($intersection);
 
-        $norm1 = sqrt(array_sum(array_map(function ($x) {
-            return $x * $x;
-        }, $words1)));
-        $norm2 = sqrt(array_sum(array_map(function ($x) {
-            return $x * $x;
-        }, $words2)));
+            $norm1 = sqrt(array_sum(array_map(function ($x) {
+                return $x * $x;
+            }, $words1)));
+            $norm2 = sqrt(array_sum(array_map(function ($x) {
+                return $x * $x;
+            }, $words2)));
 
-        if ($norm1 * $norm2 == 0) return 0;
+            if ($norm1 * $norm2 == 0) return 0;
 
-        return $dotProduct / ($norm1 * $norm2);
+            return $dotProduct / ($norm1 * $norm2);
+        } catch (\Exception $e) {
+            Log::error('Error calculating similarity: ' . $e->getMessage());
+            return 0;
+        }
     }
 
     // Métodos para conversaciones
     public function createConversation(array $data): ChatbotConversation
     {
-        // Para bigint, usar un número entero en lugar de string
-        $data['id_conversation'] = $this->getNextConversationId();
-        return ChatbotConversation::create($data);
-    }
-
-    public function addMessage(array $data): ChatbotMessage
-    {
-        // Para bigint, usar un número entero en lugar de string
-        $data['id_message'] = $this->getNextMessageId();
-        return ChatbotMessage::create($data);
+        try {
+            return ChatbotConversation::create($data);
+        } catch (\Exception $e) {
+            Log::error('Error creating conversation: ' . $e->getMessage());
+            throw new \Exception('No se pudo crear la conversación: ' . $e->getMessage());
+        }
     }
 
     public function getConversationWithMessages(int $conversationId)
     {
-        return ChatbotConversation::with('messages.faq')->find($conversationId);
+        return ChatbotConversation::with('faqMatched')->find($conversationId);
     }
 
     public function updateConversation(int $conversationId, array $data): bool
     {
-        return ChatbotConversation::where('id', $conversationId)->update($data);
+        try {
+            $conversation = ChatbotConversation::find($conversationId);
+            if (!$conversation) {
+                throw new \Exception('Conversación no encontrada');
+            }
+            return $conversation->update($data);
+        } catch (\Exception $e) {
+            Log::error('Error updating conversation: ' . $e->getMessage());
+            throw new \Exception('No se pudo actualizar la conversación: ' . $e->getMessage());
+        }
     }
 
-    private function getNextConversationId(): int
+    public function updateConversationWithMessage(int $conversationId, string $userMessage, string $botResponse, ?int $faqMatchedId = null): bool
     {
-        $lastConversation = ChatbotConversation::orderBy('id_conversation', 'desc')->first();
-        return $lastConversation ? $lastConversation->id_conversation + 1 : 1;
-    }
+        try {
+            $conversation = ChatbotConversation::find($conversationId);
+            if (!$conversation) {
+                throw new \Exception('Conversación no encontrada');
+            }
 
-    private function getNextMessageId(): int
-    {
-        $lastMessage = ChatbotMessage::orderBy('id_message', 'desc')->first();
-        return $lastMessage ? $lastMessage->id_message + 1 : 1;
+            $updateData = [
+                'last_bot_response' => $botResponse,
+                'message_count' => $conversation->message_count + 1
+            ];
+
+            // Si es el primer mensaje, guardarlo
+            if ($conversation->message_count === 0) {
+                $updateData['first_message'] = $userMessage;
+            }
+
+            // Si hay FAQ match, actualizar
+            if ($faqMatchedId) {
+                $updateData['faq_matched_id'] = $faqMatchedId;
+            }
+
+            return $conversation->update($updateData);
+        } catch (\Exception $e) {
+            Log::error('Error updating conversation with message: ' . $e->getMessage());
+            return false;
+        }
     }
 
     public function getTotalFaqs(): int
@@ -189,41 +229,31 @@ class ChatbotRepository
 
     public function getConversationStats(): array
     {
-        $total = ChatbotConversation::count();
-        $resolved = ChatbotConversation::where('resolved', true)->count();
+        try {
+            $total = ChatbotConversation::count();
+            $resolved = ChatbotConversation::where('resolved', true)->count();
+            $active = ChatbotConversation::whereNull('ended_at')->count();
+            $avgSatisfaction = ChatbotConversation::whereNotNull('satisfaction_rating')
+                ->avg('satisfaction_rating');
 
-        return [
-            'total' => $total,
-            'resolved' => $resolved
-        ];
+            return [
+                'total' => $total,
+                'resolved' => $resolved,
+                'active' => $active,
+                'resolved_rate' => $total > 0 ? round($resolved / $total, 2) : 0,
+                'avg_satisfaction' => $avgSatisfaction ? round($avgSatisfaction, 2) : 0,
+                'handed_to_human' => ChatbotConversation::where('handed_to_human', true)->count(),
+            ];
+        } catch (\Exception $e) {
+            Log::error('Error getting conversation stats: ' . $e->getMessage());
+            return [
+                'total' => 0,
+                'resolved' => 0,
+                'active' => 0,
+                'resolved_rate' => 0,
+                'avg_satisfaction' => 0,
+                'handed_to_human' => 0,
+            ];
+        }
     }
-
-    /*public function getTotalFaqs(): int
-    {
-        return ChatbotFaq::whereNull('deleted_at')->count();
-    }
-
-    public function getActiveFaqsCount(): int
-    {
-        return ChatbotFaq::where('active', true)
-            ->whereNull('deleted_at')
-            ->count();
-    }
-
-    public function getConversationStats(): array
-    {
-        $totalConversations = ChatbotConversation::count();
-        $activeConversations = ChatbotConversation::whereNull('ended_date')->count();
-        $resolvedConversations = ChatbotConversation::where('resolved', true)->count();
-
-        $avgSatisfaction = ChatbotConversation::whereNotNull('satisfaction_rating')
-            ->avg('satisfaction_rating');
-
-        return [
-            'total_conversations' => $totalConversations,
-            'active_conversations' => $activeConversations,
-            'avg_satisfaction' => $avgSatisfaction ? round($avgSatisfaction, 2) : 0,
-            'resolved_rate' => $totalConversations > 0 ? round($resolvedConversations / $totalConversations, 2) : 0,
-        ];
-    }*/
 }

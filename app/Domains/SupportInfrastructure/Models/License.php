@@ -1,21 +1,34 @@
 <?php
 
 namespace App\Domains\SupportInfrastructure\Models;
+#namespace IncadevUns\CoreDomain\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class License extends Model{
-    protected $fillable = ['software_name','license_key','license_type','provider','purchase_date',
-    'expiration_date','seats_total','seats_used','cost_annual','status','responsible_id','notes',];
 
+    use HasFactory;
+    protected $table = 'licenses';
+
+    protected $fillable = ['software_id',
+        'key_code',
+        'provider',
+        'purchase_date',
+        'expiration_date',
+        'cost',
+        'status',
+    ];
     
-    public $timestamps = FALSE;
-    public function software(){
-        return $this->belongsTo(Software::class, 'software_id');
-    }
+    protected $casts = [
+        'purchase_date' => 'datetime',
+        'expiration_date' => 'datetime',
+        'cost' => 'decimal:2',
+    ];
 
-    public function responsible(){
-        return $this->belongsTo(Employee::class, 'responsible_id');
+    #probablemente necesite refactorizarse
+    public function software(): BelongsTo{
+        return $this->belongsTo(Software::class);
     }
-
 }

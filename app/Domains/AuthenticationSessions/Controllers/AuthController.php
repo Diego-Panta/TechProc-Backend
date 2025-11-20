@@ -2,284 +2,339 @@
 
 namespace App\Domains\AuthenticationSessions\Controllers;
 
-use App\Domains\AuthenticationSessions\Models\User;
+use App\Models\User;
 use App\Domains\AuthenticationSessions\Models\ActiveSession;
-use App\Domains\AuthenticationSessions\Services\JwtService;
+use App\Domains\AuthenticationSessions\Notifications\VerifyEmailNotification;
+use App\Domains\Security\Services\SecurityEventService;
+use App\Domains\Security\Services\AnomalyDetectionService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
-use Firebase\JWT\JWT;
-use Firebase\JWT\Key;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use Carbon\Carbon;
 
 class AuthController extends Controller
 {
-    protected $jwtService;
+    protected SecurityEventService $securityEventService;
+    protected AnomalyDetectionService $anomalyDetectionService;
 
-    public function __construct(JwtService $jwtService)
-    {
-        $this->jwtService = $jwtService;
+    public function __construct(
+        SecurityEventService $securityEventService,
+        AnomalyDetectionService $anomalyDetectionService
+    ) {
+        $this->securityEventService = $securityEventService;
+        $this->anomalyDetectionService = $anomalyDetectionService;
     }
-
-    public function login(Request $request)
+    /**
+     * Register a new user
+     */
+    public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
-            'password' => 'required|string|min:6',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|string|min:8',
+            'password_confirmation' => 'required|same:password',
+            'role' => 'required|string|exists:roles,name',
+            // Campos del vendor
+            'dni' => 'nullable|string|max:8|unique:users,dni',
+            'fullname' => 'nullable|string|max:255',
+            'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'phone' => 'nullable|string|max:20',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'error' => [
-                    'code' => 'VALIDATION_ERROR',
-                    'message' => 'Error de validación en los datos enviados',
-                    'details' => $validator->errors()
-                ]
+                'message' => 'Error de validación',
+                'errors' => $validator->errors()
             ], 422);
         }
 
-        // Buscar usuario por email
+        try {
+            $avatarPath = null;
+
+            // Manejar avatar si se proporciona
+            if ($request->hasFile('avatar')) {
+                $avatarFile = $request->file('avatar');
+                $avatarPath = $avatarFile->store('avatars', 'public');
+            }
+
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'dni' => $request->dni,
+                'fullname' => $request->fullname ?? $request->name,
+                'avatar' => $avatarPath,
+                'phone' => $request->phone,
+            ]);
+
+            // Asignar el rol al usuario
+            $user->assignRole($request->role);
+
+            // Crear token con metadata
+            $tokenResult = $user->createToken('auth_token', [
+                'ip' => $request->ip(),
+                'user_agent' => $request->userAgent()
+            ]);
+            $token = $tokenResult->plainTextToken;
+
+            // Generar URL completa del avatar
+            $avatarUrl = $user->avatar ? Storage::disk('public')->url($user->avatar) : null;
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Usuario registrado exitosamente',
+                'data' => [
+                    'user' => [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'fullname' => $user->fullname,
+                        'email' => $user->email,
+                        'dni' => $user->dni,
+                        'phone' => $user->phone,
+                        'avatar' => $user->avatar,
+                        'avatar_url' => $avatarUrl,
+                        'roles' => $user->getRoleNames(),
+                        'permissions' => $user->getAllPermissions()->pluck('name'),
+                    ],
+                    'token' => $token
+                ]
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al registrar usuario',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Login user
+     */
+
+    public function login(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+            'password' => 'required|string',
+            'role' => 'required|string|exists:roles,name',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error de validación',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user || !Hash::check($request->password, $user->password)) {
+            // Registrar intento de login fallido
+            $this->securityEventService->logLoginFailed(
+                $request->email,
+                $request->ip(),
+                $request->userAgent(),
+                'invalid_credentials'
+            );
+
+            // Detectar fuerza bruta
+            $bruteForce = $this->anomalyDetectionService->detectBruteForce(
+                $request->email,
+                $request->ip()
+            );
+
+            if ($bruteForce) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Demasiados intentos fallidos. Tu IP ha sido bloqueada temporalmente.'
+                ], 429);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Credenciales incorrectas'
+            ], 401);
+        }
+
+        // Verificar que el usuario tenga el rol especificado
+        if (!$user->hasRole($request->role)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No tienes permisos para acceder con el rol especificado'
+            ], 403);
+        }
+
+        // Si tiene 2FA habilitado, requerir código
+        if ($user->two_factor_enabled) {
+            return response()->json([
+                'success' => false,
+                'requires_2fa' => true,
+                'message' => 'Se requiere código de autenticación de dos factores',
+                'data' => [
+                    'user_id' => $user->id,
+                    'email' => $user->email
+                ]
+            ], 200);
+        }
+
+        // Crear token con Sanctum y guardar metadata (IP y user agent)
+        $tokenResult = $user->createToken('auth_token', [
+            'ip' => $request->ip(),
+            'user_agent' => $request->userAgent()
+        ]);
+        $token = $tokenResult->plainTextToken;
+
+        // Registrar login exitoso
+        $this->securityEventService->logLoginSuccess(
+            $user->id,
+            $request->ip(),
+            $request->userAgent()
+        );
+
+        // Detectar anomalías (múltiples IPs)
+        $this->anomalyDetectionService->runAllDetections(
+            $user->id,
+            $request->ip(),
+            $request->userAgent()
+        );
+
+        // Generar URL completa del avatar
+        $avatarUrl = $user->avatar ? Storage::disk('public')->url($user->avatar) : null;
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Login exitoso',
+            'data' => [
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'fullname' => $user->fullname,
+                    'email' => $user->email,
+                    'dni' => $user->dni,
+                    'phone' => $user->phone,
+                    'avatar' => $user->avatar,
+                    'avatar_url' => $avatarUrl,
+                    'roles' => $user->getRoleNames(),
+                    'permissions' => $user->getAllPermissions()->pluck('name'),
+                ],
+                'token' => $token
+            ]
+        ], 200);
+    }
+
+    /**
+     * Verificar código 2FA durante el login
+     */
+    public function verify2FALogin(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+            'password' => 'required|string',
+            'code' => 'required|string',
+            'role' => 'required|string|exists:roles,name',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error de validación',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
         $user = User::where('email', $request->email)->first();
 
         // Verificar credenciales
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
                 'success' => false,
-                'error' => [
-                    'code' => 'AUTHENTICATION_FAILED',
-                    'message' => 'Email o contraseña incorrectos'
-                ]
+                'message' => 'Credenciales incorrectas'
             ], 401);
         }
 
-        // Verificar que el usuario esté activo
-        if (!$user->isActive()) {
+        // Verificar rol
+        if (!$user->hasRole($request->role)) {
             return response()->json([
                 'success' => false,
-                'error' => [
-                    'code' => 'USER_INACTIVE',
-                    'message' => 'Usuario inactivo. Contacte al administrador.'
-                ]
+                'message' => 'No tienes permisos para acceder con el rol especificado'
             ], 403);
         }
 
-        $token = $this->jwtService->generateToken($user);
-        
-        // Crear sesión activa
-        $session = ActiveSession::create([
-            'user_id' => $user->id,
-            'session_id' => time(),
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-            'device' => $this->getDevice($request->userAgent()),
-            'start_date' => now(),
-            'active' => true,
-            'blocked' => false
-        ]);
-
-        // Actualizar último acceso del usuario
-        $user->update([
-            'last_access' => now(),
-            'last_access_ip' => $request->ip(),
-            'last_connection' => now()
-        ]);
-
-        // Cargar datos del empleado si existe
-        $user->load(['employee.position', 'employee.department']);
-
-        $response = [
-            'success' => true,
-            'data' => [
-                'user' => [
-                    'id' => $user->id,
-                    'first_name' => $user->first_name,
-                    'last_name' => $user->last_name,
-                    'email' => $user->email,
-                    'role' => $user->role,
-                    'profile_photo' => $user->profile_photo,
-                    'status' => $user->status
-                ],
-                'session' => [
-                    'session_id' => $session->id,
-                    'token' => $token,
-                    'expires_at' => now()->addHours(2)->toISOString()
-                ]
-            ]
-        ];
-
-        // Agregar datos del empleado si existe
-        if ($user->employee) {
-            $response['data']['employee'] = [
-                'id' => $user->employee->id,
-                'employee_id' => $user->employee->employee_id,
-                'hire_date' => $user->employee->hire_date,
-                'position' => $user->employee->position ? [
-                    'id' => $user->employee->position->id,
-                    'position_name' => $user->employee->position->position_name,
-                    'department_id' => $user->employee->position->department_id
-                ] : null,
-                'department' => $user->employee->department ? [
-                    'id' => $user->employee->department->id,
-                    'department_name' => $user->employee->department->department_name
-                ] : null,
-                'employment_status' => $user->employee->employment_status,
-                'schedule' => $user->employee->schedule,
-                'speciality' => $user->employee->speciality,
-                'salary' => $user->employee->salary
-            ];
-        }
-
-        return response()->json($response, 200);
-    }
-
-    /**
-     * Verificar token
-    */
-    public function verifyToken(Request $request)
-    {
-        $token = $this->getTokenFromRequest($request);
-        
-        if (!$token) {
+        // Verificar que 2FA esté habilitado
+        if (!$user->two_factor_enabled) {
             return response()->json([
                 'success' => false,
-                'error' => [
-                    'code' => 'TOKEN_MISSING',
-                    'message' => 'Token no proporcionado'
-                ]
-            ], 401);
+                'message' => 'La autenticación de dos factores no está habilitada'
+            ], 400);
         }
 
-        $payload = $this->jwtService->validateToken($token);
-        
-        if (!$payload) {
-            return response()->json([
-                'success' => false,
-                'error' => [
-                    'code' => 'TOKEN_INVALID',
-                    'message' => 'Token inválido'
-                ]
-            ], 401);
+        // Verificar código 2FA
+        $google2fa = new \PragmaRX\Google2FA\Google2FA();
+        $valid = $google2fa->verifyKey($user->two_factor_secret, $request->code);
+
+        // Si el código no es válido, intentar con códigos de recuperación
+        if (!$valid) {
+            $recoveryCodesValid = false;
+
+            if ($user->two_factor_recovery_codes) {
+                $recoveryCodes = json_decode($user->two_factor_recovery_codes, true);
+
+                foreach ($recoveryCodes as $index => $hashedCode) {
+                    if (Hash::check(strtoupper($request->code), $hashedCode)) {
+                        // Código de recuperación válido, eliminarlo
+                        unset($recoveryCodes[$index]);
+                        $user->update([
+                            'two_factor_recovery_codes' => json_encode(array_values($recoveryCodes))
+                        ]);
+                        $recoveryCodesValid = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!$recoveryCodesValid) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Código de autenticación inválido'
+                ], 401);
+            }
         }
+
+        // Crear token
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        // Generar URL completa del avatar
+        $avatarUrl = $user->avatar ? Storage::disk('public')->url($user->avatar) : null;
 
         return response()->json([
             'success' => true,
+            'message' => 'Login exitoso',
             'data' => [
-                'valid' => true,
-                'user' => $payload['user']
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'fullname' => $user->fullname,
+                    'email' => $user->email,
+                    'dni' => $user->dni,
+                    'phone' => $user->phone,
+                    'avatar' => $user->avatar,
+                    'avatar_url' => $avatarUrl,
+                    'roles' => $user->getRoleNames(),
+                    'permissions' => $user->getAllPermissions()->pluck('name'),
+                ],
+                'token' => $token
             ]
         ], 200);
-    }
-
-    /**
-     * Register new user
-     */
-    public function register(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'first_name' => 'required|string|max:50',
-            'last_name' => 'required|string|max:50',
-            'email' => 'required|email|unique:users',
-            'password' => 'required|string|min:6',
-            'phone_number' => 'nullable|string|max:20',
-            'role' => 'required|in:admin,lms,seg,infra,web,data,support',
-            'reason' => 'required|string|max:500',
-            // Datos del empleado
-            'position_id' => 'required|integer',
-            'department_id' => 'required|integer',
-            'hire_date' => 'nullable|date',
-            'employment_status' => 'nullable|in:Active,Inactive,Terminated',
-            'schedule' => 'nullable|string',
-            'speciality' => 'nullable|string|max:255',
-            'salary' => 'nullable|numeric|min:0'
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'error' => [
-                    'code' => 'VALIDATION_ERROR',
-                    'message' => 'Error de validación en los datos enviados',
-                    'details' => $validator->errors()
-                ]
-            ], 422);
-        }
-
-        // Validación manual de existencia de position y department
-        $position = \App\Domains\Administrator\Models\Position::find($request->position_id);
-        $department = \App\Domains\Administrator\Models\Department::find($request->department_id);
-
-        $errors = [];
-        if (!$position) {
-            $errors['position_id'] = ['El ID de posición proporcionado no existe.'];
-        }
-        if (!$department) {
-            $errors['department_id'] = ['El ID de departamento proporcionado no existe.'];
-        }
-
-        if (!empty($errors)) {
-            return response()->json([
-                'success' => false,
-                'error' => [
-                    'code' => 'VALIDATION_ERROR',
-                    'message' => 'Error de validación en los datos enviados',
-                    'details' => $errors
-                ]
-            ], 422);
-        }
-
-        try {
-            // Iniciar transacción para asegurar integridad de datos
-            DB::beginTransaction();
-
-            // Crear usuario
-            $user = User::create([
-                'first_name' => $request->first_name,
-                'last_name' => $request->last_name,
-                'email' => $request->email,
-                'password' => Hash::make($request->password),
-                'phone_number' => $request->phone_number,
-                'role' => [$request->role],
-                'status' => 'inactive'
-            ]);
-
-            // Crear empleado asociado
-            $employee = \App\Domains\Administrator\Models\Employee::create([
-                'user_id' => $user->id,
-                'position_id' => $request->position_id,
-                'department_id' => $request->department_id,
-                'hire_date' => $request->hire_date ?? now(),
-                'employment_status' => $request->employment_status ?? 'Active',
-                'schedule' => $request->schedule,
-                'speciality' => $request->speciality,
-                'salary' => $request->salary
-            ]);
-
-            // Confirmar transacción
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Solicitud de registro enviada. Será revisada por un administrador.',
-                'data' => [
-                    'request_id' => $user->id,
-                    'employee_id' => $employee->id
-                ]
-            ], 201);
-
-        } catch (\Exception $e) {
-            // Revertir transacción en caso de error
-            DB::rollBack();
-
-            return response()->json([
-                'success' => false,
-                'error' => [
-                    'code' => 'REGISTRATION_ERROR',
-                    'message' => 'Error al crear el registro: ' . $e->getMessage()
-                ]
-            ], 500);
-        }
     }
 
     /**
@@ -287,107 +342,717 @@ class AuthController extends Controller
      */
     public function logout(Request $request)
     {
+        $request->user()->currentAccessToken()->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Sesión cerrada exitosamente'
+        ], 200);
+    }
+
+    /**
+     * Get authenticated user
+     */
+    public function me(Request $request)
+    {
+        $user = $request->user();
+
+        // Generar URL completa del avatar
+        $avatarUrl = $user->avatar ? Storage::disk('public')->url($user->avatar) : null;
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'fullname' => $user->fullname,
+                    'email' => $user->email,
+                    'dni' => $user->dni,
+                    'phone' => $user->phone,
+                    'avatar' => $user->avatar,
+                    'avatar_url' => $avatarUrl,
+                    'recovery_email' => $user->recovery_email,
+                    'recovery_email_verified' => $user->recovery_email_verified_at !== null,
+                    'two_factor_enabled' => $user->two_factor_enabled,
+                    'roles' => $user->getRoleNames(),
+                    'permissions' => $user->getAllPermissions()->pluck('name'),
+                ]
+            ]
+        ], 200);
+    }
+
+    /**
+     * Update authenticated user profile
+     */
+    public function updateProfile(Request $request)
+    {
+        $user = $request->user();
+
         $validator = Validator::make($request->all(), [
-            'session_id' => 'required|integer'
+            'name' => 'sometimes|string|max:255',
+            'email' => 'sometimes|email|unique:users,email,' . $user->id,
+            'password' => 'sometimes|string|min:8|confirmed',
+            'dni' => 'sometimes|string|max:8|unique:users,dni,' . $user->id,
+            'fullname' => 'sometimes|string|max:255',
+            'avatar' => 'sometimes|image|mimes:jpeg,png,jpg,gif,webp|max:2048', // 2MB max
+            'phone' => 'sometimes|string|max:20',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'error' => [
-                    'code' => 'VALIDATION_ERROR',
-                    'message' => 'Error de validación en los datos enviados',
-                    'details' => $validator->errors()
-                ]
+                'message' => 'Error de validación',
+                'errors' => $validator->errors()
             ], 422);
         }
 
         try {
-            $session = ActiveSession::find($request->session_id);
-            
-            if ($session) {
-                $session->update([
-                    'active' => false
-                ]);
+            // DEBUG: Log para verificar qué está recibiendo
+            Log::info('Update Profile Request:', [
+                'all_data' => $request->all(),
+                'files' => $request->allFiles(),
+                'has_avatar' => $request->hasFile('avatar'),
+                'avatar_file' => $request->file('avatar'),
+                'content_type' => $request->header('Content-Type'),
+            ]);
+
+            // Preparar datos para actualizar
+            $dataToUpdate = $request->only([
+                'name',
+                'email',
+                'dni',
+                'fullname',
+                'phone'
+            ]);
+
+            // Si se proporciona password, encriptarlo
+            if ($request->has('password')) {
+                $dataToUpdate['password'] = Hash::make($request->password);
             }
 
-            // ✅ ELIMINADO: JWTAuth::invalidate(JWTAuth::getToken());
-            // Con Firebase JWT, los tokens no se invalidan del lado del servidor
-            // Se manejan por expiración automática
+            // Manejar avatar (imagen)
+            if ($request->hasFile('avatar')) {
+                Log::info('Avatar file detected, processing...');
+
+                // Eliminar avatar anterior si existe
+                if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
+                    Storage::disk('public')->delete($user->avatar);
+                    Log::info('Previous avatar deleted: ' . $user->avatar);
+                }
+
+                // Guardar nueva imagen
+                $avatarFile = $request->file('avatar');
+                $avatarPath = $avatarFile->store('avatars', 'public');
+                $dataToUpdate['avatar'] = $avatarPath;
+
+                Log::info('New avatar saved: ' . $avatarPath);
+            } else {
+                Log::warning('No avatar file detected in request');
+            }
+
+            // Actualizar usuario
+            $user->update($dataToUpdate);
+
+            // Refrescar usuario para obtener datos actualizados
+            $user->refresh();
+
+            // Generar URL completa del avatar
+            $avatarUrl = $user->avatar ? Storage::disk('public')->url($user->avatar) : null;
 
             return response()->json([
                 'success' => true,
-                'message' => 'Sesión cerrada exitosamente'
+                'message' => 'Perfil actualizado exitosamente',
+                'data' => [
+                    'user' => [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'fullname' => $user->fullname,
+                        'email' => $user->email,
+                        'dni' => $user->dni,
+                        'phone' => $user->phone,
+                        'avatar' => $user->avatar,
+                        'avatar_url' => $avatarUrl,
+                        'roles' => $user->getRoleNames(),
+                        'permissions' => $user->getAllPermissions()->pluck('name'),
+                    ]
+                ]
             ], 200);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'error' => [
-                    'code' => 'LOGOUT_ERROR',
-                    'message' => 'Error al cerrar sesión: ' . $e->getMessage()
-                ]
+                'message' => 'Error al actualizar perfil',
+                'error' => $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Get user active sessions
+     * Send password reset link using recovery email
      */
-    public function getSessions($userId)
+    public function forgotPassword(Request $request)
     {
-        // Verificar que el usuario autenticado tenga permisos
-        $authenticatedUser = request()->user();
-        
-        if ($authenticatedUser->id != $userId && !$authenticatedUser->isAdmin()) {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+        ]);
+
+        if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'error' => [
-                    'code' => 'FORBIDDEN',
-                    'message' => 'No tienes permisos para ver estas sesiones'
+                'message' => 'Error de validación',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $email = $request->email;
+
+            // Buscar usuario por recovery_email verificado
+            $user = User::where('recovery_email', $email)
+                        ->whereNotNull('recovery_email_verified_at')
+                        ->first();
+
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No existe una cuenta con este correo de recuperación o no ha sido verificado.'
+                ], 404);
+            }
+
+            // Generar token de reseteo para el usuario encontrado
+            $status = Password::sendResetLink(['email' => $user->email]);
+
+            if ($status === Password::RESET_LINK_SENT) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Se ha enviado un enlace de recuperación a tu correo de recuperación.'
+                ], 200);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'No se pudo enviar el enlace de recuperación. Intenta nuevamente.'
+            ], 500);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al enviar el enlace de recuperación',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Reset password
+     */
+    public function resetPassword(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email|exists:users,email',
+            'token' => 'required|string',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error de validación',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $status = Password::reset(
+                $request->only('email', 'password', 'password_confirmation', 'token'),
+                function (User $user, string $password) {
+                    $user->forceFill([
+                        'password' => Hash::make($password)
+                    ])->setRememberToken(Str::random(60));
+
+                    $user->save();
+
+                    // Revocar todos los tokens existentes del usuario
+                    $user->tokens()->delete();
+                }
+            );
+
+            if ($status === Password::PASSWORD_RESET) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Contraseña actualizada exitosamente. Puedes iniciar sesión con tu nueva contraseña.'
+                ], 200);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Token inválido o expirado. Solicita un nuevo enlace de recuperación.'
+            ], 400);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al resetear la contraseña',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Add and send verification code to recovery email
+     */
+    public function addRecoveryEmail(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'recovery_email' => 'required|email|different:email',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error de validación',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $user = $request->user();
+
+        // Verificar que el recovery email no esté siendo usado por otro usuario
+        if (User::where('email', $request->recovery_email)->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Este email ya está registrado en el sistema'
+            ], 400);
+        }
+
+        try {
+            // Generar código de 6 dígitos
+            $code = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
+
+            // Guardar recovery email, código y expiración (15 minutos)
+            $user->update([
+                'recovery_email' => $request->recovery_email,
+                'recovery_email_verified_at' => null, // Resetear verificación
+                'recovery_verification_code' => $code,
+                'recovery_code_expires_at' => Carbon::now()->addMinutes(15)
+            ]);
+
+            // Enviar código al recovery email usando Notification
+            $user->notify(new \App\Domains\AuthenticationSessions\Notifications\VerifyRecoveryEmailNotification($code));
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Email de recuperación agregado. Se ha enviado un código de verificación.',
+                'data' => [
+                    'recovery_email' => $user->recovery_email,
+                    'verified' => false
                 ]
-            ], 403);
-        }
-
-        $sessions = ActiveSession::where('user_id', $userId)
-            ->where('active', true)
-            ->get()
-            ->map(function ($session) {
-                return [
-                    'session_id' => $session->id,
-                    'ip_address' => $session->ip_address,
-                    'device' => $session->device,
-                    'start_date' => $session->start_date->toISOString(),
-                    'active' => $session->active,
-                    'blocked' => $session->blocked
-                ];
-            });
-
-        return response()->json([
-            'success' => true,
-            'data' => $sessions
-        ], 200);
-    }
-
-    private function getDevice($userAgent)
-    {
-        if (strpos($userAgent, 'Mobile') !== false) {
-            return 'Mobile';
-        } elseif (strpos($userAgent, 'Tablet') !== false) {
-            return 'Tablet';
-        } else {
-            return 'Desktop';
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al agregar el email de recuperación',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 
-    private function getTokenFromRequest(Request $request)
+    /**
+     * Verify recovery email with code
+     */
+    public function verifyRecoveryEmail(Request $request)
     {
-        $header = $request->header('Authorization', '');
-        
-        if (preg_match('/Bearer\s+(.*)$/i', $header, $matches)) {
-            return $matches[1];
+        $validator = Validator::make($request->all(), [
+            'code' => 'required|string|size:6',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error de validación',
+                'errors' => $validator->errors()
+            ], 422);
         }
 
-        return null;
+        $user = $request->user();
+
+        // Verificar si tiene un recovery email
+        if (!$user->recovery_email) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No has agregado un email de recuperación'
+            ], 400);
+        }
+
+        // Verificar si el email ya está verificado
+        if ($user->recovery_email_verified_at) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El email de recuperación ya está verificado'
+            ], 400);
+        }
+
+        // Verificar si existe un código
+        if (!$user->recovery_verification_code) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No hay un código de verificación activo. Solicita uno nuevo.'
+            ], 400);
+        }
+
+        // Verificar si el código ha expirado
+        if (Carbon::now()->isAfter($user->recovery_code_expires_at)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El código de verificación ha expirado. Solicita uno nuevo.'
+            ], 400);
+        }
+
+        // Verificar si el código es correcto
+        if ($user->recovery_verification_code !== $request->code) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Código de verificación incorrecto'
+            ], 400);
+        }
+
+        try {
+            // Marcar recovery email como verificado y limpiar código
+            $user->update([
+                'recovery_email_verified_at' => Carbon::now(),
+                'recovery_verification_code' => null,
+                'recovery_code_expires_at' => null
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Email de recuperación verificado exitosamente',
+                'data' => [
+                    'recovery_email' => $user->recovery_email,
+                    'verified' => true,
+                    'verified_at' => $user->recovery_email_verified_at
+                ]
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al verificar el email de recuperación',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Resend recovery email verification code
+     */
+    public function resendRecoveryCode(Request $request)
+    {
+        $user = $request->user();
+
+        // Verificar si tiene un recovery email
+        if (!$user->recovery_email) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No has agregado un email de recuperación'
+            ], 400);
+        }
+
+        // Verificar si el email ya está verificado
+        if ($user->recovery_email_verified_at) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El email de recuperación ya está verificado'
+            ], 400);
+        }
+
+        try {
+            // Generar nuevo código de 6 dígitos
+            $code = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
+
+            // Actualizar código y expiración
+            $user->update([
+                'recovery_verification_code' => $code,
+                'recovery_code_expires_at' => Carbon::now()->addMinutes(15)
+            ]);
+
+            // Enviar notificación al recovery email
+            $user->notify(new \App\Domains\AuthenticationSessions\Notifications\VerifyRecoveryEmailNotification($code));
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Nuevo código de verificación enviado a tu email de recuperación'
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al reenviar el código de verificación',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Remove recovery email
+     */
+    public function removeRecoveryEmail(Request $request)
+    {
+        $user = $request->user();
+
+        if (!$user->recovery_email) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No tienes un email de recuperación configurado'
+            ], 400);
+        }
+
+        try {
+            $user->update([
+                'recovery_email' => null,
+                'recovery_email_verified_at' => null,
+                'recovery_verification_code' => null,
+                'recovery_code_expires_at' => null
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Email de recuperación eliminado exitosamente'
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al eliminar el email de recuperación',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Habilitar 2FA para el usuario
+     */
+    public function enable2FA(Request $request)
+    {
+        try {
+            $user = $request->user();
+
+            // Si ya está habilitado
+            if ($user->two_factor_enabled) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'La autenticación de dos factores ya está habilitada'
+                ], 400);
+            }
+
+            // Generar secreto 2FA
+            $google2fa = new \PragmaRX\Google2FA\Google2FA();
+            $secret = $google2fa->generateSecretKey();
+
+            // Guardar el secreto (pero aún no habilitado)
+            $user->update([
+                'two_factor_secret' => $secret,
+            ]);
+
+            // Generar códigos de recuperación
+            $recoveryCodes = [];
+            for ($i = 0; $i < 8; $i++) {
+                $recoveryCodes[] = strtoupper(substr(bin2hex(random_bytes(4)), 0, 8));
+            }
+
+            // Guardar códigos de recuperación encriptados
+            $user->update([
+                'two_factor_recovery_codes' => json_encode(array_map(function($code) {
+                    return Hash::make($code);
+                }, $recoveryCodes))
+            ]);
+
+            // Generar QR code URL
+            $qrCodeUrl = $google2fa->getQRCodeUrl(
+                config('app.name'),
+                $user->email,
+                $secret
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Escanea el código QR con Google Authenticator y luego verifica el código para habilitar 2FA',
+                'data' => [
+                    'secret' => $secret,
+                    'qr_code_url' => $qrCodeUrl,
+                    'recovery_codes' => $recoveryCodes, // Solo se muestran una vez
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al habilitar 2FA',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Verificar y confirmar la habilitación de 2FA
+     */
+    public function verify2FA(Request $request)
+    {
+        try {
+            $request->validate([
+                'code' => 'required|string|size:6'
+            ]);
+
+            $user = $request->user();
+
+            // Validar que tenga un secreto generado
+            if (!$user->two_factor_secret) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Primero debes iniciar el proceso de habilitación de 2FA'
+                ], 400);
+            }
+
+            // Si ya está habilitado
+            if ($user->two_factor_enabled) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'La autenticación de dos factores ya está habilitada'
+                ], 400);
+            }
+
+            // Verificar código
+            $google2fa = new \PragmaRX\Google2FA\Google2FA();
+            $valid = $google2fa->verifyKey($user->two_factor_secret, $request->code);
+
+            if (!$valid) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Código de verificación inválido'
+                ], 400);
+            }
+
+            // Habilitar 2FA
+            $user->update([
+                'two_factor_enabled' => true
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Autenticación de dos factores habilitada exitosamente',
+                'data' => [
+                    'two_factor_enabled' => true
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al verificar 2FA',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Deshabilitar 2FA
+     */
+    public function disable2FA(Request $request)
+    {
+        try {
+            $request->validate([
+                'password' => 'required|string'
+            ]);
+
+            $user = $request->user();
+
+            // Verificar que 2FA esté habilitado
+            if (!$user->two_factor_enabled) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'La autenticación de dos factores no está habilitada'
+                ], 400);
+            }
+
+            // Verificar password
+            if (!Hash::check($request->password, $user->password)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Contraseña incorrecta'
+                ], 400);
+            }
+
+            // Deshabilitar 2FA y limpiar datos
+            $user->update([
+                'two_factor_enabled' => false,
+                'two_factor_secret' => null,
+                'two_factor_recovery_codes' => null
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Autenticación de dos factores deshabilitada exitosamente'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al deshabilitar 2FA',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Obtener nuevos códigos de recuperación
+     */
+    public function regenerateRecoveryCodes(Request $request)
+    {
+        try {
+            $request->validate([
+                'password' => 'required|string'
+            ]);
+
+            $user = $request->user();
+
+            // Verificar que 2FA esté habilitado
+            if (!$user->two_factor_enabled) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'La autenticación de dos factores no está habilitada'
+                ], 400);
+            }
+
+            // Verificar password
+            if (!Hash::check($request->password, $user->password)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Contraseña incorrecta'
+                ], 400);
+            }
+
+            // Generar nuevos códigos de recuperación
+            $recoveryCodes = [];
+            for ($i = 0; $i < 8; $i++) {
+                $recoveryCodes[] = strtoupper(substr(bin2hex(random_bytes(4)), 0, 8));
+            }
+
+            // Guardar códigos de recuperación encriptados
+            $user->update([
+                'two_factor_recovery_codes' => json_encode(array_map(function($code) {
+                    return Hash::make($code);
+                }, $recoveryCodes))
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Nuevos códigos de recuperación generados. Guárdalos en un lugar seguro',
+                'data' => [
+                    'recovery_codes' => $recoveryCodes
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al generar códigos de recuperación',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }
