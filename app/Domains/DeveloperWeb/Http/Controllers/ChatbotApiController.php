@@ -26,7 +26,6 @@ class ChatbotApiController
                 'success' => $result['success'],
                 'data' => $result
             ]);
-
         } catch (\Exception $e) {
             Log::error('API Error starting chatbot conversation', [
                 'error' => $e->getMessage(),
@@ -55,7 +54,6 @@ class ChatbotApiController
                 'success' => $response['success'],
                 'data' => $response
             ]);
-
         } catch (\Exception $e) {
             Log::error('API Error sending chatbot message', [
                 'conversation_id' => $request->conversation_id,
@@ -85,7 +83,6 @@ class ChatbotApiController
                 'success' => $result['success'],
                 'message' => $result['message']
             ]);
-
         } catch (\Exception $e) {
             Log::error('API Error ending chatbot conversation', [
                 'conversation_id' => $request->conversation_id,
@@ -105,13 +102,13 @@ class ChatbotApiController
     {
         try {
             $filters = ['active' => true];
-            
+
             if ($category && $category !== 'all') {
                 $filters['category'] = $category;
             }
-            
+
             $faqs = $this->faqService->getFaqsForPublic($filters);
-            
+
             return response()->json([
                 'success' => true,
                 'data' => $faqs
@@ -147,7 +144,6 @@ class ChatbotApiController
                 'success' => true,
                 'data' => $history
             ]);
-
         } catch (\Exception $e) {
             Log::error('API Error getting conversation history', [
                 'conversation_id' => $conversationId,
@@ -166,12 +162,18 @@ class ChatbotApiController
     {
         try {
             $conversationStats = $this->faqService->getConversationStats();
+            $faqsByCategory = $this->faqService->getFaqsByCategoryStats();
+            $mostUsedFaqs = $this->faqService->getMostUsedFaqs();
+            $conversationsByDay = $this->faqService->getConversationsByDay(7);
 
             return response()->json([
                 'success' => true,
-                'data' => $conversationStats
+                'data' => array_merge($conversationStats, [
+                    'faqs_by_category' => $faqsByCategory,
+                    'most_used_faqs' => $mostUsedFaqs,
+                    'conversations_by_day' => $conversationsByDay,
+                ])
             ]);
-
         } catch (\Exception $e) {
             Log::error('API Error getting chatbot analytics', [
                 'error' => $e->getMessage(),

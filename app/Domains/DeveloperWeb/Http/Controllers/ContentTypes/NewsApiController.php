@@ -89,7 +89,7 @@ class NewsApiController
         }
     }
 
-    public function update(UpdateNewsRequest $request, int $id): JsonResponse // CAMBIADO
+    public function update(UpdateNewsRequest $request, int $id): JsonResponse
     {
         try {
             $success = $this->newsService->update($id, $request->validated());
@@ -199,6 +199,9 @@ class NewsApiController
         }
     }
 
+    /**
+     * Obtener categorías disponibles (ahora desde el enum)
+     */
     public function getCategories(): JsonResponse
     {
         try {
