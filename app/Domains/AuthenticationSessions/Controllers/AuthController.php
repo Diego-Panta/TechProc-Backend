@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 
@@ -42,7 +44,7 @@ class AuthController extends Controller
             // Campos del vendor
             'dni' => 'nullable|string|max:8|unique:users,dni',
             'fullname' => 'nullable|string|max:255',
-            'avatar' => 'nullable|string|max:500',
+            'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'phone' => 'nullable|string|max:20',
         ]);
 
@@ -55,13 +57,21 @@ class AuthController extends Controller
         }
 
         try {
+            $avatarPath = null;
+
+            // Manejar avatar si se proporciona
+            if ($request->hasFile('avatar')) {
+                $avatarFile = $request->file('avatar');
+                $avatarPath = $avatarFile->store('avatars', 'public');
+            }
+
             $user = User::create([
                 'name' => $request->name,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
                 'dni' => $request->dni,
                 'fullname' => $request->fullname ?? $request->name,
-                'avatar' => $request->avatar,
+                'avatar' => $avatarPath,
                 'phone' => $request->phone,
             ]);
 
@@ -75,6 +85,9 @@ class AuthController extends Controller
             ]);
             $token = $tokenResult->plainTextToken;
 
+            // Generar URL completa del avatar
+            $avatarUrl = $user->avatar ? Storage::disk('public')->url($user->avatar) : null;
+
             return response()->json([
                 'success' => true,
                 'message' => 'Usuario registrado exitosamente',
@@ -87,6 +100,7 @@ class AuthController extends Controller
                         'dni' => $user->dni,
                         'phone' => $user->phone,
                         'avatar' => $user->avatar,
+                        'avatar_url' => $avatarUrl,
                         'roles' => $user->getRoleNames(),
                         'permissions' => $user->getAllPermissions()->pluck('name'),
                     ],
@@ -194,6 +208,9 @@ class AuthController extends Controller
             $request->userAgent()
         );
 
+        // Generar URL completa del avatar
+        $avatarUrl = $user->avatar ? Storage::disk('public')->url($user->avatar) : null;
+
         return response()->json([
             'success' => true,
             'message' => 'Login exitoso',
@@ -206,6 +223,7 @@ class AuthController extends Controller
                     'dni' => $user->dni,
                     'phone' => $user->phone,
                     'avatar' => $user->avatar,
+                    'avatar_url' => $avatarUrl,
                     'roles' => $user->getRoleNames(),
                     'permissions' => $user->getAllPermissions()->pluck('name'),
                 ],
@@ -295,6 +313,9 @@ class AuthController extends Controller
         // Crear token
         $token = $user->createToken('auth_token')->plainTextToken;
 
+        // Generar URL completa del avatar
+        $avatarUrl = $user->avatar ? Storage::disk('public')->url($user->avatar) : null;
+
         return response()->json([
             'success' => true,
             'message' => 'Login exitoso',
@@ -307,6 +328,7 @@ class AuthController extends Controller
                     'dni' => $user->dni,
                     'phone' => $user->phone,
                     'avatar' => $user->avatar,
+                    'avatar_url' => $avatarUrl,
                     'roles' => $user->getRoleNames(),
                     'permissions' => $user->getAllPermissions()->pluck('name'),
                 ],
@@ -335,6 +357,9 @@ class AuthController extends Controller
     {
         $user = $request->user();
 
+        // Generar URL completa del avatar
+        $avatarUrl = $user->avatar ? Storage::disk('public')->url($user->avatar) : null;
+
         return response()->json([
             'success' => true,
             'data' => [
@@ -346,6 +371,7 @@ class AuthController extends Controller
                     'dni' => $user->dni,
                     'phone' => $user->phone,
                     'avatar' => $user->avatar,
+                    'avatar_url' => $avatarUrl,
                     'recovery_email' => $user->recovery_email,
                     'recovery_email_verified' => $user->recovery_email_verified_at !== null,
                     'two_factor_enabled' => $user->two_factor_enabled,
@@ -369,7 +395,7 @@ class AuthController extends Controller
             'password' => 'sometimes|string|min:8|confirmed',
             'dni' => 'sometimes|string|max:8|unique:users,dni,' . $user->id,
             'fullname' => 'sometimes|string|max:255',
-            'avatar' => 'sometimes|string|max:500',
+            'avatar' => 'sometimes|image|mimes:jpeg,png,jpg,gif,webp|max:2048', // 2MB max
             'phone' => 'sometimes|string|max:20',
         ]);
 
@@ -382,13 +408,21 @@ class AuthController extends Controller
         }
 
         try {
+            // DEBUG: Log para verificar qué está recibiendo
+            Log::info('Update Profile Request:', [
+                'all_data' => $request->all(),
+                'files' => $request->allFiles(),
+                'has_avatar' => $request->hasFile('avatar'),
+                'avatar_file' => $request->file('avatar'),
+                'content_type' => $request->header('Content-Type'),
+            ]);
+
             // Preparar datos para actualizar
             $dataToUpdate = $request->only([
                 'name',
                 'email',
                 'dni',
                 'fullname',
-                'avatar',
                 'phone'
             ]);
 
@@ -397,11 +431,34 @@ class AuthController extends Controller
                 $dataToUpdate['password'] = Hash::make($request->password);
             }
 
+            // Manejar avatar (imagen)
+            if ($request->hasFile('avatar')) {
+                Log::info('Avatar file detected, processing...');
+
+                // Eliminar avatar anterior si existe
+                if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
+                    Storage::disk('public')->delete($user->avatar);
+                    Log::info('Previous avatar deleted: ' . $user->avatar);
+                }
+
+                // Guardar nueva imagen
+                $avatarFile = $request->file('avatar');
+                $avatarPath = $avatarFile->store('avatars', 'public');
+                $dataToUpdate['avatar'] = $avatarPath;
+
+                Log::info('New avatar saved: ' . $avatarPath);
+            } else {
+                Log::warning('No avatar file detected in request');
+            }
+
             // Actualizar usuario
             $user->update($dataToUpdate);
 
             // Refrescar usuario para obtener datos actualizados
             $user->refresh();
+
+            // Generar URL completa del avatar
+            $avatarUrl = $user->avatar ? Storage::disk('public')->url($user->avatar) : null;
 
             return response()->json([
                 'success' => true,
@@ -415,6 +472,7 @@ class AuthController extends Controller
                         'dni' => $user->dni,
                         'phone' => $user->phone,
                         'avatar' => $user->avatar,
+                        'avatar_url' => $avatarUrl,
                         'roles' => $user->getRoleNames(),
                         'permissions' => $user->getAllPermissions()->pluck('name'),
                     ]
