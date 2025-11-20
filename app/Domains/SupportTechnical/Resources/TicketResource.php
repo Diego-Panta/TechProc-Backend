@@ -16,23 +16,45 @@ class TicketResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'ticket_id' => $this->ticket_id,
+            'user_id' => $this->user_id,
             'title' => $this->title,
-            'description' => $this->description,
-            'priority' => $this->priority,
-            'status' => $this->status,
-            'category' => $this->category,
-            'user' => $this->when($this->relationLoaded('user') && $this->user, [
-                'id' => $this->user?->id,
-                'name' => $this->user ? $this->user->first_name . ' ' . $this->user->last_name : null,
-                'email' => $this->user?->email,
-            ]),
-            'assigned_technician' => $this->when($this->relationLoaded('assignedTechnician') && $this->assignedTechnician, [
-                'id' => $this->assignedTechnician?->id,
-                'name' => $this->assignedTechnician ? $this->assignedTechnician->first_name . ' ' . $this->assignedTechnician->last_name : null,
-            ]),
-            'creation_date' => $this->creation_date?->toIso8601String(),
-            'assignment_date' => $this->assignment_date?->toIso8601String(),
+            'type' => $this->type?->value,
+            'status' => $this->status->value,
+            'priority' => $this->priority->value,
+            'created_at' => $this->created_at?->toISOString(),
+            'updated_at' => $this->updated_at?->toISOString(),
+            
+            // Relaciones
+            'user' => $this->whenLoaded('user', function () {
+                return [
+                    'id' => $this->user->id,
+                    'name' => $this->user->name ?? $this->user->fullname ?? 'Usuario',
+                    'email' => $this->user->email,
+                ];
+            }),
+            
+            'replies' => TicketReplyResource::collection($this->whenLoaded('replies')),
+            'replies_count' => $this->when(
+                $this->relationLoaded('replies'),
+                fn () => $this->replies->count()
+            ),
+            
+            // Última respuesta (solo si está cargada)
+            'last_reply' => $this->when(
+                $this->relationLoaded('replies') && $this->replies->isNotEmpty(),
+                function () {
+                    $lastReply = $this->replies->last();
+                    return $lastReply ? [
+                        'id' => $lastReply->id,
+                        'content' => $lastReply->content,
+                        'created_at' => $lastReply->created_at?->toISOString(),
+                        'user' => [
+                            'id' => $lastReply->user->id,
+                            'name' => $lastReply->user->name ?? $lastReply->user->fullname ?? 'Usuario',
+                        ],
+                    ] : null;
+                }
+            ),
         ];
     }
 }

@@ -7,6 +7,7 @@ use App\Domains\DeveloperWeb\Repositories\ChatbotRepository;
 use App\Domains\DeveloperWeb\Models\ChatbotFaq;
 use App\Domains\DeveloperWeb\Enums\FaqCategory;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Log;
 
 class ChatbotFaqService
 {
@@ -16,65 +17,128 @@ class ChatbotFaqService
 
     public function getAllFaqs(int $perPage = 15, array $filters = []): LengthAwarePaginator
     {
-        return $this->chatbotRepository->getAllFaqsPaginated($perPage, $filters);
+        try {
+            return $this->chatbotRepository->getAllFaqsPaginated($perPage, $filters);
+        } catch (\Exception $e) {
+            Log::error('Error in getAllFaqs service method', [
+                'filters' => $filters,
+                'error' => $e->getMessage()
+            ]);
+            throw $e;
+        }
     }
 
     public function getFaqById(int $id): ?ChatbotFaq
     {
-        return $this->chatbotRepository->findFaqById($id);
+        try {
+            return $this->chatbotRepository->findFaqById($id);
+        } catch (\Exception $e) {
+            Log::error('Error in getFaqById service method', [
+                'id' => $id,
+                'error' => $e->getMessage()
+            ]);
+            throw $e;
+        }
     }
 
     public function createFaq(array $data): ChatbotFaq
     {
-        // Validar y normalizar la categoría
-        $data = $this->validateAndNormalizeCategory($data);
-        
-        // Limpiar y preparar datos
-        $cleanData = $this->prepareFaqData($data);
-        return $this->chatbotRepository->createFaq($cleanData);
+        try {
+            $data = $this->validateAndNormalizeCategory($data);
+            $cleanData = $this->prepareFaqData($data);
+            
+            return $this->chatbotRepository->createFaq($cleanData);
+        } catch (\Exception $e) {
+            Log::error('Error in createFaq service method', [
+                'data' => $data,
+                'error' => $e->getMessage()
+            ]);
+            throw $e;
+        }
     }
 
     public function updateFaq(int $id, array $data): bool
     {
-        $faq = $this->chatbotRepository->findFaqById($id);
+        try {
+            $faq = $this->chatbotRepository->findFaqById($id);
 
-        if (!$faq) {
-            return false;
+            if (!$faq) {
+                throw new \Exception("FAQ no encontrada con ID: {$id}");
+            }
+
+            $data = $this->validateAndNormalizeCategory($data);
+            $cleanData = $this->prepareFaqData($data);
+            
+            $cleanData = array_filter($cleanData, function($value) {
+                return !is_null($value);
+            });
+
+            return $this->chatbotRepository->updateFaq($faq, $cleanData);
+        } catch (\Exception $e) {
+            Log::error('Error in updateFaq service method', [
+                'id' => $id,
+                'data' => $data,
+                'error' => $e->getMessage()
+            ]);
+            throw $e;
         }
-
-        // Validar y normalizar la categoría
-        $data = $this->validateAndNormalizeCategory($data);
-
-        // Limpiar y preparar datos
-        $cleanData = $this->prepareFaqData($data);
-        
-        // Remover campos null para no sobreescribir con null
-        $cleanData = array_filter($cleanData, function($value) {
-            return !is_null($value);
-        });
-
-        return $this->chatbotRepository->updateFaq($faq, $cleanData);
     }
 
     public function deleteFaq(int $id): bool
     {
-        $faq = $this->chatbotRepository->findFaqById($id);
+        try {
+            $faq = $this->chatbotRepository->findFaqById($id);
 
-        if (!$faq) {
-            return false;
+            if (!$faq) {
+                throw new \Exception("FAQ no encontrada con ID: {$id}");
+            }
+
+            return $this->chatbotRepository->deleteFaq($faq);
+        } catch (\Exception $e) {
+            Log::error('Error in deleteFaq service method', [
+                'id' => $id,
+                'error' => $e->getMessage()
+            ]);
+            throw $e;
         }
-
-        return $this->chatbotRepository->deleteFaq($faq);
     }
 
     public function getCategories(): array
     {
-        return $this->chatbotRepository->getCategories();
+        try {
+            return $this->chatbotRepository->getCategories();
+        } catch (\Exception $e) {
+            Log::error('Error in getCategories service method', [
+                'error' => $e->getMessage()
+            ]);
+            return FaqCategory::values(); // Fallback
+        }
     }
 
     public function getCategoriesWithLabels(): array
     {
-        return $this->chatbotRepository->getCategoriesWithLabels();
+        try {
+            return $this->chatbotRepository->getCategoriesWithLabels();
+        } catch (\Exception $e) {
+            Log::error('Error in getCategoriesWithLabels service method', [
+                'error' => $e->getMessage()
+            ]);
+            return FaqCategory::labels(); // Fallback
+        }
+    }
+
+    public function getFaqsForPublic(array $filters = []): array
+    {
+        try {
+            $filters['active'] = true;
+            return $this->chatbotRepository->getAllFaqsPaginated(50, $filters)->items();
+        } catch (\Exception $e) {
+            Log::error('Error in getFaqsForPublic service method', [
+                'filters' => $filters,
+                'error' => $e->getMessage()
+            ]);
+            return []; // En caso de error, retornar array vacío
+        }
     }
 
     /**
@@ -85,22 +149,14 @@ class ChatbotFaqService
         if (isset($data['category'])) {
             $category = $data['category'];
             
-            // Si es una nueva categoría (no existe en el enum), usar la categoría por defecto
             if (!FaqCategory::isValid($category)) {
                 $data['category'] = FaqCategory::getDefault()->value;
             }
         } else {
-            // Si no se proporciona categoría, usar la por defecto
             $data['category'] = FaqCategory::getDefault()->value;
         }
 
         return $data;
-    }
-
-    public function getFaqsForPublic(array $filters = []): array
-    {
-        $filters['active'] = true;
-        return $this->chatbotRepository->getAllFaqsPaginated(50, $filters)->items();
     }
 
     /**
@@ -108,7 +164,6 @@ class ChatbotFaqService
      */
     private function prepareFaqData(array $data): array
     {
-        // Asegurarse de que keywords sea un array válido
         if (isset($data['keywords'])) {
             if (is_string($data['keywords'])) {
                 try {
@@ -119,29 +174,24 @@ class ChatbotFaqService
                 }
             }
 
-            // Filtrar keywords vacías
             if (is_array($data['keywords'])) {
                 $data['keywords'] = array_filter($data['keywords'], function ($keyword) {
                     return !empty(trim($keyword));
                 });
-                $data['keywords'] = array_values($data['keywords']); // Reindexar
+                $data['keywords'] = array_values($data['keywords']);
             } else {
                 $data['keywords'] = [];
             }
         } else {
-            // Si no se proporciona keywords, mantener el valor existente
             unset($data['keywords']);
         }
 
-        // Asegurarse de que active sea boolean si se proporciona
         if (isset($data['active'])) {
             $data['active'] = (bool)$data['active'];
         } else {
-            // Si no se proporciona active, mantener el valor existente
             unset($data['active']);
         }
 
-        // Si category es null, mantener la categoría existente
         if (array_key_exists('category', $data) && is_null($data['category'])) {
             unset($data['category']);
         }
@@ -151,16 +201,43 @@ class ChatbotFaqService
 
     public function getTotalFaqs(): int
     {
-        return $this->chatbotRepository->getTotalFaqs();
+        try {
+            return $this->chatbotRepository->getTotalFaqs();
+        } catch (\Exception $e) {
+            Log::error('Error in getTotalFaqs service method', [
+                'error' => $e->getMessage()
+            ]);
+            return 0;
+        }
     }
 
     public function getActiveFaqsCount(): int
     {
-        return $this->chatbotRepository->getActiveFaqsCount();
+        try {
+            return $this->chatbotRepository->getActiveFaqsCount();
+        } catch (\Exception $e) {
+            Log::error('Error in getActiveFaqsCount service method', [
+                'error' => $e->getMessage()
+            ]);
+            return 0;
+        }
     }
 
     public function getConversationStats(): array
     {
-        return $this->chatbotRepository->getConversationStats();
+        try {
+            return $this->chatbotRepository->getConversationStats();
+        } catch (\Exception $e) {
+            Log::error('Error in getConversationStats service method', [
+                'error' => $e->getMessage()
+            ]);
+            return [
+                'total' => 0,
+                'resolved' => 0,
+                'active' => 0,
+                'resolved_rate' => 0,
+                'avg_satisfaction' => 0,
+            ];
+        }
     }
 }

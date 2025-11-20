@@ -4,7 +4,7 @@ namespace App\Domains\AuthenticationSessions\Services;
 
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
-use App\Domains\AuthenticationSessions\Models\User;
+use App\Models\User;
 
 class JwtService
 {

@@ -2,64 +2,45 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
     /**
      * Seed the application's database.
+     *
+     * Ejecuta todos los seeders en el orden correcto:
+     * 1. Vendor seeders (usuarios base, roles, permisos)
+     * 2. Seeders locales (soporte técnico, datos de muestra)
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        $this->command->info('🌱 Iniciando proceso de seed...');
 
-        $this->call([
-            // 1. Tablas básicas sin dependencias
-            DepartmentsSeeder::class,
-            PositionsSeeder::class,
-            UsersSeeder::class,
-            CompaniesSeeder::class,
-            AcademicPeriodsSeeder::class,
-            CoursesSeeder::class,
-            SubjectsSeeder::class,
-            PaymentMethodsSeeder::class,
-            RevenueSourcesSeeder::class,
-            AccountsSeeder::class,
-            
-            // 2. Tablas que dependen de users
-            InstructorsSeeder::class,
-            EmployeesSeeder::class,
-            
-            // 3. Tablas académicas que dependen de las anteriores
-            CourseOfferingsSeeder::class,
-            GroupsSeeder::class,
-            GradeConfigurationsSeeder::class,
-            EvaluationsSeeder::class,
-            
-            // 4. Tablas de estudiantes
-            StudentsSeeder::class,
-            EnrollmentsSeeder::class,
-            EnrollmentDetailsSeeder::class,
-            
-            // 5. Tablas de grupos y clases
-            GroupParticipantsSeeder::class,
-            ClassesSeeder::class,
-            
-            // 6. Tablas principales solicitadas
-            AttendancesSeeder::class,
-            GradeRecordsSeeder::class,
-            FinalGradesSeeder::class,
-            InvoicesSeeder::class,
-            PaymentsSeeder::class,
-            FinancialTransactionsSeeder::class,
-            TicketsSeeder::class,
-            EscalationsSeeder::class,
-            SecurityLogsSeeder::class,
-            BlockedIPsSeeder::class,
-            SecurityAlertsSeeder::class,
-            IncidentsSeeder::class,
-        ]);
+        // 1. Seeder principal del vendor (usuarios, roles, permisos base)
+        $this->command->info('📦 Ejecutando seeder del vendor (IncadevSeeder)...');
+        $this->call(\IncadevUns\CoreDomain\Database\Seeders\IncadevSeeder::class);
+
+        // 2. Módulo de Soporte Técnico
+        $this->command->info('🎫 Configurando módulo de Soporte Técnico...');
+        $this->call(SupportTechnicalSeeder::class);
+
+        // 3. Asignar permisos al módulo de Soporte Técnico
+        $this->command->info('🔐 Asignando permisos de Soporte Técnico...');
+        $this->call(AssignSupportTechnicalPermissionsSeeder::class);
+
+        // 4. Datos completos del sistema (pagos, encuestas, tickets, citas)
+        $this->command->info('📊 Generando datos completos del sistema...');
+        $this->call(CompleteSeeder::class);
+
+        // 5. Datos de muestra para Soporte Técnico
+        $this->command->info('🎭 Generando datos de muestra para Soporte Técnico...');
+        $this->call(SupportTechnicalSampleDataSeeder::class);
+
+        // 6. Módulo de Seguridad
+        $this->command->info('🔐 Configurando módulo de Seguridad...');
+        $this->call(SecurityPermissionsSeeder::class);
+
+        $this->command->info('✅ Proceso de seed completado exitosamente!');
     }
 }

@@ -6,7 +6,6 @@ namespace App\Domains\DeveloperWeb\Enums;
 enum ContactFormStatus: string
 {
     case PENDING = 'pending';
-    case IN_PROGRESS = 'in_progress';
     case RESPONDED = 'responded';
     case SPAM = 'spam';
 
@@ -19,7 +18,6 @@ enum ContactFormStatus: string
     {
         return [
             self::PENDING->value => 'Pendiente',
-            self::IN_PROGRESS->value => 'En Progreso',
             self::RESPONDED->value => 'Respondido',
             self::SPAM->value => 'Spam',
         ];
@@ -47,7 +45,6 @@ enum ContactFormStatus: string
     {
         return [
             self::PENDING->value,
-            self::IN_PROGRESS->value,
         ];
     }
 
