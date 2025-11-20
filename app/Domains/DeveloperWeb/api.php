@@ -67,11 +67,6 @@ Route::prefix('developer-web')->name('api.developer-web.')->group(function () {
     Route::prefix('contact-forms')->name('contact-forms.')->group(function () {
         // Public endpoint to submit contact forms
         Route::post('/', [ContactFormApiController::class, 'store'])->name('store');
-        
-        // Protected endpoints
-        /*Route::middleware([DeveloperWebMiddleware::class])->group(function () {
-            Route::post('/respond', [ContactFormApiController::class, 'respond'])->name('respond');
-        });*/
     });
 
     // Chatbot FAQs API
