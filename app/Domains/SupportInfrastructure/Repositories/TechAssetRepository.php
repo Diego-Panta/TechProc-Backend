@@ -11,11 +11,11 @@ class TechAssetRepository {
     }
 
     public function all(){
-        return $this->model->all();
+        return $this->model::with(['hardware', 'licenseAssignments'])->get();
     }
 
     public function find(int $id){
-        return $this->model->find($id);
+        return $this->model::with(['hardware', 'licenseAssignments'])->find($id);
     }
 
     public function create(array $data){

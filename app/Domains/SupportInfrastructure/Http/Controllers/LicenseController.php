@@ -20,7 +20,7 @@ class LicenseController extends Controller{
 
     public function store(Request $request){
         $data = $request->validate([
-            'software_id' => 'required|integer|exists:software,id',
+            'software_id' => 'required|integer|exists:softwares,id',
             'key_code' => 'nullable|string',
             'provider' => 'nullable|string',
             'purchase_date' => 'nullable|date',
