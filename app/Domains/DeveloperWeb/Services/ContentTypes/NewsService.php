@@ -7,6 +7,7 @@ use App\Domains\DeveloperWeb\Repositories\ContentItemRepository;
 use App\Domains\DeveloperWeb\Enums\ContentType;
 use App\Domains\DeveloperWeb\Enums\ContentStatus;
 use App\Domains\DeveloperWeb\Enums\NewsItemType;
+use App\Domains\DeveloperWeb\Enums\NewsCategory;
 use Illuminate\Support\Str;
 
 class NewsService extends ContentService
@@ -35,7 +36,7 @@ class NewsService extends ContentService
             'image_url' => $data['image_url'] ?? null,
             'published_date' => $this->formatDateTime($data['published_date'] ?? null) ??
                 ($data['status'] === ContentStatus::PUBLISHED->value ? now()->format('Y-m-d H:i:s') : null),
-            'category' => $data['category'],
+            'category' => $data['category'], // Ahora validado por el enum NewsCategory
             'item_type' => $data['item_type'] ?? NewsItemType::ARTICLE->value,
             'seo_title' => $data['seo_title'] ?? null,
             'seo_description' => $data['seo_description'] ?? null,
@@ -105,7 +106,6 @@ class NewsService extends ContentService
 
     public function getPublishedNews(int $perPage = 15)
     {
-        // CORREGIDO: Usar el repository para obtener datos paginados
         return $this->contentItemRepository->getPublishedByType($this->contentType->value, $perPage);
     }
 
@@ -120,9 +120,12 @@ class NewsService extends ContentService
         return $this->contentItemRepository->resetViews($news);
     }
 
+    /**
+     * Obtener categorías disponibles (ahora desde el enum)
+     */
     public function getCategories(): array
     {
-        return $this->contentItemRepository->getCategoryCounts($this->contentType->value);
+        return NewsCategory::forSelect();
     }
 
     public function getStats(): array

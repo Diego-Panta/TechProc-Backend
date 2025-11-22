@@ -7,6 +7,7 @@ use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Contracts\Validation\Validator;
 use App\Domains\DeveloperWeb\Enums\ContentStatus;
 use App\Domains\DeveloperWeb\Enums\NewsItemType;
+use App\Domains\DeveloperWeb\Enums\NewsCategory;
 
 class UpdateNewsRequest extends FormRequest
 {
@@ -26,7 +27,7 @@ class UpdateNewsRequest extends FormRequest
             'summary' => 'sometimes|string|min:10|max:500',
             'content' => 'sometimes|string|min:50',
             'image_url' => 'nullable|url|max:500',
-            'category' => 'sometimes|string|max:100',
+            'category' => 'sometimes|string|in:' . implode(',', NewsCategory::all()),
             'item_type' => 'nullable|string|in:' . implode(',', NewsItemType::all()),
             'status' => 'sometimes|string|in:' . implode(',', ContentStatus::forNews()),
             'published_date' => 'nullable|date_format:Y-m-d H:i:s|after_or_equal:today',
@@ -46,6 +47,7 @@ class UpdateNewsRequest extends FormRequest
             'summary.min' => 'El resumen debe tener al menos 10 caracteres',
             'summary.max' => 'El resumen no debe exceder los 500 caracteres',
             'content.min' => 'El contenido debe tener al menos 50 caracteres',
+            'category.in' => 'La categoría seleccionada no es válida',
             'published_date.date_format' => 'La fecha debe tener el formato Y-m-d H:i:s',
             'published_date.after_or_equal' => 'La fecha de publicación no puede ser en el pasado',
         ];
