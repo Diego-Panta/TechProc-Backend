@@ -18,28 +18,16 @@ class DatabaseSeeder extends Seeder
         $this->command->info('🌱 Iniciando proceso de seed...');
 
         // 1. Seeder principal del vendor (usuarios, roles, permisos base)
+        // NOTA: IncadevSeeder ya incluye TechnologySeeder que contiene:
+        // - Permisos de Soporte Técnico y Seguridad
+        // - Asignación de permisos a roles
+        // - Datos de muestra de tickets
         $this->command->info('📦 Ejecutando seeder del vendor (IncadevSeeder)...');
         $this->call(\IncadevUns\CoreDomain\Database\Seeders\IncadevSeeder::class);
 
-        // 2. Módulo de Soporte Técnico
-        $this->command->info('🎫 Configurando módulo de Soporte Técnico...');
-        $this->call(SupportTechnicalSeeder::class);
-
-        // 3. Asignar permisos al módulo de Soporte Técnico
-        $this->command->info('🔐 Asignando permisos de Soporte Técnico...');
-        $this->call(AssignSupportTechnicalPermissionsSeeder::class);
-
-        // 4. Datos completos del sistema (pagos, encuestas, tickets, citas)
+        // 2. Datos completos del sistema (pagos, encuestas, tickets, citas)
         $this->command->info('📊 Generando datos completos del sistema...');
         $this->call(CompleteSeeder::class);
-
-        // 5. Datos de muestra para Soporte Técnico
-        $this->command->info('🎭 Generando datos de muestra para Soporte Técnico...');
-        $this->call(SupportTechnicalSampleDataSeeder::class);
-
-        // 6. Módulo de Seguridad
-        $this->command->info('🔐 Configurando módulo de Seguridad...');
-        $this->call(SecurityPermissionsSeeder::class);
 
         $this->command->info('✅ Proceso de seed completado exitosamente!');
     }

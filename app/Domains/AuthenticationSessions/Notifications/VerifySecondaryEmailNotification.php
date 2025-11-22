@@ -6,7 +6,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class VerifyRecoveryEmailNotification extends Notification
+class VerifySecondaryEmailNotification extends Notification
 {
     use Queueable;
 
@@ -34,9 +34,9 @@ class VerifyRecoveryEmailNotification extends Notification
     public function toMail($notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Verificación de Email de Recuperación - TechProc')
+            ->subject('Verificación de Email Secundario - TechProc')
             ->greeting('¡Hola!')
-            ->line('Has agregado este email como tu email de recuperación de contraseña.')
+            ->line('Has agregado este email como tu email secundario para notificaciones y recuperación de cuenta.')
             ->line('Tu código de verificación es:')
             ->line('')
             ->line('**' . $this->code . '**')

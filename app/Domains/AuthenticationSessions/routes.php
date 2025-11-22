@@ -17,11 +17,11 @@ Route::prefix('auth')->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
         Route::put('/profile', [AuthController::class, 'updateProfile']);
 
-        // Recovery email routes
-        Route::post('/recovery-email/add', [AuthController::class, 'addRecoveryEmail']);
-        Route::post('/recovery-email/verify', [AuthController::class, 'verifyRecoveryEmail']);
-        Route::post('/recovery-email/resend-code', [AuthController::class, 'resendRecoveryCode']);
-        Route::delete('/recovery-email/remove', [AuthController::class, 'removeRecoveryEmail']);
+        // Secondary email routes (para notificaciones, recuperación, etc.)
+        Route::post('/secondary-email/add', [AuthController::class, 'addSecondaryEmail']);
+        Route::post('/secondary-email/verify', [AuthController::class, 'verifySecondaryEmail']);
+        Route::post('/secondary-email/resend-code', [AuthController::class, 'resendSecondaryEmailCode']);
+        Route::delete('/secondary-email/remove', [AuthController::class, 'removeSecondaryEmail']);
 
         // 2FA routes
         Route::post('/2fa/enable', [AuthController::class, 'enable2FA']);
