@@ -53,13 +53,13 @@ class LicenseController extends Controller{
     public function update(Request $request, $id)
     {
         $data = $request->validate([
-            'software_id' => 'sometimes|integer|exists:software,id',
+            'software_id' => 'sometimes|integer|exists:softwares,id',
             'key_code' => 'nullable|string',
             'provider' => 'nullable|string',
             'purchase_date' => 'nullable|date',
             'expiration_date' => 'nullable|date',
             'cost' => 'nullable|numeric',
-            'status' => 'required|string'
+            'status' => 'nullable|string'
         ]);
 
         // Convertir fechas del formato ISO 8601 a formato MySQL
