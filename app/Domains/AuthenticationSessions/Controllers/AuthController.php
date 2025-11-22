@@ -615,11 +615,21 @@ class AuthController extends Controller
 
         $user = $request->user();
 
-        // Verificar que el recovery email no esté siendo usado por otro usuario
+        // Verificar que el recovery email no esté siendo usado como email principal
         if (User::where('email', $request->recovery_email)->exists()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Este email ya está registrado en el sistema'
+                'message' => 'Este email ya está registrado como email principal en el sistema'
+            ], 400);
+        }
+
+        // Verificar que el recovery email no esté siendo usado por otro usuario
+        if (User::where('recovery_email', $request->recovery_email)
+                ->where('id', '!=', $user->id)
+                ->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Este email ya está siendo usado como email de recuperación por otro usuario'
             ], 400);
         }
 
