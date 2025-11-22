@@ -22,7 +22,7 @@ class LicenseAssignmentController extends Controller
     public function index(): JsonResponse
     {
         try {
-            $assignments = $this->licenseAssignmentService->getAll();
+            $assignments = $this->licenseAssignmentService->getAllAssignment();
             return response()->json(['success' => true, 'data' => $assignments]);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Error al listar asignaciones', 'error' => $e->getMessage()], 500);

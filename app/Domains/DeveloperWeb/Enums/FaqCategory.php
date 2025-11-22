@@ -5,10 +5,11 @@ namespace App\Domains\DeveloperWeb\Enums;
 
 enum FaqCategory: string
 {
-    case COURSES = 'cursos';
-    case PAYMENTS = 'pagos';
-    case CERTIFICATIONS = 'certificaciones';
     case GENERAL = 'general';
+    case ACADEMICO = 'academico';
+    case TECNICO = 'tecnico';
+    case PAGOS = 'pagos';
+    case SOPORTE = 'soporte';
 
     public static function values(): array
     {
@@ -18,10 +19,11 @@ enum FaqCategory: string
     public static function labels(): array
     {
         return [
-            self::COURSES->value => 'Cursos',
-            self::PAYMENTS->value => 'Pagos',
-            self::CERTIFICATIONS->value => 'Certificaciones',
-            self::GENERAL->value => 'General',
+            self::GENERAL->value   => 'General',
+            self::ACADEMICO->value => 'Académico',
+            self::TECNICO->value   => 'Técnico',
+            self::PAGOS->value     => 'Pagos',
+            self::SOPORTE->value   => 'Soporte',
         ];
     }
 
@@ -32,7 +34,7 @@ enum FaqCategory: string
 
     public static function isValid(string $category): bool
     {
-        return in_array($category, self::values());
+        return in_array($category, self::values(), true);
     }
 
     public static function getDefault(): self

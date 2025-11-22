@@ -22,20 +22,29 @@ class ContentItemRepository
             $query->ofType($filters['content_type']);
         }
 
-        // Aplicar filtros
-        if (!empty($filters['status'])) {
+        // Aplicar filtros - validar que no sean 'undefined'
+        if (!empty($filters['status']) && $filters['status'] !== 'undefined') {
             $query->where('status', $filters['status']);
         }
 
-        if (!empty($filters['category'])) {
+        if (!empty($filters['category']) && $filters['category'] !== 'undefined') {
             $query->where('category', $filters['category']);
         }
 
-        if (!empty($filters['search'])) {
-            $query->where(function($q) use ($filters) {
-                $q->where('title', 'ILIKE', '%' . $filters['search'] . '%')
-                  ->orWhere('summary', 'ILIKE', '%' . $filters['search'] . '%')
-                  ->orWhere('content', 'ILIKE', '%' . $filters['search'] . '%');
+        if (!empty($filters['target_page'])) {
+            $query->where('target_page', $filters['target_page']);
+        }
+
+        // NUEVO: Filtrar por item_type (para ALERTS)
+        if (!empty($filters['item_type'])) {
+            $query->where('item_type', $filters['item_type']);
+        }
+
+        if (!empty($filters['search']) && $filters['search'] !== 'undefined') {
+            $query->where(function ($q) use ($filters) {
+                $q->where('title', 'LIKE', '%' . $filters['search'] . '%')
+                    ->orWhere('summary', 'LIKE', '%' . $filters['search'] . '%')
+                    ->orWhere('content', 'LIKE', '%' . $filters['search'] . '%');
             });
         }
 
@@ -130,7 +139,7 @@ class ContentItemRepository
     public function getStatusCounts(string $contentType = null): array
     {
         $query = ContentItem::query();
-        
+
         if ($contentType) {
             $query->ofType($contentType);
         }
@@ -147,7 +156,7 @@ class ContentItemRepository
     public function getCategoryCounts(string $contentType = null): array
     {
         $query = ContentItem::query();
-        
+
         if ($contentType) {
             $query->ofType($contentType);
         }
@@ -203,7 +212,7 @@ class ContentItemRepository
         $published = ContentItem::ofType($contentType)
             ->shouldBeDisplayed()
             ->count();
-        
+
         $statusCounts = $this->getStatusCounts($contentType);
         $totalViews = ContentItem::ofType($contentType)->sum('views');
 
@@ -221,7 +230,7 @@ class ContentItemRepository
     public function getNewsStats(): array
     {
         $baseStats = $this->getStatsByType(ContentType::NEWS->value);
-        
+
         // Estadísticas adicionales para NEWS
         $categoryCounts = $this->getCategoryCounts(ContentType::NEWS->value);
         $recentPublished = ContentItem::news()
@@ -246,7 +255,7 @@ class ContentItemRepository
     public function getAnnouncementStats(): array
     {
         $baseStats = $this->getStatsByType(ContentType::ANNOUNCEMENT->value);
-        
+
         // Estadísticas adicionales para ANNOUNCEMENT
         $activeNow = ContentItem::announcements()
             ->shouldBeDisplayed()
@@ -276,7 +285,7 @@ class ContentItemRepository
     public function getAlertStats(): array
     {
         $baseStats = $this->getStatsByType(ContentType::ALERT->value);
-        
+
         // Estadísticas adicionales para ALERT
         $activeNow = ContentItem::alerts()
             ->shouldBeDisplayed()

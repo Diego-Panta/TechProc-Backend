@@ -5,6 +5,7 @@ namespace App\Domains\DeveloperWeb\Http\Requests\ContentTypes;
 use Illuminate\Foundation\Http\FormRequest;
 use App\Domains\DeveloperWeb\Enums\ContentStatus;
 use App\Domains\DeveloperWeb\Enums\NewsItemType;
+use App\Domains\DeveloperWeb\Enums\NewsCategory;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Contracts\Validation\Validator;
 
@@ -22,7 +23,7 @@ class StoreNewsRequest extends FormRequest
             'title' => 'required|string|max:255',
             'summary' => 'required|string|min:10|max:500',
             'content' => 'required|string|min:50',
-            'category' => 'required|string|max:100',
+            'category' => 'required|string|in:' . implode(',', NewsCategory::all()),
             'status' => 'required|string|in:' . implode(',', ContentStatus::forNews()),
             
             // Campos OPCIONALES para NEWS
@@ -47,6 +48,7 @@ class StoreNewsRequest extends FormRequest
             'content.required' => 'El contenido es obligatorio',
             'content.min' => 'El contenido debe tener al menos 50 caracteres',
             'category.required' => 'La categoría es obligatoria',
+            'category.in' => 'La categoría seleccionada no es válida',
             'status.required' => 'El estado es obligatorio',
             'slug.unique' => 'Este slug ya está en uso',
             'published_date.date_format' => 'La fecha debe tener el formato Y-m-d H:i:s (ej: 2024-01-20 10:00:00)',
