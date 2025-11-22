@@ -131,7 +131,7 @@ Route::prefix('developer-web')->name('api.developer-web.')->group(function () {
 
         // 5. Noticias públicas
         Route::get('/news', [LandingPageController::class, 'getPublicNews'])->name('news');
-        Route::get('/news/{slug}', [LandingPageController::class, 'getNewsDetail'])->name('news.detail');
+        Route::get('/news/{id}', [LandingPageController::class, 'getNewsDetail'])->name('news.detail');
 
         // 6. Anuncios activos
         Route::get('/announcements', [LandingPageController::class, 'getActiveAnnouncements'])->name('announcements');

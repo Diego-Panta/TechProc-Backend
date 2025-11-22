@@ -10,8 +10,10 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use IncadevUns\CoreDomain\Models\Course;
+use IncadevUns\CoreDomain\Models\CourseVersion;
 use IncadevUns\CoreDomain\Models\TeacherProfile;
 use IncadevUns\CoreDomain\Models\SurveyResponse;
+use IncadevUns\CoreDomain\Enums\CourseVersionStatus;
 
 class LandingPageController extends Controller
 {
@@ -57,16 +59,29 @@ class LandingPageController extends Controller
     public function getAvailableCourses(): JsonResponse
     {
         try {
-            $courses = Course::orderBy('created_at', 'desc')
-                ->limit(6) // Mostrar los 6 cursos más recientes
+            // Obtener cursos que tengan al menos una versión publicada
+            $courses = Course::whereHas('versions', function ($query) {
+                    $query->where('status', CourseVersionStatus::Published->value);
+                })
+                ->with(['versions' => function ($query) {
+                    $query->where('status', CourseVersionStatus::Published->value)
+                          ->orderBy('created_at', 'desc');
+                }])
+                ->orderBy('created_at', 'desc')
+                ->limit(6)
                 ->get()
                 ->map(function ($course) {
+                    // Obtener la versión publicada más reciente
+                    $publishedVersion = $course->versions->first();
+
                     return [
                         'id' => $course->id,
-                        'name' => $course->course_name ?? 'Curso sin nombre',
+                        'name' => $course->name,
                         'description' => $course->description ?? 'Sin descripción disponible',
-                        'image' => $course->course_image ?? 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&h=600&fit=crop',
-                        'duration_hours' => $course->duration_hours ?? 0,
+                        'image' => $course->image_path ?? 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&h=600&fit=crop',
+                        'version' => $publishedVersion?->version,
+                        'version_name' => $publishedVersion?->name,
+                        'price' => $publishedVersion?->price,
                         'created_at' => $course->created_at,
                     ];
                 });
@@ -109,7 +124,7 @@ class LandingPageController extends Controller
                     return [
                         'id' => $teacher->id,
                         'name' => $teacher->fullname ?? $teacher->name,
-                        'avatar' => $teacher->avatar ?? 'https://ui-avatars.com/api/?name=' . urlencode($teacher->name) . '&size=200',
+                        'avatar' => $teacher->avatar,
                         'subject_areas' => $teacherProfile?->subject_areas ?? null,
                         'professional_summary' => $teacherProfile?->professional_summary ?? null,
                         'cv_path' => $teacherProfile?->cv_path ?? null,
@@ -243,13 +258,13 @@ class LandingPageController extends Controller
     /**
      * Obtener detalle completo de una noticia
      *
-     * GET /api/developer-web/landing/news/{slug}
+     * GET /api/developer-web/landing/news/{id}
      */
-    public function getNewsDetail(string $slug): JsonResponse
+    public function getNewsDetail(int $id): JsonResponse
     {
         try {
             $news = ContentItem::where('content_type', ContentType::NEWS->value)
-                ->where('slug', $slug)
+                ->where('id', $id)
                 ->where('status', ContentStatus::PUBLISHED->value)
                 ->first();
 
