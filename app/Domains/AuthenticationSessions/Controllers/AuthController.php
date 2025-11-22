@@ -7,6 +7,7 @@ use App\Domains\AuthenticationSessions\Models\ActiveSession;
 use App\Domains\AuthenticationSessions\Notifications\VerifyEmailNotification;
 use App\Domains\Security\Services\SecurityEventService;
 use App\Domains\Security\Services\AnomalyDetectionService;
+use App\Domains\Security\Services\SessionService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -22,13 +23,16 @@ class AuthController extends Controller
 {
     protected SecurityEventService $securityEventService;
     protected AnomalyDetectionService $anomalyDetectionService;
+    protected SessionService $sessionService;
 
     public function __construct(
         SecurityEventService $securityEventService,
-        AnomalyDetectionService $anomalyDetectionService
+        AnomalyDetectionService $anomalyDetectionService,
+        SessionService $sessionService
     ) {
         $this->securityEventService = $securityEventService;
         $this->anomalyDetectionService = $anomalyDetectionService;
+        $this->sessionService = $sessionService;
     }
     /**
      * Register a new user
@@ -136,6 +140,21 @@ class AuthController extends Controller
             ], 422);
         }
 
+        // Verificar si el usuario está bloqueado ANTES de verificar credenciales
+        $blockInfo = $this->anomalyDetectionService->isEmailBlocked($request->email);
+        if ($blockInfo) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tu cuenta está temporalmente bloqueada',
+                'blocked' => true,
+                'block_info' => [
+                    'reason' => $blockInfo['reason'],
+                    'blocked_until' => $blockInfo['blocked_until'],
+                    'remaining_time' => $blockInfo['remaining_time'],
+                ]
+            ], 423); // 423 Locked
+        }
+
         $user = User::where('email', $request->email)->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
@@ -147,16 +166,31 @@ class AuthController extends Controller
                 'invalid_credentials'
             );
 
-            // Detectar fuerza bruta
-            $bruteForce = $this->anomalyDetectionService->detectBruteForce(
+            // Detectar fuerza bruta y bloquear si es necesario
+            $blockResult = $this->anomalyDetectionService->detectAndBlockIfNeeded(
                 $request->email,
                 $request->ip()
             );
 
-            if ($bruteForce) {
+            if ($blockResult) {
+                // Si se bloqueó al usuario o ya estaba bloqueado
+                if ($blockResult['type'] === 'user_blocked' || $blockResult['type'] === 'already_blocked') {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Tu cuenta ha sido bloqueada temporalmente debido a múltiples intentos fallidos',
+                        'blocked' => true,
+                        'block_info' => [
+                            'blocked_until' => $blockResult['blocked_until'] ?? null,
+                            'remaining_time' => $blockResult['remaining_time'] ?? null,
+                            'block_duration_minutes' => $blockResult['block_duration_minutes'] ?? null,
+                        ]
+                    ], 423); // 423 Locked
+                }
+
+                // Si es brute force pero el usuario no existe
                 return response()->json([
                     'success' => false,
-                    'message' => 'Demasiados intentos fallidos. Tu IP ha sido bloqueada temporalmente.'
+                    'message' => 'Demasiados intentos fallidos. Por favor, intenta más tarde.'
                 ], 429);
             }
 
@@ -172,6 +206,20 @@ class AuthController extends Controller
                 'success' => false,
                 'message' => 'No tienes permisos para acceder con el rol especificado'
             ], 403);
+        }
+
+        // Verificar límite de sesiones concurrentes
+        $sessionInfo = $this->sessionService->getConcurrentSessionsInfo($user->id);
+        if ($sessionInfo['has_reached_limit']) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Has alcanzado el límite máximo de sesiones concurrentes',
+                'session_limit_exceeded' => true,
+                'session_info' => [
+                    'current_sessions' => $sessionInfo['current_sessions'],
+                    'max_sessions' => $sessionInfo['max_sessions'],
+                ]
+            ], 429); // 429 Too Many Requests
         }
 
         // Si tiene 2FA habilitado, requerir código
@@ -308,6 +356,20 @@ class AuthController extends Controller
                     'message' => 'Código de autenticación inválido'
                 ], 401);
             }
+        }
+
+        // Verificar límite de sesiones concurrentes
+        $sessionInfo = $this->sessionService->getConcurrentSessionsInfo($user->id);
+        if ($sessionInfo['has_reached_limit']) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Has alcanzado el límite máximo de sesiones concurrentes',
+                'session_limit_exceeded' => true,
+                'session_info' => [
+                    'current_sessions' => $sessionInfo['current_sessions'],
+                    'max_sessions' => $sessionInfo['max_sessions'],
+                ]
+            ], 429);
         }
 
         // Crear token

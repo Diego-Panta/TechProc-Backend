@@ -3,6 +3,7 @@
 namespace App\Domains\Security\Services;
 
 use App\Domains\Security\Repositories\SessionRepository;
+use App\Domains\Security\Models\SecuritySetting;
 use Illuminate\Support\Collection;
 
 class SessionService
@@ -10,6 +11,51 @@ class SessionService
     public function __construct(
         private SessionRepository $sessionRepository
     ) {}
+
+    /**
+     * Verificar si el usuario ha alcanzado el máximo de sesiones concurrentes
+     */
+    public function hasReachedMaxSessions(int $userId): bool
+    {
+        $maxSessions = SecuritySetting::get('max_concurrent_sessions', 5);
+        $currentSessions = $this->sessionRepository->countActiveSessions($userId);
+
+        return $currentSessions >= $maxSessions;
+    }
+
+    /**
+     * Obtener información de sesiones concurrentes
+     */
+    public function getConcurrentSessionsInfo(int $userId): array
+    {
+        $maxSessions = SecuritySetting::get('max_concurrent_sessions', 5);
+        $currentSessions = $this->sessionRepository->countActiveSessions($userId);
+
+        return [
+            'current_sessions' => $currentSessions,
+            'max_sessions' => $maxSessions,
+            'has_reached_limit' => $currentSessions >= $maxSessions,
+        ];
+    }
+
+    /**
+     * Terminar las sesiones más antiguas si se excede el límite
+     * Retorna el número de sesiones terminadas
+     */
+    public function terminateOldestIfExceedsLimit(int $userId): int
+    {
+        $maxSessions = SecuritySetting::get('max_concurrent_sessions', 5);
+        $currentSessions = $this->sessionRepository->countActiveSessions($userId);
+
+        if ($currentSessions < $maxSessions) {
+            return 0;
+        }
+
+        // Calcular cuántas sesiones hay que eliminar
+        $sessionsToTerminate = ($currentSessions - $maxSessions) + 1;
+
+        return $this->sessionRepository->terminateOldestSessions($userId, $sessionsToTerminate);
+    }
 
     /**
      * Obtener sesiones del usuario autenticado
