@@ -24,16 +24,18 @@ class ContentItemsSeeder extends Seeder
                 'content_type' => ContentType::NEWS->value,
                 'title' => 'Nueva plataforma de aprendizaje en línea revoluciona la educación',
                 'slug' => 'nueva-plataforma-aprendizaje-revoluciona-educacion',
-                'content' => '<h2>Una nueva era en la educación digital</h2>
-                    <p>La plataforma Incadev presenta su nuevo sistema de gestión de aprendizaje que integra inteligencia artificial para personalizar la experiencia educativa de cada estudiante.</p>
-                    <h3>Características principales</h3>
-                    <ul>
-                        <li>Análisis predictivo de deserción estudiantil</li>
-                        <li>Chatbot inteligente con IA para soporte 24/7</li>
-                        <li>Dashboard interactivo para estudiantes y profesores</li>
-                        <li>Sistema de evaluación automática</li>
-                    </ul>
-                    <p>Esta innovación marca un antes y un después en cómo se imparte la educación en línea.</p>',
+                'content' => 'Una nueva era en la educación digital
+
+La plataforma Incadev presenta su nuevo sistema de gestión de aprendizaje que integra inteligencia artificial para personalizar la experiencia educativa de cada estudiante.
+
+Características principales:
+
+- Análisis predictivo de deserción estudiantil
+- Chatbot inteligente con IA para soporte 24/7
+- Dashboard interactivo para estudiantes y profesores
+- Sistema de evaluación automática
+
+Esta innovación marca un antes y un después en cómo se imparte la educación en línea.',
                 'summary' => 'Incadev lanza su nueva plataforma educativa con IA integrada que promete transformar la experiencia de aprendizaje.',
                 'image_url' => 'https://images.unsplash.com/photo-1501504905252-473c47e087f8?w=1200&h=800&fit=crop',
                 'status' => ContentStatus::PUBLISHED->value,
@@ -55,10 +57,15 @@ class ContentItemsSeeder extends Seeder
                 'content_type' => ContentType::NEWS->value,
                 'title' => 'Inteligencia Artificial en la educación: El futuro es ahora',
                 'slug' => 'inteligencia-artificial-educacion-futuro',
-                'content' => '<h2>La IA transforma el aula</h2>
-                    <p>Los sistemas de inteligencia artificial están cambiando radicalmente la forma en que los estudiantes aprenden y los profesores enseñan.</p>
-                    <p>Desde tutores virtuales hasta sistemas de evaluación automática, la IA está democratizando el acceso a educación de calidad.</p>
-                    <blockquote>La tecnología no reemplaza al profesor, lo potencia - Dr. Juan Pérez, experto en EdTech</blockquote>',
+                'content' => 'La IA transforma el aula
+
+Los sistemas de inteligencia artificial están cambiando radicalmente la forma en que los estudiantes aprenden y los profesores enseñan.
+
+Desde tutores virtuales hasta sistemas de evaluación automática, la IA está democratizando el acceso a educación de calidad.
+
+"La tecnología no reemplaza al profesor, lo potencia" - Dr. Juan Pérez, experto en EdTech
+
+El impacto de estas tecnologías se refleja en mejores tasas de retención estudiantil y mayor satisfacción tanto de alumnos como de docentes.',
                 'summary' => 'La inteligencia artificial está revolucionando la educación con soluciones innovadoras para estudiantes y profesores.',
                 'image_url' => 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=1200&h=800&fit=crop',
                 'status' => ContentStatus::PUBLISHED->value,
@@ -80,16 +87,17 @@ class ContentItemsSeeder extends Seeder
                 'content_type' => ContentType::NEWS->value,
                 'title' => 'Mejores prácticas para el aprendizaje en línea exitoso',
                 'slug' => 'mejores-practicas-aprendizaje-en-linea',
-                'content' => '<h2>Consejos para maximizar tu experiencia de aprendizaje</h2>
-                    <p>El aprendizaje en línea requiere disciplina y estrategia. Aquí te compartimos las mejores prácticas:</p>
-                    <ol>
-                        <li>Crea un espacio dedicado para estudiar</li>
-                        <li>Establece un horario regular</li>
-                        <li>Participa activamente en foros y discusiones</li>
-                        <li>Toma descansos regulares</li>
-                        <li>Conecta con tus compañeros</li>
-                    </ol>
-                    <p>Siguiendo estos consejos, podrás aprovechar al máximo tu experiencia educativa en línea.</p>',
+                'content' => 'Consejos para maximizar tu experiencia de aprendizaje
+
+El aprendizaje en línea requiere disciplina y estrategia. Aquí te compartimos las mejores prácticas:
+
+1. Crea un espacio dedicado para estudiar
+2. Establece un horario regular
+3. Participa activamente en foros y discusiones
+4. Toma descansos regulares
+5. Conecta con tus compañeros
+
+Siguiendo estos consejos, podrás aprovechar al máximo tu experiencia educativa en línea. La clave está en la constancia y en mantener una rutina que te permita balancear tus estudios con otras actividades.',
                 'summary' => 'Descubre las estrategias comprobadas para tener éxito en tu educación en línea.',
                 'image_url' => 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1200&h=800&fit=crop',
                 'status' => ContentStatus::PUBLISHED->value,
@@ -111,10 +119,13 @@ class ContentItemsSeeder extends Seeder
                 'content_type' => ContentType::NEWS->value,
                 'title' => 'Incadev alcanza 10,000 estudiantes activos',
                 'slug' => 'incadev-10000-estudiantes-activos',
-                'content' => '<h2>Un hito importante para nuestra comunidad</h2>
-                    <p>Estamos orgullosos de anunciar que hemos alcanzado los 10,000 estudiantes activos en nuestra plataforma.</p>
-                    <p>Este logro representa el compromiso de nuestra comunidad con la educación de calidad y el aprendizaje continuo.</p>
-                    <p>Gracias a todos nuestros estudiantes, profesores y colaboradores por hacer esto posible.</p>',
+                'content' => 'Un hito importante para nuestra comunidad
+
+Estamos orgullosos de anunciar que hemos alcanzado los 10,000 estudiantes activos en nuestra plataforma.
+
+Este logro representa el compromiso de nuestra comunidad con la educación de calidad y el aprendizaje continuo.
+
+Gracias a todos nuestros estudiantes, profesores y colaboradores por hacer esto posible. Este es solo el comienzo de un camino que esperamos nos lleve a impactar positivamente la vida de miles de personas más.',
                 'summary' => 'Incadev celebra un hito importante al alcanzar 10,000 estudiantes activos en su plataforma.',
                 'image_url' => 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=1200&h=800&fit=crop',
                 'status' => ContentStatus::PUBLISHED->value,
@@ -136,15 +147,15 @@ class ContentItemsSeeder extends Seeder
                 'content_type' => ContentType::ANNOUNCEMENT->value,
                 'title' => 'Nuevos cursos disponibles en Programación Web',
                 'slug' => 'nuevos-cursos-programacion-web',
-                'content' => '<p>Nos complace anunciar que hemos agregado 5 nuevos cursos de programación web a nuestro catálogo:</p>
-                    <ul>
-                        <li>React Avanzado</li>
-                        <li>Node.js y Express</li>
-                        <li>Vue.js 3 desde cero</li>
-                        <li>TypeScript para desarrolladores</li>
-                        <li>Full Stack Developer Bootcamp</li>
-                    </ul>
-                    <p>Las inscripciones están abiertas. ¡No te pierdas esta oportunidad!</p>',
+                'content' => 'Nos complace anunciar que hemos agregado 5 nuevos cursos de programación web a nuestro catálogo:
+
+- React Avanzado
+- Node.js y Express
+- Vue.js 3 desde cero
+- TypeScript para desarrolladores
+- Full Stack Developer Bootcamp
+
+Las inscripciones están abiertas. ¡No te pierdas esta oportunidad de potenciar tus habilidades como desarrollador web!',
                 'summary' => 'Inscríbete ahora en nuestros nuevos cursos de programación web y lleva tus habilidades al siguiente nivel.',
                 'image_url' => 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=1200&h=800&fit=crop',
                 'status' => ContentStatus::ACTIVE->value,
@@ -166,9 +177,11 @@ class ContentItemsSeeder extends Seeder
                 'content_type' => ContentType::ANNOUNCEMENT->value,
                 'title' => 'Mantenimiento programado del sistema',
                 'slug' => 'mantenimiento-programado-sistema',
-                'content' => '<p>Informamos que realizaremos un mantenimiento programado de nuestros servidores el próximo domingo 25 de noviembre de 2:00 AM a 6:00 AM.</p>
-                    <p>Durante este periodo, la plataforma no estará disponible.</p>
-                    <p>Pedimos disculpas por las molestias y agradecemos su comprensión.</p>',
+                'content' => 'Informamos que realizaremos un mantenimiento programado de nuestros servidores el próximo domingo 25 de noviembre de 2:00 AM a 6:00 AM.
+
+Durante este periodo, la plataforma no estará disponible.
+
+Pedimos disculpas por las molestias y agradecemos su comprensión. Este mantenimiento nos permitirá mejorar el rendimiento y la seguridad de la plataforma.',
                 'summary' => 'Mantenimiento del sistema el domingo 25 de noviembre de 2:00 AM a 6:00 AM.',
                 'image_url' => 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=1200&h=800&fit=crop',
                 'status' => ContentStatus::ACTIVE->value,
@@ -190,7 +203,7 @@ class ContentItemsSeeder extends Seeder
                 'content_type' => ContentType::ALERT->value,
                 'title' => 'Actualiza tu perfil para mejorar tu experiencia',
                 'slug' => 'actualiza-perfil-mejora-experiencia',
-                'content' => '<p>Hemos detectado que tu perfil está incompleto. Actualiza tu información para obtener recomendaciones personalizadas de cursos y una mejor experiencia en la plataforma.</p>',
+                'content' => 'Hemos detectado que tu perfil está incompleto. Actualiza tu información para obtener recomendaciones personalizadas de cursos y una mejor experiencia en la plataforma.',
                 'summary' => 'Completa tu perfil para recibir recomendaciones personalizadas.',
                 'image_url' => 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=1200&h=800&fit=crop',
                 'status' => ContentStatus::ACTIVE->value,
@@ -213,8 +226,9 @@ class ContentItemsSeeder extends Seeder
                 'content_type' => ContentType::ALERT->value,
                 'title' => '¡Últimos días para inscribirte con descuento!',
                 'slug' => 'ultimos-dias-inscripcion-descuento',
-                'content' => '<p>Aprovecha el 30% de descuento en todos nuestros cursos. La promoción termina el 30 de noviembre.</p>
-                    <p>¡No dejes pasar esta oportunidad de invertir en tu educación!</p>',
+                'content' => 'Aprovecha el 30% de descuento en todos nuestros cursos. La promoción termina el 30 de noviembre.
+
+¡No dejes pasar esta oportunidad de invertir en tu educación!',
                 'summary' => '30% de descuento en todos los cursos hasta el 30 de noviembre.',
                 'image_url' => 'https://images.unsplash.com/photo-1607703703674-df96af81dffa?w=1200&h=800&fit=crop',
                 'status' => ContentStatus::ACTIVE->value,
@@ -238,16 +252,20 @@ class ContentItemsSeeder extends Seeder
                 'content_type' => ContentType::NEWS->value,
                 'title' => 'El aprendizaje adaptativo: ciencia detrás de la educación personalizada',
                 'slug' => 'aprendizaje-adaptativo-ciencia-educacion',
-                'content' => '<h2>La neurociencia aplicada a la educación</h2>
-                    <p>Estudios recientes demuestran que el aprendizaje adaptativo puede mejorar la retención de conocimiento hasta en un 60%.</p>
-                    <p>La clave está en ajustar el contenido y el ritmo de aprendizaje según las necesidades individuales de cada estudiante.</p>
-                    <h3>Beneficios comprobados</h3>
-                    <ul>
-                        <li>Mayor retención de información</li>
-                        <li>Reducción del estrés académico</li>
-                        <li>Mejor rendimiento en evaluaciones</li>
-                        <li>Mayor satisfacción estudiantil</li>
-                    </ul>',
+                'content' => 'La neurociencia aplicada a la educación
+
+Estudios recientes demuestran que el aprendizaje adaptativo puede mejorar la retención de conocimiento hasta en un 60%.
+
+La clave está en ajustar el contenido y el ritmo de aprendizaje según las necesidades individuales de cada estudiante.
+
+Beneficios comprobados:
+
+- Mayor retención de información
+- Reducción del estrés académico
+- Mejor rendimiento en evaluaciones
+- Mayor satisfacción estudiantil
+
+Los investigadores coinciden en que este enfoque representa el futuro de la educación personalizada.',
                 'summary' => 'Investigaciones científicas revelan los beneficios del aprendizaje adaptativo en la educación moderna.',
                 'image_url' => 'https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=1200&h=800&fit=crop',
                 'status' => ContentStatus::PUBLISHED->value,
@@ -269,17 +287,19 @@ class ContentItemsSeeder extends Seeder
                 'content_type' => ContentType::NEWS->value,
                 'title' => 'Salud mental y educación en línea: Consejos para estudiantes',
                 'slug' => 'salud-mental-educacion-en-linea',
-                'content' => '<h2>Cuida tu bienestar mientras estudias</h2>
-                    <p>La educación en línea trae muchos beneficios, pero también nuevos desafíos para la salud mental de los estudiantes.</p>
-                    <h3>Estrategias para mantener el equilibrio</h3>
-                    <ol>
-                        <li>Establece límites entre estudio y tiempo personal</li>
-                        <li>Mantén contacto social con compañeros</li>
-                        <li>Practica ejercicio regularmente</li>
-                        <li>Duerme suficiente</li>
-                        <li>No dudes en pedir ayuda si la necesitas</li>
-                    </ol>
-                    <p>Recuerda: tu salud mental es tan importante como tu rendimiento académico.</p>',
+                'content' => 'Cuida tu bienestar mientras estudias
+
+La educación en línea trae muchos beneficios, pero también nuevos desafíos para la salud mental de los estudiantes.
+
+Estrategias para mantener el equilibrio:
+
+1. Establece límites entre estudio y tiempo personal
+2. Mantén contacto social con compañeros
+3. Practica ejercicio regularmente
+4. Duerme suficiente
+5. No dudes en pedir ayuda si la necesitas
+
+Recuerda: tu salud mental es tan importante como tu rendimiento académico. Cuidarte a ti mismo es parte fundamental del proceso de aprendizaje.',
                 'summary' => 'Consejos prácticos para cuidar tu salud mental mientras estudias en línea.',
                 'image_url' => 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=1200&h=800&fit=crop',
                 'status' => ContentStatus::PUBLISHED->value,
