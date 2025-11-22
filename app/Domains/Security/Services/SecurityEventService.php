@@ -178,4 +178,40 @@ class SecurityEventService
             ]
         );
     }
+
+    /**
+     * Registrar usuario bloqueado
+     */
+    public function logUserBlocked(int $userId, string $ip, string $userAgent, array $metadata = []): SecurityEvent
+    {
+        return $this->logEvent(
+            $userId,
+            SecurityEventType::SUSPICIOUS_ACTIVITY,
+            SecurityEventSeverity::CRITICAL,
+            $ip,
+            $userAgent,
+            array_merge([
+                'action' => 'user_blocked',
+                'timestamp' => now()->toIso8601String()
+            ], $metadata)
+        );
+    }
+
+    /**
+     * Registrar usuario desbloqueado
+     */
+    public function logUserUnblocked(int $userId, string $ip, string $userAgent, array $metadata = []): SecurityEvent
+    {
+        return $this->logEvent(
+            $userId,
+            SecurityEventType::SUSPICIOUS_ACTIVITY,
+            SecurityEventSeverity::INFO,
+            $ip,
+            $userAgent,
+            array_merge([
+                'action' => 'user_unblocked',
+                'timestamp' => now()->toIso8601String()
+            ], $metadata)
+        );
+    }
 }
