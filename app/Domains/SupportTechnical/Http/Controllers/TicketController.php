@@ -257,6 +257,42 @@ class TicketController extends Controller
     }
 
     /**
+     * Get my tickets (tickets created by the authenticated user)
+     * GET /api/support/my-tickets
+     */
+    public function myTickets(ListTicketsRequest $request): JsonResponse
+    {
+        try {
+            $user = $request->user();
+
+            $perPage = $request->input('per_page', 15);
+
+            $filters = [
+                'user_id' => $user->id, // Siempre filtrar por el usuario actual
+                'status' => $request->input('status'),
+                'priority' => $request->input('priority'),
+                'type' => $request->input('type'),
+                'search' => $request->input('search'),
+                'sort_by' => $request->input('sort_by', 'updated_at'),
+                'sort_order' => $request->input('sort_order', 'desc'),
+            ];
+
+            $filters = array_filter($filters, fn($value) => !is_null($value));
+            $tickets = $this->ticketService->getAllTickets($filters, $perPage);
+
+            return response()->json([
+                'status' => 'success',
+                'data' => new TicketCollection($tickets)
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Get statistics
      * GET /api/support/statistics
      */
