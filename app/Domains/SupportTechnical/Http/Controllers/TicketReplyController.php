@@ -44,6 +44,9 @@ class TicketReplyController extends Controller
             // Authorize to view the ticket (need access to reply)
             $this->authorize('view', $ticket);
 
+            // Verificar si es soporte/admin
+            $isSupport = $user->hasRole(['support', 'admin']);
+
             $data = $request->validated();
             $attachments = $request->hasFile('attachments') ? $request->file('attachments') : null;
 
@@ -51,7 +54,8 @@ class TicketReplyController extends Controller
                 $ticketId,
                 $data,
                 $user->id,
-                $attachments
+                $attachments,
+                $isSupport
             );
 
             return response()->json([
