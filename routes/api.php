@@ -33,6 +33,22 @@ Route::get('/dev/users', function () {
     ]);
 });
 
+// [DEV] Listar todas las tablas de la base de datos
+Route::get('/dev/tables', function () {
+    $tables = \Illuminate\Support\Facades\DB::select('SHOW TABLES');
+    $dbName = \Illuminate\Support\Facades\DB::getDatabaseName();
+    $key = "Tables_in_{$dbName}";
+
+    $tableNames = array_map(fn($table) => $table->$key, $tables);
+
+    return response()->json([
+        'success' => true,
+        'database' => $dbName,
+        'count' => count($tableNames),
+        'tables' => $tableNames
+    ]);
+});
+
 // Verificar token (solo desarrollo) - Requiere autenticación
 Route::middleware('auth:sanctum')->get('/check-token', function (Request $request) {
     $user = $request->user();
