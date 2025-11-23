@@ -3,7 +3,15 @@
     "allow": [
       "Bash(del \"c:\\Users\\anton\\Documents\\GitHub\\TechProc-Backend\\database\\seeders\\SurveyModuleSeeder.php\")",
       "Bash(del \"c:\\Users\\anton\\Documents\\GitHub\\TechProc-Backend\\database\\seeders\\SecuritySettingsSeeder.php\")",
-      "Bash(del \"c:\\Users\\anton\\Documents\\GitHub\\TechProc-Backend\\database\\seeders\\ContentItemsSeeder.php\")"
+      "Bash(del \"c:\\Users\\anton\\Documents\\GitHub\\TechProc-Backend\\database\\seeders\\ContentItemsSeeder.php\")",
+      "Bash(del \"c:\\Users\\anton\\Documents\\GitHub\\TechProc-Backend\\app\\Http\\Controllers\\ChatbotController.php\")",
+      "Bash(cat:*)",
+      "Bash(del \"c:\\Users\\anton\\Documents\\GitHub\\TechProc-Backend\\database\\migrations\\2025_11_23_000001_create_active_sessions_table.php\")",
+      "Bash(composer show:*)",
+      "Bash(nul)",
+      "Bash(findstr:*)",
+      "Bash(dir:*)",
+      "Bash(where /r vendorincadevuns TicketStatus.php 2)"
     ],
     "deny": [],
     "ask": []
