@@ -2,10 +2,10 @@
 
 namespace App\Domains\Security\Services;
 
-use App\Domains\Security\Models\UserBlock;
-use App\Domains\Security\Models\SecuritySetting;
 use App\Domains\Security\Repositories\UserBlockRepository;
 use App\Models\User;
+use IncadevUns\CoreDomain\Models\SecuritySetting;
+use IncadevUns\CoreDomain\Models\UserBlock;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;

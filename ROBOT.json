@@ -1,0 +1,683 @@
+{
+	"info": {
+		"name": "TechProc - Chatbot & FAQs API",
+		"description": "Collection para testear el sistema de Chatbot y FAQs de TechProc",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "FAQs",
+			"item": [
+				{
+					"name": "Crear FAQ - Inscripciones",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"question\": \"¿Cómo puedo inscribirme en un curso?\",\n  \"answer\": \"Para inscribirte en un curso, debes iniciar sesión, ir a la sección de Cursos, seleccionar el curso deseado y hacer clic en 'Inscribirse'. Luego completa el proceso de pago.\",\n  \"category\": \"Inscripciones\",\n  \"keywords\": [\"inscripción\", \"matricula\", \"registro\", \"curso\", \"inscribirse\"],\n  \"active\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/chatbot/faqs",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"chatbot",
+								"faqs"
+							]
+						}
+					}
+				},
+				{
+					"name": "Crear FAQ - Pagos",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"question\": \"¿Cuáles son los métodos de pago disponibles?\",\n  \"answer\": \"Aceptamos transferencias bancarias, pagos en agencias autorizadas y pagos con tarjeta de crédito/débito.\",\n  \"category\": \"Pagos\",\n  \"keywords\": [\"pago\", \"transferencia\", \"tarjeta\", \"banco\", \"agencia\"],\n  \"active\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/chatbot/faqs",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"chatbot",
+								"faqs"
+							]
+						}
+					}
+				},
+				{
+					"name": "Crear FAQ - Certificados",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"question\": \"¿Puedo obtener un certificado al finalizar el curso?\",\n  \"answer\": \"Sí, al completar el curso con éxito y aprobar los exámenes requeridos, recibirás un certificado digital que puedes descargar desde tu perfil.\",\n  \"category\": \"Certificados\",\n  \"keywords\": [\"certificado\", \"diploma\", \"título\", \"finalizar\", \"completar\"],\n  \"active\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/chatbot/faqs",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"chatbot",
+								"faqs"
+							]
+						}
+					}
+				},
+				{
+					"name": "Crear FAQ - Soporte",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"question\": \"¿Cómo contacto con el soporte técnico?\",\n  \"answer\": \"Puedes crear un ticket de soporte desde tu perfil en la sección 'Ayuda' o enviarnos un correo a soporte@incadevuns.edu.pe\",\n  \"category\": \"Soporte\",\n  \"keywords\": [\"soporte\", \"ayuda\", \"problema\", \"técnico\", \"contacto\"],\n  \"active\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/chatbot/faqs",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"chatbot",
+								"faqs"
+							]
+						}
+					}
+				},
+				{
+					"name": "Listar todas las FAQs",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/chatbot/faqs",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"chatbot",
+								"faqs"
+							]
+						}
+					}
+				},
+				{
+					"name": "Filtrar FAQs por categoría",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/chatbot/faqs?category=Pagos",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"chatbot",
+								"faqs"
+							],
+							"query": [
+								{
+									"key": "category",
+									"value": "Pagos"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Buscar FAQ por palabras clave",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/chatbot/faqs/search?query=inscripción",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"chatbot",
+								"faqs",
+								"search"
+							],
+							"query": [
+								{
+									"key": "query",
+									"value": "inscripción"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Obtener FAQ por ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/chatbot/faqs/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"chatbot",
+								"faqs",
+								"1"
+							]
+						}
+					}
+				},
+				{
+					"name": "Actualizar FAQ",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"question\": \"¿Cómo puedo inscribirme en un curso?\",\n  \"answer\": \"Para inscribirte en un curso, debes: 1) Iniciar sesión, 2) Ir a la sección de Cursos, 3) Seleccionar el curso deseado, 4) Hacer clic en 'Inscribirse', 5) Completar el formulario y realizar el pago.\",\n  \"category\": \"Inscripciones\",\n  \"keywords\": [\"inscripción\", \"matricula\", \"registro\", \"curso\", \"inscribirse\", \"enrolamiento\"],\n  \"active\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/chatbot/faqs/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"chatbot",
+								"faqs",
+								"1"
+							]
+						}
+					}
+				},
+				{
+					"name": "Desactivar FAQ",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"active\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/chatbot/faqs/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"chatbot",
+								"faqs",
+								"1"
+							]
+						}
+					}
+				},
+				{
+					"name": "Eliminar FAQ",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/chatbot/faqs/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"chatbot",
+								"faqs",
+								"1"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Conversaciones",
+			"item": [
+				{
+					"name": "Iniciar conversación",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"first_message\": \"Hola, necesito ayuda para inscribirme en un curso\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/chatbot/conversations",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"chatbot",
+								"conversations"
+							]
+						}
+					}
+				},
+				{
+					"name": "Listar conversaciones",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/chatbot/conversations",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"chatbot",
+								"conversations"
+							]
+						}
+					}
+				},
+				{
+					"name": "Obtener conversación por ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/chatbot/conversations/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"chatbot",
+								"conversations",
+								"1"
+							]
+						}
+					}
+				},
+				{
+					"name": "Enviar mensaje del bot",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"message\": \"¿En qué curso estás interesado?\",\n  \"is_bot\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/chatbot/conversations/1/messages",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"chatbot",
+								"conversations",
+								"1",
+								"messages"
+							]
+						}
+					}
+				},
+				{
+					"name": "Enviar mensaje del usuario",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"message\": \"Quiero inscribirme en el curso de Laravel Avanzado\",\n  \"is_bot\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/chatbot/conversations/1/messages",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"chatbot",
+								"conversations",
+								"1",
+								"messages"
+							]
+						}
+					}
+				},
+				{
+					"name": "Resolver conversación",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"resolved\": true,\n  \"satisfaction_rating\": 5,\n  \"feedback\": \"El chatbot me ayudó mucho, gracias!\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/chatbot/conversations/1/resolve",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"chatbot",
+								"conversations",
+								"1",
+								"resolve"
+							]
+						}
+					}
+				},
+				{
+					"name": "Transferir a humano",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"handed_to_human\": true,\n  \"reason\": \"La consulta requiere atención personalizada\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/chatbot/conversations/1/hand-to-human",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"chatbot",
+								"conversations",
+								"1",
+								"hand-to-human"
+							]
+						}
+					}
+				},
+				{
+					"name": "Finalizar conversación",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"ended_at\": \"2025-11-23T10:30:00Z\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/chatbot/conversations/1/end",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"chatbot",
+								"conversations",
+								"1",
+								"end"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Estadísticas",
+			"item": [
+				{
+					"name": "Obtener estadísticas generales",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/chatbot/statistics",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"chatbot",
+								"statistics"
+							]
+						}
+					}
+				},
+				{
+					"name": "FAQs más usadas",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/chatbot/faqs/most-used",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"chatbot",
+								"faqs",
+								"most-used"
+							]
+						}
+					}
+				},
+				{
+					"name": "Conversaciones sin resolver",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/chatbot/conversations?resolved=false",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"chatbot",
+								"conversations"
+							],
+							"query": [
+								{
+									"key": "resolved",
+									"value": "false"
+								}
+							]
+						}
+					}
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{auth_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "auth_token",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

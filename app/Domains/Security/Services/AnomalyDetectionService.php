@@ -2,9 +2,9 @@
 
 namespace App\Domains\Security\Services;
 
-use App\Domains\Security\Models\SecuritySetting;
 use App\Domains\Security\Repositories\SecurityEventRepository;
 use App\Domains\Security\Repositories\UserBlockRepository;
+use IncadevUns\CoreDomain\Models\SecuritySetting;
 use App\Models\User;
 
 class AnomalyDetectionService

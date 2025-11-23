@@ -2,8 +2,8 @@
 
 namespace App\Domains\Security\Repositories;
 
-use App\Domains\Security\Models\UserBlock;
 use App\Models\User;
+use IncadevUns\CoreDomain\Models\UserBlock;
 use Illuminate\Support\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Carbon\Carbon;
