@@ -7,6 +7,7 @@ use App\Domains\AuthenticationSessions\Models\ActiveSession;
 use App\Domains\AuthenticationSessions\Notifications\VerifyEmailNotification;
 use App\Domains\Security\Services\SecurityEventService;
 use App\Domains\Security\Services\AnomalyDetectionService;
+use App\Domains\Security\Services\SessionService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -22,13 +23,16 @@ class AuthController extends Controller
 {
     protected SecurityEventService $securityEventService;
     protected AnomalyDetectionService $anomalyDetectionService;
+    protected SessionService $sessionService;
 
     public function __construct(
         SecurityEventService $securityEventService,
-        AnomalyDetectionService $anomalyDetectionService
+        AnomalyDetectionService $anomalyDetectionService,
+        SessionService $sessionService
     ) {
         $this->securityEventService = $securityEventService;
         $this->anomalyDetectionService = $anomalyDetectionService;
+        $this->sessionService = $sessionService;
     }
     /**
      * Register a new user
@@ -136,6 +140,21 @@ class AuthController extends Controller
             ], 422);
         }
 
+        // Verificar si el usuario está bloqueado ANTES de verificar credenciales
+        $blockInfo = $this->anomalyDetectionService->isEmailBlocked($request->email);
+        if ($blockInfo) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tu cuenta está temporalmente bloqueada',
+                'blocked' => true,
+                'block_info' => [
+                    'reason' => $blockInfo['reason'],
+                    'blocked_until' => $blockInfo['blocked_until'],
+                    'remaining_time' => $blockInfo['remaining_time'],
+                ]
+            ], 423); // 423 Locked
+        }
+
         $user = User::where('email', $request->email)->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
@@ -147,16 +166,31 @@ class AuthController extends Controller
                 'invalid_credentials'
             );
 
-            // Detectar fuerza bruta
-            $bruteForce = $this->anomalyDetectionService->detectBruteForce(
+            // Detectar fuerza bruta y bloquear si es necesario
+            $blockResult = $this->anomalyDetectionService->detectAndBlockIfNeeded(
                 $request->email,
                 $request->ip()
             );
 
-            if ($bruteForce) {
+            if ($blockResult) {
+                // Si se bloqueó al usuario o ya estaba bloqueado
+                if ($blockResult['type'] === 'user_blocked' || $blockResult['type'] === 'already_blocked') {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Tu cuenta ha sido bloqueada temporalmente debido a múltiples intentos fallidos',
+                        'blocked' => true,
+                        'block_info' => [
+                            'blocked_until' => $blockResult['blocked_until'] ?? null,
+                            'remaining_time' => $blockResult['remaining_time'] ?? null,
+                            'block_duration_minutes' => $blockResult['block_duration_minutes'] ?? null,
+                        ]
+                    ], 423); // 423 Locked
+                }
+
+                // Si es brute force pero el usuario no existe
                 return response()->json([
                     'success' => false,
-                    'message' => 'Demasiados intentos fallidos. Tu IP ha sido bloqueada temporalmente.'
+                    'message' => 'Demasiados intentos fallidos. Por favor, intenta más tarde.'
                 ], 429);
             }
 
@@ -172,6 +206,20 @@ class AuthController extends Controller
                 'success' => false,
                 'message' => 'No tienes permisos para acceder con el rol especificado'
             ], 403);
+        }
+
+        // Verificar límite de sesiones concurrentes
+        $sessionInfo = $this->sessionService->getConcurrentSessionsInfo($user->id);
+        if ($sessionInfo['has_reached_limit']) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Has alcanzado el límite máximo de sesiones concurrentes',
+                'session_limit_exceeded' => true,
+                'session_info' => [
+                    'current_sessions' => $sessionInfo['current_sessions'],
+                    'max_sessions' => $sessionInfo['max_sessions'],
+                ]
+            ], 429); // 429 Too Many Requests
         }
 
         // Si tiene 2FA habilitado, requerir código
@@ -310,6 +358,20 @@ class AuthController extends Controller
             }
         }
 
+        // Verificar límite de sesiones concurrentes
+        $sessionInfo = $this->sessionService->getConcurrentSessionsInfo($user->id);
+        if ($sessionInfo['has_reached_limit']) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Has alcanzado el límite máximo de sesiones concurrentes',
+                'session_limit_exceeded' => true,
+                'session_info' => [
+                    'current_sessions' => $sessionInfo['current_sessions'],
+                    'max_sessions' => $sessionInfo['max_sessions'],
+                ]
+            ], 429);
+        }
+
         // Crear token
         $token = $user->createToken('auth_token')->plainTextToken;
 
@@ -372,8 +434,8 @@ class AuthController extends Controller
                     'phone' => $user->phone,
                     'avatar' => $user->avatar,
                     'avatar_url' => $avatarUrl,
-                    'recovery_email' => $user->recovery_email,
-                    'recovery_email_verified' => $user->recovery_email_verified_at !== null,
+                    'secondary_email' => $user->secondary_email,
+                    'secondary_email_verified' => $user->secondary_email_verified_at !== null,
                     'two_factor_enabled' => $user->two_factor_enabled,
                     'roles' => $user->getRoleNames(),
                     'permissions' => $user->getAllPermissions()->pluck('name'),
@@ -488,7 +550,7 @@ class AuthController extends Controller
     }
 
     /**
-     * Send password reset link using recovery email
+     * Send password reset link using secondary email
      */
     public function forgotPassword(Request $request)
     {
@@ -507,15 +569,15 @@ class AuthController extends Controller
         try {
             $email = $request->email;
 
-            // Buscar usuario por recovery_email verificado
-            $user = User::where('recovery_email', $email)
-                        ->whereNotNull('recovery_email_verified_at')
+            // Buscar usuario por secondary_email verificado
+            $user = User::where('secondary_email', $email)
+                        ->whereNotNull('secondary_email_verified_at')
                         ->first();
 
             if (!$user) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'No existe una cuenta con este correo de recuperación o no ha sido verificado.'
+                    'message' => 'No existe una cuenta con este correo secundario o no ha sido verificado.'
                 ], 404);
             }
 
@@ -525,7 +587,7 @@ class AuthController extends Controller
             if ($status === Password::RESET_LINK_SENT) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Se ha enviado un enlace de recuperación a tu correo de recuperación.'
+                    'message' => 'Se ha enviado un enlace de recuperación a tu correo secundario.'
                 ], 200);
             }
 
@@ -597,12 +659,12 @@ class AuthController extends Controller
     }
 
     /**
-     * Add and send verification code to recovery email
+     * Add and send verification code to secondary email
      */
-    public function addRecoveryEmail(Request $request)
+    public function addSecondaryEmail(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'recovery_email' => 'required|email|different:email',
+            'secondary_email' => 'required|email|different:email',
         ]);
 
         if ($validator->fails()) {
@@ -615,21 +677,21 @@ class AuthController extends Controller
 
         $user = $request->user();
 
-        // Verificar que el recovery email no esté siendo usado como email principal
-        if (User::where('email', $request->recovery_email)->exists()) {
+        // Verificar que el email secundario no esté siendo usado como email principal
+        if (User::where('email', $request->secondary_email)->exists()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Este email ya está registrado como email principal en el sistema'
             ], 400);
         }
 
-        // Verificar que el recovery email no esté siendo usado por otro usuario
-        if (User::where('recovery_email', $request->recovery_email)
+        // Verificar que el email secundario no esté siendo usado por otro usuario
+        if (User::where('secondary_email', $request->secondary_email)
                 ->where('id', '!=', $user->id)
                 ->exists()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Este email ya está siendo usado como email de recuperación por otro usuario'
+                'message' => 'Este email ya está siendo usado como email secundario por otro usuario'
             ], 400);
         }
 
@@ -637,38 +699,38 @@ class AuthController extends Controller
             // Generar código de 6 dígitos
             $code = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
 
-            // Guardar recovery email, código y expiración (15 minutos)
+            // Guardar email secundario, código y expiración (15 minutos)
             $user->update([
-                'recovery_email' => $request->recovery_email,
-                'recovery_email_verified_at' => null, // Resetear verificación
-                'recovery_verification_code' => $code,
-                'recovery_code_expires_at' => Carbon::now()->addMinutes(15)
+                'secondary_email' => $request->secondary_email,
+                'secondary_email_verified_at' => null, // Resetear verificación
+                'secondary_email_verification_code' => $code,
+                'secondary_email_code_expires_at' => Carbon::now()->addMinutes(15)
             ]);
 
-            // Enviar código al recovery email usando Notification
-            $user->notify(new \App\Domains\AuthenticationSessions\Notifications\VerifyRecoveryEmailNotification($code));
+            // Enviar código al email secundario usando Notification
+            $user->notify(new \App\Domains\AuthenticationSessions\Notifications\VerifySecondaryEmailNotification($code));
 
             return response()->json([
                 'success' => true,
-                'message' => 'Email de recuperación agregado. Se ha enviado un código de verificación.',
+                'message' => 'Email secundario agregado. Se ha enviado un código de verificación.',
                 'data' => [
-                    'recovery_email' => $user->recovery_email,
+                    'secondary_email' => $user->secondary_email,
                     'verified' => false
                 ]
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error al agregar el email de recuperación',
+                'message' => 'Error al agregar el email secundario',
                 'error' => $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Verify recovery email with code
+     * Verify secondary email with code
      */
-    public function verifyRecoveryEmail(Request $request)
+    public function verifySecondaryEmail(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'code' => 'required|string|size:6',
@@ -685,23 +747,23 @@ class AuthController extends Controller
         $user = $request->user();
 
         // Verificar si tiene un recovery email
-        if (!$user->recovery_email) {
+        if (!$user->secondary_email) {
             return response()->json([
                 'success' => false,
-                'message' => 'No has agregado un email de recuperación'
+                'message' => 'No has agregado un email secundario'
             ], 400);
         }
 
         // Verificar si el email ya está verificado
-        if ($user->recovery_email_verified_at) {
+        if ($user->secondary_email_verified_at) {
             return response()->json([
                 'success' => false,
-                'message' => 'El email de recuperación ya está verificado'
+                'message' => 'El email secundario ya está verificado'
             ], 400);
         }
 
         // Verificar si existe un código
-        if (!$user->recovery_verification_code) {
+        if (!$user->secondary_email_verification_code) {
             return response()->json([
                 'success' => false,
                 'message' => 'No hay un código de verificación activo. Solicita uno nuevo.'
@@ -709,7 +771,7 @@ class AuthController extends Controller
         }
 
         // Verificar si el código ha expirado
-        if (Carbon::now()->isAfter($user->recovery_code_expires_at)) {
+        if (Carbon::now()->isAfter($user->secondary_email_code_expires_at)) {
             return response()->json([
                 'success' => false,
                 'message' => 'El código de verificación ha expirado. Solicita uno nuevo.'
@@ -717,7 +779,7 @@ class AuthController extends Controller
         }
 
         // Verificar si el código es correcto
-        if ($user->recovery_verification_code !== $request->code) {
+        if ($user->secondary_email_verification_code !== $request->code) {
             return response()->json([
                 'success' => false,
                 'message' => 'Código de verificación incorrecto'
@@ -727,49 +789,49 @@ class AuthController extends Controller
         try {
             // Marcar recovery email como verificado y limpiar código
             $user->update([
-                'recovery_email_verified_at' => Carbon::now(),
-                'recovery_verification_code' => null,
-                'recovery_code_expires_at' => null
+                'secondary_email_verified_at' => Carbon::now(),
+                'secondary_email_verification_code' => null,
+                'secondary_email_code_expires_at' => null
             ]);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Email de recuperación verificado exitosamente',
+                'message' => 'Email secundario verificado exitosamente',
                 'data' => [
-                    'recovery_email' => $user->recovery_email,
+                    'secondary_email' => $user->secondary_email,
                     'verified' => true,
-                    'verified_at' => $user->recovery_email_verified_at
+                    'verified_at' => $user->secondary_email_verified_at
                 ]
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error al verificar el email de recuperación',
+                'message' => 'Error al verificar el email secundario',
                 'error' => $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Resend recovery email verification code
+     * Resend secondary email verification code
      */
-    public function resendRecoveryCode(Request $request)
+    public function resendSecondaryEmailCode(Request $request)
     {
         $user = $request->user();
 
         // Verificar si tiene un recovery email
-        if (!$user->recovery_email) {
+        if (!$user->secondary_email) {
             return response()->json([
                 'success' => false,
-                'message' => 'No has agregado un email de recuperación'
+                'message' => 'No has agregado un email secundario'
             ], 400);
         }
 
         // Verificar si el email ya está verificado
-        if ($user->recovery_email_verified_at) {
+        if ($user->secondary_email_verified_at) {
             return response()->json([
                 'success' => false,
-                'message' => 'El email de recuperación ya está verificado'
+                'message' => 'El email secundario ya está verificado'
             ], 400);
         }
 
@@ -779,16 +841,16 @@ class AuthController extends Controller
 
             // Actualizar código y expiración
             $user->update([
-                'recovery_verification_code' => $code,
-                'recovery_code_expires_at' => Carbon::now()->addMinutes(15)
+                'secondary_email_verification_code' => $code,
+                'secondary_email_code_expires_at' => Carbon::now()->addMinutes(15)
             ]);
 
-            // Enviar notificación al recovery email
-            $user->notify(new \App\Domains\AuthenticationSessions\Notifications\VerifyRecoveryEmailNotification($code));
+            // Enviar notificación al email secundario
+            $user->notify(new \App\Domains\AuthenticationSessions\Notifications\VerifySecondaryEmailNotification($code));
 
             return response()->json([
                 'success' => true,
-                'message' => 'Nuevo código de verificación enviado a tu email de recuperación'
+                'message' => 'Nuevo código de verificación enviado a tu email secundario'
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -800,35 +862,35 @@ class AuthController extends Controller
     }
 
     /**
-     * Remove recovery email
+     * Remove secondary email
      */
-    public function removeRecoveryEmail(Request $request)
+    public function removeSecondaryEmail(Request $request)
     {
         $user = $request->user();
 
-        if (!$user->recovery_email) {
+        if (!$user->secondary_email) {
             return response()->json([
                 'success' => false,
-                'message' => 'No tienes un email de recuperación configurado'
+                'message' => 'No tienes un email secundario configurado'
             ], 400);
         }
 
         try {
             $user->update([
-                'recovery_email' => null,
-                'recovery_email_verified_at' => null,
-                'recovery_verification_code' => null,
-                'recovery_code_expires_at' => null
+                'secondary_email' => null,
+                'secondary_email_verified_at' => null,
+                'secondary_email_verification_code' => null,
+                'secondary_email_code_expires_at' => null
             ]);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Email de recuperación eliminado exitosamente'
+                'message' => 'Email secundario eliminado exitosamente'
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error al eliminar el email de recuperación',
+                'message' => 'Error al eliminar el email secundario',
                 'error' => $e->getMessage()
             ], 500);
         }

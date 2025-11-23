@@ -6,6 +6,7 @@ use IncadevUns\CoreDomain\Models\TicketReply;
 use IncadevUns\CoreDomain\Models\ReplyAttachment;
 use IncadevUns\CoreDomain\Enums\MediaType;
 use App\Domains\SupportTechnical\Repositories\TicketRepositoryInterface;
+use App\Domains\SupportTechnical\Notifications\TicketReplyReceivedNotification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\UploadedFile;
@@ -27,7 +28,7 @@ class TicketReplyService
         return DB::transaction(function () use ($ticketId, $data, $userId, $files) {
             // Verify ticket exists and is not closed
             $ticket = $this->repository->findById($ticketId);
-            
+
             if (!$ticket) {
                 throw new \Exception('Ticket no encontrado');
             }
@@ -49,7 +50,18 @@ class TicketReplyService
                 }
             }
 
-            return $reply->load(['user', 'attachments']);
+            $replyWithRelations = $reply->load(['user', 'attachments']);
+
+            // Enviar notificación al dueño del ticket si la respuesta NO es del dueño
+            // (evitar notificar al usuario cuando responde su propio ticket)
+            if ($ticket->user_id !== $userId) {
+                $ticket->user->notify(new TicketReplyReceivedNotification(
+                    $ticket,
+                    $replyWithRelations
+                ));
+            }
+
+            return $replyWithRelations;
         });
     }
 

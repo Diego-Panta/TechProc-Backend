@@ -40,11 +40,11 @@ class User extends Authenticatable
         'avatar',
         'phone',
 
-        // Campos de recovery email
-        'recovery_email',
-        'recovery_email_verified_at',
-        'recovery_verification_code',
-        'recovery_code_expires_at',
+        // Campos de email secundario (notificaciones, recuperación, etc.)
+        'secondary_email',
+        'secondary_email_verified_at',
+        'secondary_email_verification_code',
+        'secondary_email_code_expires_at',
 
         // Campos de 2FA
         'two_factor_enabled',
@@ -55,15 +55,15 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
-        'recovery_verification_code',
+        'secondary_email_verification_code',
         'two_factor_secret',
         'two_factor_recovery_codes',
     ];
 
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'recovery_email_verified_at' => 'datetime',
-        'recovery_code_expires_at' => 'datetime',
+        'secondary_email_verified_at' => 'datetime',
+        'secondary_email_code_expires_at' => 'datetime',
         'password' => 'hashed',
         'two_factor_enabled' => 'boolean',
     ];
@@ -85,23 +85,25 @@ class User extends Authenticatable
     }
 
     /**
-     * Ruta para el email de recuperación en notificaciones
+     * Ruta para el email en notificaciones
+     *
+     * Usa el secondary_email verificado para TODAS las notificaciones si está disponible.
+     * De lo contrario, usa el email principal.
      */
     public function routeNotificationForMail($notification)
     {
-        // Si es la notificación de recovery email, enviar al recovery_email
-        if ($notification instanceof \App\Domains\AuthenticationSessions\Notifications\VerifyRecoveryEmailNotification) {
-            return $this->recovery_email;
+        // Si es la notificación de verificación de secondary email, enviar al secondary_email
+        if ($notification instanceof \App\Domains\AuthenticationSessions\Notifications\VerifySecondaryEmailNotification) {
+            return $this->secondary_email;
         }
 
-        // Si es reseteo de contraseña Y tiene recovery_email verificado, enviar ahí
-        if ($notification instanceof \App\Domains\AuthenticationSessions\Notifications\ResetPasswordNotification) {
-            if ($this->recovery_email && $this->recovery_email_verified_at) {
-                return $this->recovery_email;
-            }
+        // Para TODAS las demás notificaciones:
+        // Si tiene secondary_email verificado, usar ese; de lo contrario, usar email principal
+        if ($this->secondary_email && $this->secondary_email_verified_at) {
+            return $this->secondary_email;
         }
 
-        // Para otras notificaciones, usar el email principal
+        // Si no hay secondary_email verificado, usar el email principal
         return $this->email;
     }
 }
