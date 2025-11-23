@@ -51,6 +51,9 @@ class NewsApiController
                 ], 404);
             }
 
+            // Incrementar el contador de vistas
+            $this->newsService->incrementViews($id);
+
             return response()->json([
                 'success' => true,
                 'data' => $news
