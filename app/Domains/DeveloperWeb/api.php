@@ -9,6 +9,7 @@ use App\Domains\DeveloperWeb\Http\Controllers\ChatbotConfigController;
 use App\Domains\DeveloperWeb\Http\Controllers\ContentStatsController;
 use App\Domains\DeveloperWeb\Http\Controllers\ContactFormApiController;
 use App\Domains\DeveloperWeb\Http\Controllers\LandingPageController;
+use App\Domains\DeveloperWeb\Http\Controllers\ContentApiController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -18,6 +19,12 @@ Route::prefix('developer-web')->name('api.developer-web.')->group(function () {
     // ESTADÍSTICAS GENERALES
     Route::prefix('stats')->name('stats.')->group(function () {
         Route::get('/overall', [ContentStatsController::class, 'getOverallStats'])->name('overall');
+    });
+
+    // CONTENT (Todos los tipos de contenido)
+    Route::prefix('content')->name('content.')->group(function () {
+        Route::get('/', [ContentApiController::class, 'index'])->name('index');
+        Route::get('/{id}', [ContentApiController::class, 'show'])->name('show');
     });
 
     // NEWS
