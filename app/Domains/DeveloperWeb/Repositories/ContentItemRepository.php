@@ -48,7 +48,20 @@ class ContentItemRepository
             });
         }
 
-        return $query->orderBy('created_at', 'desc')
+        // Ordenamiento configurable
+        $sortBy = $filters['sort_by'] ?? 'created_at';
+        $sortOrder = $filters['sort_order'] ?? 'desc';
+
+        // Validar campos permitidos para ordenar
+        $allowedSortFields = ['created_at', 'updated_at', 'published_date', 'title', 'views', 'priority'];
+        if (!in_array($sortBy, $allowedSortFields)) {
+            $sortBy = 'created_at';
+        }
+
+        // Validar dirección de ordenamiento
+        $sortOrder = strtolower($sortOrder) === 'asc' ? 'asc' : 'desc';
+
+        return $query->orderBy($sortBy, $sortOrder)
             ->paginate($perPage);
     }
 
@@ -61,6 +74,14 @@ class ContentItemRepository
             ->shouldBeDisplayed()
             ->orderBy('created_at', 'desc')
             ->paginate($perPage);
+    }
+
+    /**
+     * Buscar contenido por ID (sin filtrar por tipo)
+     */
+    public function findById(int $id): ?ContentItem
+    {
+        return ContentItem::find($id);
     }
 
     /**

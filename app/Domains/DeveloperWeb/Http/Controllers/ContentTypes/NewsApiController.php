@@ -18,7 +18,14 @@ class NewsApiController
     public function index(Request $request): JsonResponse
     {
         try {
-            $filters = $request->only(['status', 'category', 'search']);
+            $filters = $request->only([
+                'status',
+                'category',
+                'search',
+                'item_type',
+                'sort_by',
+                'sort_order'
+            ]);
             $perPage = $request->get('per_page', 15);
 
             $news = $this->newsService->getAll($perPage, $filters);
