@@ -6,6 +6,7 @@ use IncadevUns\CoreDomain\Models\TicketReply;
 use IncadevUns\CoreDomain\Models\ReplyAttachment;
 use IncadevUns\CoreDomain\Enums\MediaType;
 use App\Domains\SupportTechnical\Repositories\TicketRepositoryInterface;
+use App\Domains\SupportTechnical\Notifications\TicketReplyReceivedNotification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\UploadedFile;
@@ -22,18 +23,26 @@ class TicketReplyService
     /**
      * Create a reply with optional attachments
      */
-    public function createReply(int $ticketId, array $data, int $userId, ?array $files = null): TicketReply
+    public function createReply(int $ticketId, array $data, int $userId, ?array $files = null, bool $isSupport = false): TicketReply
     {
-        return DB::transaction(function () use ($ticketId, $data, $userId, $files) {
+        return DB::transaction(function () use ($ticketId, $data, $userId, $files, $isSupport) {
             // Verify ticket exists and is not closed
             $ticket = $this->repository->findById($ticketId);
-            
+
             if (!$ticket) {
                 throw new \Exception('Ticket no encontrado');
             }
 
             if ($ticket->status->value === 'closed') {
                 throw new \Exception('No se puede responder a un ticket cerrado');
+            }
+
+            // Si es un usuario de soporte respondiendo y el ticket está en estado 'pending', cambiar a 'open'
+            if ($isSupport && $ticket->status->value === 'pending') {
+                $this->repository->update($ticketId, [
+                    'status' => \IncadevUns\CoreDomain\Enums\TicketStatus::Open,
+                ]);
+                $ticket->refresh();
             }
 
             // Create the reply
@@ -49,7 +58,18 @@ class TicketReplyService
                 }
             }
 
-            return $reply->load(['user', 'attachments']);
+            $replyWithRelations = $reply->load(['user', 'attachments']);
+
+            // Enviar notificación al dueño del ticket si la respuesta NO es del dueño
+            // (evitar notificar al usuario cuando responde su propio ticket)
+            if ($ticket->user_id !== $userId) {
+                $ticket->user->notify(new TicketReplyReceivedNotification(
+                    $ticket,
+                    $replyWithRelations
+                ));
+            }
+
+            return $replyWithRelations;
         });
     }
 

@@ -18,7 +18,14 @@ class NewsApiController
     public function index(Request $request): JsonResponse
     {
         try {
-            $filters = $request->only(['status', 'category', 'search']);
+            $filters = $request->only([
+                'status',
+                'category',
+                'search',
+                'item_type',
+                'sort_by',
+                'sort_order'
+            ]);
             $perPage = $request->get('per_page', 15);
 
             $news = $this->newsService->getAll($perPage, $filters);
@@ -50,6 +57,9 @@ class NewsApiController
                     'message' => 'Noticia no encontrada'
                 ], 404);
             }
+
+            // Incrementar el contador de vistas
+            $this->newsService->incrementViews($id);
 
             return response()->json([
                 'success' => true,
@@ -89,7 +99,7 @@ class NewsApiController
         }
     }
 
-    public function update(UpdateNewsRequest $request, int $id): JsonResponse // CAMBIADO
+    public function update(UpdateNewsRequest $request, int $id): JsonResponse
     {
         try {
             $success = $this->newsService->update($id, $request->validated());
@@ -199,6 +209,9 @@ class NewsApiController
         }
     }
 
+    /**
+     * Obtener categorías disponibles (ahora desde el enum)
+     */
     public function getCategories(): JsonResponse
     {
         try {

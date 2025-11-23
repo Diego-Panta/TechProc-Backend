@@ -30,9 +30,9 @@ class ChatbotRepository
         if (!empty($filters['search'])) {
             $search = $filters['search'];
             $query->where(function ($q) use ($search) {
-                $q->where('question', 'ILIKE', "%{$search}%")
-                    ->orWhere('answer', 'ILIKE', "%{$search}%")
-                    ->orWhere('category', 'ILIKE', "%{$search}%");
+                $q->where('question', 'LIKE', "%{$search}%")
+                    ->orWhere('answer', 'LIKE', "%{$search}%")
+                    ->orWhere('category', 'LIKE', "%{$search}%");
             });
         }
 
@@ -254,6 +254,83 @@ class ChatbotRepository
                 'avg_satisfaction' => 0,
                 'handed_to_human' => 0,
             ];
+        }
+    }
+
+    public function getFaqsByCategoryStats(): array
+    {
+        try {
+            $stats = ChatbotFaq::select('category', DB::raw('count(*) as count'))
+                ->where('active', true)
+                ->groupBy('category')
+                ->get()
+                ->toArray();
+
+            return $stats;
+        } catch (\Exception $e) {
+            Log::error('Error getting FAQs by category stats: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    public function getMostUsedFaqs(int $limit = 5): array
+    {
+        try {
+            return ChatbotFaq::where('active', true)
+                ->orderBy('usage_count', 'desc')
+                ->limit($limit)
+                ->get(['id', 'question', 'usage_count'])
+                ->toArray();
+        } catch (\Exception $e) {
+            Log::error('Error getting most used FAQs: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    public function getConversationsByDay(int $days = 7): array
+    {
+        try {
+            $startDate = now()->subDays($days);
+
+            $stats = ChatbotConversation::select(
+                DB::raw('DATE(started_at) as date'),
+                DB::raw('COUNT(*) as count')
+            )
+                ->where('started_at', '>=', $startDate)
+                ->groupBy(DB::raw('DATE(started_at)'))
+                ->orderBy('date')
+                ->get()
+                ->toArray();
+
+            // Rellenar días faltantes con 0
+            $result = [];
+            for ($i = $days - 1; $i >= 0; $i--) {
+                $date = now()->subDays($i)->format('Y-m-d');
+                $found = false;
+
+                foreach ($stats as $stat) {
+                    if ($stat['date'] === $date) {
+                        $result[] = [
+                            'date' => $date,
+                            'count' => $stat['count']
+                        ];
+                        $found = true;
+                        break;
+                    }
+                }
+
+                if (!$found) {
+                    $result[] = [
+                        'date' => $date,
+                        'count' => 0
+                    ];
+                }
+            }
+
+            return $result;
+        } catch (\Exception $e) {
+            Log::error('Error getting conversations by day: ' . $e->getMessage());
+            return [];
         }
     }
 }

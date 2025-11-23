@@ -1,0 +1,1096 @@
+{
+	"info": {
+		"_postman_id": "security-module-collection",
+		"name": "Security Module - TechProc",
+		"description": "Colección completa para probar todas las funcionalidades del módulo de seguridad.\n\n## Configuración Inicial\n1. Ejecutar \"Login\" para obtener el token\n2. El token se guarda automáticamente en la variable `{{token}}`\n3. Todas las demás peticiones usan este token\n\n## Funcionalidades\n- Dashboard de seguridad\n- Gestión de sesiones\n- Eventos de seguridad\n- Bloqueo de usuarios\n- Configuración dinámica",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000/api",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "test_user_id",
+			"value": "2",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "🔐 Autenticación",
+			"item": [
+				{
+					"name": "Login (Admin/Security)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data && jsonData.data.token) {",
+									"        pm.collectionVariables.set('token', jsonData.data.token);",
+									"        console.log('Token guardado:', jsonData.data.token);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"admin@techproc.com\",\n    \"password\": \"password\",\n    \"role\": \"admin\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "login"]
+						},
+						"description": "Iniciar sesión para obtener token de autenticación.\n\nEl token se guarda automáticamente en la variable `token` de la colección."
+					},
+					"response": []
+				},
+				{
+					"name": "Login - Probar Bloqueo (Intento Fallido)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"test@techproc.com\",\n    \"password\": \"wrong_password\",\n    \"role\": \"student\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "login"]
+						},
+						"description": "Ejecutar múltiples veces para probar el bloqueo automático.\n\nDespués de X intentos fallidos (configurable), el usuario será bloqueado."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "📊 Dashboard",
+			"item": [
+				{
+					"name": "Get Security Dashboard",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/security/dashboard",
+							"host": ["{{base_url}}"],
+							"path": ["security", "dashboard"]
+						},
+						"description": "Obtiene el dashboard de seguridad del usuario actual.\n\nIncluye:\n- Información del usuario\n- Resumen de sesiones\n- Resumen de tokens\n- Estadísticas de eventos\n- Alertas"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🖥️ Sesiones",
+			"item": [
+				{
+					"name": "Get My Sessions",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/security/sessions",
+							"host": ["{{base_url}}"],
+							"path": ["security", "sessions"]
+						},
+						"description": "Obtiene las sesiones del usuario actual."
+					},
+					"response": []
+				},
+				{
+					"name": "Get User Sessions (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/security/sessions?user_id={{test_user_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["security", "sessions"],
+							"query": [
+								{
+									"key": "user_id",
+									"value": "{{test_user_id}}"
+								}
+							]
+						},
+						"description": "Obtiene las sesiones de un usuario específico.\n\nRequiere permiso: `sessions.view-any`"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Sessions (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/security/sessions/all",
+							"host": ["{{base_url}}"],
+							"path": ["security", "sessions", "all"]
+						},
+						"description": "Obtiene TODAS las sesiones activas agrupadas por usuario.\n\nRequiere permiso: `sessions.view-any`"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Suspicious Sessions",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/security/sessions/suspicious",
+							"host": ["{{base_url}}"],
+							"path": ["security", "sessions", "suspicious"]
+						},
+						"description": "Obtiene sesiones sospechosas (múltiples IPs simultáneas)."
+					},
+					"response": []
+				},
+				{
+					"name": "Terminate Session",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/security/sessions/1",
+							"host": ["{{base_url}}"],
+							"path": ["security", "sessions", "1"]
+						},
+						"description": "Termina una sesión específica (revoca el token).\n\nCambiar el ID en la URL."
+					},
+					"response": []
+				},
+				{
+					"name": "Terminate All My Sessions",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/security/sessions/terminate-all",
+							"host": ["{{base_url}}"],
+							"path": ["security", "sessions", "terminate-all"]
+						},
+						"description": "Termina todas las sesiones del usuario actual excepto la actual."
+					},
+					"response": []
+				},
+				{
+					"name": "Terminate All User Sessions (Admin)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/security/sessions/terminate-all?user_id={{test_user_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["security", "sessions", "terminate-all"],
+							"query": [
+								{
+									"key": "user_id",
+									"value": "{{test_user_id}}"
+								}
+							]
+						},
+						"description": "Termina todas las sesiones de un usuario específico.\n\nRequiere permiso: `sessions.terminate-any`"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "📋 Eventos de Seguridad",
+			"item": [
+				{
+					"name": "Get My Events",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/security/events?per_page=15",
+							"host": ["{{base_url}}"],
+							"path": ["security", "events"],
+							"query": [
+								{
+									"key": "per_page",
+									"value": "15"
+								}
+							]
+						},
+						"description": "Obtiene los eventos de seguridad del usuario actual (paginado)."
+					},
+					"response": []
+				},
+				{
+					"name": "Get User Events (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/security/events?user_id={{test_user_id}}&per_page=15",
+							"host": ["{{base_url}}"],
+							"path": ["security", "events"],
+							"query": [
+								{
+									"key": "user_id",
+									"value": "{{test_user_id}}"
+								},
+								{
+									"key": "per_page",
+									"value": "15"
+								}
+							]
+						},
+						"description": "Obtiene los eventos de un usuario específico.\n\nRequiere permiso: `security-events.view-any`"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Events (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/security/events/all?per_page=20",
+							"host": ["{{base_url}}"],
+							"path": ["security", "events", "all"],
+							"query": [
+								{
+									"key": "per_page",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Obtiene TODOS los eventos de seguridad.\n\nRequiere permiso: `security-events.view-any`"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Recent Events",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/security/events/recent?days=7",
+							"host": ["{{base_url}}"],
+							"path": ["security", "events", "recent"],
+							"query": [
+								{
+									"key": "days",
+									"value": "7"
+								}
+							]
+						},
+						"description": "Obtiene los eventos de los últimos X días."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Critical Events",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/security/events/critical?days=30",
+							"host": ["{{base_url}}"],
+							"path": ["security", "events", "critical"],
+							"query": [
+								{
+									"key": "days",
+									"value": "30"
+								}
+							]
+						},
+						"description": "Obtiene solo los eventos críticos de los últimos X días."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Events Statistics",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/security/events/statistics?days=30",
+							"host": ["{{base_url}}"],
+							"path": ["security", "events", "statistics"],
+							"query": [
+								{
+									"key": "days",
+									"value": "30"
+								}
+							]
+						},
+						"description": "Obtiene estadísticas de eventos de los últimos X días.\n\nIncluye:\n- Total de eventos\n- Eventos por tipo\n- Eventos por severidad\n- Conteo de críticos/warnings/info"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🚫 Bloqueos de Usuarios",
+			"item": [
+				{
+					"name": "Get Blocked Users",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/security/blocks?per_page=15",
+							"host": ["{{base_url}}"],
+							"path": ["security", "blocks"],
+							"query": [
+								{
+									"key": "per_page",
+									"value": "15"
+								}
+							]
+						},
+						"description": "Lista todos los usuarios actualmente bloqueados.\n\nRequiere permiso: `user-blocks.view-any`"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Blocks History",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/security/blocks/history?per_page=20",
+							"host": ["{{base_url}}"],
+							"path": ["security", "blocks", "history"],
+							"query": [
+								{
+									"key": "per_page",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Obtiene el historial completo de bloqueos (activos e inactivos).\n\nRequiere permiso: `user-blocks.view-any`"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Blocks Statistics",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/security/blocks/statistics?days=30",
+							"host": ["{{base_url}}"],
+							"path": ["security", "blocks", "statistics"],
+							"query": [
+								{
+									"key": "days",
+									"value": "30"
+								}
+							]
+						},
+						"description": "Obtiene estadísticas de bloqueos.\n\nIncluye:\n- Total de bloqueos\n- Bloqueos automáticos vs manuales\n- Usuarios actualmente bloqueados\n- Desbloqueados"
+					},
+					"response": []
+				},
+				{
+					"name": "Get User Block History",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/security/blocks/user/{{test_user_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["security", "blocks", "user", "{{test_user_id}}"]
+						},
+						"description": "Obtiene el historial de bloqueos de un usuario específico.\n\nRequiere permiso: `user-blocks.view-any`"
+					},
+					"response": []
+				},
+				{
+					"name": "Check If User Is Blocked",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/security/blocks/check/{{test_user_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["security", "blocks", "check", "{{test_user_id}}"]
+						},
+						"description": "Verifica si un usuario está actualmente bloqueado.\n\nRequiere permiso: `user-blocks.view-any`"
+					},
+					"response": []
+				},
+				{
+					"name": "Block User Manually",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"user_id\": 2,\n    \"reason\": \"Comportamiento sospechoso detectado\",\n    \"duration_minutes\": 60\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/security/blocks",
+							"host": ["{{base_url}}"],
+							"path": ["security", "blocks"]
+						},
+						"description": "Bloquea un usuario manualmente.\n\n**Campos:**\n- `user_id` (required): ID del usuario a bloquear\n- `reason` (required): Razón del bloqueo\n- `duration_minutes` (optional): Duración en minutos. Si no se especifica, el bloqueo es permanente.\n\nRequiere permiso: `user-blocks.create`"
+					},
+					"response": []
+				},
+				{
+					"name": "Block User Permanently",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"user_id\": 2,\n    \"reason\": \"Violación grave de términos de servicio\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/security/blocks",
+							"host": ["{{base_url}}"],
+							"path": ["security", "blocks"]
+						},
+						"description": "Bloquea un usuario de forma permanente (sin duration_minutes).\n\nRequiere permiso: `user-blocks.create`"
+					},
+					"response": []
+				},
+				{
+					"name": "Unblock User by User ID",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/security/blocks/user/{{test_user_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["security", "blocks", "user", "{{test_user_id}}"]
+						},
+						"description": "Desbloquea un usuario usando su ID.\n\nRequiere permiso: `user-blocks.delete`"
+					},
+					"response": []
+				},
+				{
+					"name": "Unblock User by Block ID",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/security/blocks/1",
+							"host": ["{{base_url}}"],
+							"path": ["security", "blocks", "1"]
+						},
+						"description": "Desbloquea un usuario usando el ID del registro de bloqueo.\n\nRequiere permiso: `user-blocks.delete`"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "⚙️ Configuración de Seguridad",
+			"item": [
+				{
+					"name": "Get All Settings",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/security/settings",
+							"host": ["{{base_url}}"],
+							"path": ["security", "settings"]
+						},
+						"description": "Obtiene todas las configuraciones de seguridad.\n\nRequiere permiso: `security-settings.view`"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Settings Grouped",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/security/settings/grouped",
+							"host": ["{{base_url}}"],
+							"path": ["security", "settings", "grouped"]
+						},
+						"description": "Obtiene las configuraciones agrupadas por categoría.\n\nGrupos:\n- login\n- blocking\n- sessions\n- anomaly_detection\n\nRequiere permiso: `security-settings.view`"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Login Settings",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/security/settings/login",
+							"host": ["{{base_url}}"],
+							"path": ["security", "settings", "login"]
+						},
+						"description": "Obtiene solo las configuraciones relacionadas con login y bloqueo.\n\nRetorna:\n- max_failed_login_attempts\n- block_duration_minutes\n- failed_login_window_minutes\n\nRequiere permiso: `security-settings.view`"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Settings by Group",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/security/settings/group/blocking",
+							"host": ["{{base_url}}"],
+							"path": ["security", "settings", "group", "blocking"]
+						},
+						"description": "Obtiene configuraciones de un grupo específico.\n\nGrupos disponibles:\n- login\n- blocking\n- sessions\n- anomaly_detection\n\nRequiere permiso: `security-settings.view`"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Single Setting",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"value\": 10\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/security/settings/max_failed_login_attempts",
+							"host": ["{{base_url}}"],
+							"path": ["security", "settings", "max_failed_login_attempts"]
+						},
+						"description": "Actualiza una configuración específica.\n\n**Configuraciones disponibles:**\n- `max_failed_login_attempts` - Intentos antes de bloquear (default: 5)\n- `failed_login_window_minutes` - Ventana de tiempo (default: 10)\n- `block_duration_minutes` - Duración del bloqueo (default: 30)\n- `session_timeout_minutes` - Timeout de sesión (default: 30)\n- `max_concurrent_sessions` - Sesiones máximas (default: 5)\n\nRequiere permiso: `security-settings.update`"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Multiple Settings",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"settings\": {\n        \"max_failed_login_attempts\": 5,\n        \"block_duration_minutes\": 30,\n        \"failed_login_window_minutes\": 10\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/security/settings",
+							"host": ["{{base_url}}"],
+							"path": ["security", "settings"]
+						},
+						"description": "Actualiza múltiples configuraciones a la vez.\n\nRequiere permiso: `security-settings.update`"
+					},
+					"response": []
+				},
+				{
+					"name": "Clear Settings Cache",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/security/settings/clear-cache",
+							"host": ["{{base_url}}"],
+							"path": ["security", "settings", "clear-cache"]
+						},
+						"description": "Limpia el cache de configuraciones.\n\nÚtil si se modificaron directamente en la base de datos.\n\nRequiere permiso: `security-settings.update`"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🧪 Pruebas de Bloqueo Automático",
+			"item": [
+				{
+					"name": "1. Configurar - 3 intentos max",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"settings\": {\n        \"max_failed_login_attempts\": 3,\n        \"block_duration_minutes\": 5,\n        \"failed_login_window_minutes\": 10\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/security/settings",
+							"host": ["{{base_url}}"],
+							"path": ["security", "settings"]
+						},
+						"description": "Configura el sistema para bloquear después de 3 intentos fallidos con 5 minutos de bloqueo."
+					},
+					"response": []
+				},
+				{
+					"name": "2. Login Fallido #1",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"test@techproc.com\",\n    \"password\": \"wrong1\",\n    \"role\": \"student\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "login"]
+						},
+						"description": "Primer intento fallido."
+					},
+					"response": []
+				},
+				{
+					"name": "3. Login Fallido #2",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"test@techproc.com\",\n    \"password\": \"wrong2\",\n    \"role\": \"student\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "login"]
+						},
+						"description": "Segundo intento fallido."
+					},
+					"response": []
+				},
+				{
+					"name": "4. Login Fallido #3 (Bloqueo)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"test@techproc.com\",\n    \"password\": \"wrong3\",\n    \"role\": \"student\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "login"]
+						},
+						"description": "Tercer intento fallido - debería bloquear al usuario.\n\nEsperar respuesta con código 423 (Locked)."
+					},
+					"response": []
+				},
+				{
+					"name": "5. Verificar Bloqueo",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"test@techproc.com\",\n    \"password\": \"correct_password\",\n    \"role\": \"student\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "login"]
+						},
+						"description": "Intento con contraseña correcta - debería fallar porque está bloqueado.\n\nEsperar respuesta con código 423 (Locked) e información del bloqueo."
+					},
+					"response": []
+				},
+				{
+					"name": "6. Restaurar Config Original",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"settings\": {\n        \"max_failed_login_attempts\": 5,\n        \"block_duration_minutes\": 30,\n        \"failed_login_window_minutes\": 10\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/security/settings",
+							"host": ["{{base_url}}"],
+							"path": ["security", "settings"]
+						},
+						"description": "Restaura la configuración original."
+					},
+					"response": []
+				}
+			],
+			"description": "Carpeta con requests ordenados para probar el flujo completo de bloqueo automático."
+		}
+	]
+}

@@ -80,4 +80,26 @@ class SessionRepository
     {
         return ActiveToken::forUser($userId)->active()->count();
     }
+
+    /**
+     * Contar todas las sesiones de un usuario (activas e inactivas)
+     */
+    public function countAllSessions(int $userId): int
+    {
+        return ActiveToken::forUser($userId)->count();
+    }
+
+    /**
+     * Terminar las sesiones más antiguas de un usuario
+     */
+    public function terminateOldestSessions(int $userId, int $count): int
+    {
+        $oldestTokens = ActiveToken::forUser($userId)
+            ->orderBy('last_used_at', 'asc')
+            ->orderBy('created_at', 'asc')
+            ->limit($count)
+            ->pluck('id');
+
+        return ActiveToken::whereIn('id', $oldestTokens)->delete();
+    }
 }
