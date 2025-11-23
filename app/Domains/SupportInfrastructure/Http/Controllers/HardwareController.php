@@ -38,7 +38,7 @@ class HardwareController extends Controller{
 
     public function show($id){
             $hardware = $this->service->getHardwareById($id);
-            if (!hardware) {
+            if (!$hardware) {
                 return response()->json(['message' => 'Hardware no encontrado'], 404);
             }
             return response()->json($hardware);

@@ -35,7 +35,7 @@ class LicenseAssignmentController extends Controller
     public function show(int $id): JsonResponse
     {
         try {
-            $assignment = $this->licenseAssignmentService->getById($id);
+            $assignment = $this->licenseAssignmentService->getAssignmentById($id);
             return response()->json(['success' => true, 'data' => $assignment]);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'No se encontró la asignación', 'error' => $e->getMessage()], 404);
@@ -55,7 +55,7 @@ class LicenseAssignmentController extends Controller
         ]);
 
         try {
-            $assignment = $this->licenseAssignmentService->create($validated);
+            $assignment = $this->licenseAssignmentService->createAssignment($validated);
             return response()->json(['success' => true, 'data' => $assignment], 201);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Error al crear asignación', 'error' => $e->getMessage()], 500);
@@ -75,7 +75,7 @@ class LicenseAssignmentController extends Controller
         ]);
 
         try {
-            $assignment = $this->licenseAssignmentService->update($id, $validated);
+            $assignment = $this->licenseAssignmentService->updateAssignment($id, $validated);
             return response()->json(['success' => true, 'data' => $assignment]);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Error al actualizar asignación', 'error' => $e->getMessage()], 500);
@@ -88,7 +88,7 @@ class LicenseAssignmentController extends Controller
     public function destroy(int $id): JsonResponse
     {
         try {
-            $this->licenseAssignmentService->delete($id);
+            $this->licenseAssignmentService->deleteAssignment($id);
             return response()->json(['success' => true, 'message' => 'Asignación eliminada correctamente']);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Error al eliminar asignación', 'error' => $e->getMessage()], 500);
