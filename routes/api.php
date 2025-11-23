@@ -21,6 +21,18 @@ Route::get('/test-public', function () {
     ]);
 });
 
+// [DEV] Listar todos los usuarios (sin autenticación - solo desarrollo)
+Route::get('/dev/users', function () {
+    $users = \App\Models\User::select('id', 'name', 'email', 'created_at')
+        ->with('roles:id,name')
+        ->get();
+    return response()->json([
+        'success' => true,
+        'count' => $users->count(),
+        'data' => $users
+    ]);
+});
+
 // Verificar token (solo desarrollo) - Requiere autenticación
 Route::middleware('auth:sanctum')->get('/check-token', function (Request $request) {
     $user = $request->user();
