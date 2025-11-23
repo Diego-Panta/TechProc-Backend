@@ -1,24 +1,17 @@
 {
   "permissions": {
     "allow": [
-      "Bash(find:*)",
-      "Bash(php artisan:*)",
-      "Bash(/mnt/c/Users/anton/Documents/GitHub/TechProc-Backend/.env)",
-      "Bash(tree:*)",
-      "Bash(composer require:*)",
-      "Bash(composer update:*)",
-      "Bash(php -l:*)",
-      "Bash(dir /s \"c:\\Users\\anton\\Documents\\GitHub\\TechProc-Backend\\resources\")",
-      "Bash(test:*)",
-      "Bash(dir /s /b \"c:\\Users\\anton\\Documents\\GitHub\\TechProc-Backend\\vendor\\incadev-uns\")",
-      "Bash(mv:*)",
-      "Bash(mkdir:*)",
-      "Bash(php:*)",
-      "Bash(dir:*)",
+      "Bash(del \"c:\\Users\\anton\\Documents\\GitHub\\TechProc-Backend\\database\\seeders\\SurveyModuleSeeder.php\")",
+      "Bash(del \"c:\\Users\\anton\\Documents\\GitHub\\TechProc-Backend\\database\\seeders\\SecuritySettingsSeeder.php\")",
+      "Bash(del \"c:\\Users\\anton\\Documents\\GitHub\\TechProc-Backend\\database\\seeders\\ContentItemsSeeder.php\")",
+      "Bash(del \"c:\\Users\\anton\\Documents\\GitHub\\TechProc-Backend\\app\\Http\\Controllers\\ChatbotController.php\")",
       "Bash(cat:*)",
-      "Bash(taskkill:*)",
+      "Bash(del \"c:\\Users\\anton\\Documents\\GitHub\\TechProc-Backend\\database\\migrations\\2025_11_23_000001_create_active_sessions_table.php\")",
+      "Bash(composer show:*)",
       "Bash(nul)",
-      "Bash(mysql:*)"
+      "Bash(findstr:*)",
+      "Bash(dir:*)",
+      "Bash(where /r vendorincadevuns TicketStatus.php 2)"
     ],
     "deny": [],
     "ask": []

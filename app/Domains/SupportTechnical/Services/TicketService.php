@@ -5,6 +5,7 @@ namespace App\Domains\SupportTechnical\Services;
 use IncadevUns\CoreDomain\Models\Ticket;
 use IncadevUns\CoreDomain\Enums\TicketStatus;
 use App\Domains\SupportTechnical\Repositories\TicketRepositoryInterface;
+use App\Domains\SupportTechnical\Notifications\TicketStatusChangedNotification;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
@@ -44,7 +45,7 @@ class TicketService
                 'user_id' => $userId,
                 'title' => $data['title'],
                 'type' => $data['type'] ?? null,
-                'status' => TicketStatus::Open,
+                'status' => TicketStatus::Pending,
                 'priority' => $data['priority'],
             ]);
 
@@ -64,7 +65,7 @@ class TicketService
     public function updateTicket(int $ticketId, array $data, int $userId, bool $canUpdateAll = false): Ticket
     {
         $ticket = $this->repository->findById($ticketId);
-        
+
         if (!$ticket) {
             throw new \Exception('Ticket no encontrado');
         }
@@ -81,9 +82,12 @@ class TicketService
             }
         }
 
+        // Guardar estado anterior para notificación
+        $oldStatus = $ticket->status->value;
+
         // Prepare update data
         $updateData = [];
-        
+
         // Title can be updated by anyone with permission
         if (isset($data['title'])) {
             $updateData['title'] = $data['title'];
@@ -102,7 +106,18 @@ class TicketService
             }
         }
 
-        return $this->repository->update($ticketId, $updateData);
+        $updatedTicket = $this->repository->update($ticketId, $updateData);
+
+        // Enviar notificación si el estado cambió
+        if (isset($updateData['status']) && $oldStatus !== $updateData['status']->value) {
+            $ticket->user->notify(new TicketStatusChangedNotification(
+                $updatedTicket,
+                $oldStatus,
+                $updateData['status']->value
+            ));
+        }
+
+        return $updatedTicket;
     }
 
     /**
@@ -111,7 +126,7 @@ class TicketService
     public function closeTicket(int $ticketId): Ticket
     {
         $ticket = $this->repository->findById($ticketId);
-        
+
         if (!$ticket) {
             throw new \Exception('Ticket no encontrado');
         }
@@ -121,7 +136,17 @@ class TicketService
             throw new \Exception('El ticket ya está cerrado');
         }
 
-        return $this->repository->close($ticketId);
+        $oldStatus = $ticket->status->value;
+        $closedTicket = $this->repository->close($ticketId);
+
+        // Enviar notificación al dueño del ticket
+        $ticket->user->notify(new TicketStatusChangedNotification(
+            $closedTicket,
+            $oldStatus,
+            'closed'
+        ));
+
+        return $closedTicket;
     }
 
     /**
@@ -130,7 +155,7 @@ class TicketService
     public function reopenTicket(int $ticketId): Ticket
     {
         $ticket = $this->repository->findById($ticketId);
-        
+
         if (!$ticket) {
             throw new \Exception('Ticket no encontrado');
         }
@@ -140,7 +165,17 @@ class TicketService
             throw new \Exception('El ticket no está cerrado');
         }
 
-        return $this->repository->reopen($ticketId);
+        $oldStatus = $ticket->status->value;
+        $reopenedTicket = $this->repository->reopen($ticketId);
+
+        // Enviar notificación al dueño del ticket
+        $ticket->user->notify(new TicketStatusChangedNotification(
+            $reopenedTicket,
+            $oldStatus,
+            'open'
+        ));
+
+        return $reopenedTicket;
     }
 
     /**

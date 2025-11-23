@@ -46,7 +46,7 @@ class ChatbotFaqService
         try {
             $data = $this->validateAndNormalizeCategory($data);
             $cleanData = $this->prepareFaqData($data);
-            
+
             return $this->chatbotRepository->createFaq($cleanData);
         } catch (\Exception $e) {
             Log::error('Error in createFaq service method', [
@@ -68,8 +68,8 @@ class ChatbotFaqService
 
             $data = $this->validateAndNormalizeCategory($data);
             $cleanData = $this->prepareFaqData($data);
-            
-            $cleanData = array_filter($cleanData, function($value) {
+
+            $cleanData = array_filter($cleanData, function ($value) {
                 return !is_null($value);
             });
 
@@ -148,7 +148,7 @@ class ChatbotFaqService
     {
         if (isset($data['category'])) {
             $category = $data['category'];
-            
+
             if (!FaqCategory::isValid($category)) {
                 $data['category'] = FaqCategory::getDefault()->value;
             }
@@ -238,6 +238,42 @@ class ChatbotFaqService
                 'resolved_rate' => 0,
                 'avg_satisfaction' => 0,
             ];
+        }
+    }
+
+    public function getFaqsByCategoryStats(): array
+    {
+        try {
+            return $this->chatbotRepository->getFaqsByCategoryStats();
+        } catch (\Exception $e) {
+            Log::error('Error in getFaqsByCategoryStats service method', [
+                'error' => $e->getMessage()
+            ]);
+            return [];
+        }
+    }
+
+    public function getMostUsedFaqs(int $limit = 5): array
+    {
+        try {
+            return $this->chatbotRepository->getMostUsedFaqs($limit);
+        } catch (\Exception $e) {
+            Log::error('Error in getMostUsedFaqs service method', [
+                'error' => $e->getMessage()
+            ]);
+            return [];
+        }
+    }
+
+    public function getConversationsByDay(int $days = 7): array
+    {
+        try {
+            return $this->chatbotRepository->getConversationsByDay($days);
+        } catch (\Exception $e) {
+            Log::error('Error in getConversationsByDay service method', [
+                'error' => $e->getMessage()
+            ]);
+            return [];
         }
     }
 }

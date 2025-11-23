@@ -8,6 +8,8 @@ use App\Domains\DeveloperWeb\Http\Controllers\ChatbotApiController;
 use App\Domains\DeveloperWeb\Http\Controllers\ChatbotConfigController;
 use App\Domains\DeveloperWeb\Http\Controllers\ContentStatsController;
 use App\Domains\DeveloperWeb\Http\Controllers\ContactFormApiController;
+use App\Domains\DeveloperWeb\Http\Controllers\LandingPageController;
+use App\Domains\DeveloperWeb\Http\Controllers\ContentApiController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -17,6 +19,12 @@ Route::prefix('developer-web')->name('api.developer-web.')->group(function () {
     // ESTADÍSTICAS GENERALES
     Route::prefix('stats')->name('stats.')->group(function () {
         Route::get('/overall', [ContentStatsController::class, 'getOverallStats'])->name('overall');
+    });
+
+    // CONTENT (Todos los tipos de contenido)
+    Route::prefix('content')->name('content.')->group(function () {
+        Route::get('/', [ContentApiController::class, 'index'])->name('index');
+        Route::get('/{id}', [ContentApiController::class, 'show'])->name('show');
     });
 
     // NEWS
@@ -67,11 +75,6 @@ Route::prefix('developer-web')->name('api.developer-web.')->group(function () {
     Route::prefix('contact-forms')->name('contact-forms.')->group(function () {
         // Public endpoint to submit contact forms
         Route::post('/', [ContactFormApiController::class, 'store'])->name('store');
-        
-        // Protected endpoints
-        /*Route::middleware([DeveloperWebMiddleware::class])->group(function () {
-            Route::post('/respond', [ContactFormApiController::class, 'respond'])->name('respond');
-        });*/
     });
 
     // Chatbot FAQs API
@@ -115,5 +118,32 @@ Route::prefix('developer-web')->name('api.developer-web.')->group(function () {
         Route::post('/reset', [ChatbotConfigController::class, 'resetConfig'])->name('reset');
         Route::get('/health', [ChatbotConfigController::class, 'healthCheck'])->name('health');
         // });
+    });
+
+    // ========================================
+    // LANDING PAGE API - PUBLIC ENDPOINTS
+    // ========================================
+    Route::prefix('landing')->name('landing.')->group(function () {
+        // 1. Hero Section - Estadísticas
+        Route::get('/hero-stats', [LandingPageController::class, 'getHeroStats'])->name('hero-stats');
+
+        // 2. Cursos disponibles
+        Route::get('/courses', [LandingPageController::class, 'getAvailableCourses'])->name('courses');
+
+        // 3. Profesores destacados
+        Route::get('/featured-teachers', [LandingPageController::class, 'getFeaturedTeachers'])->name('featured-teachers');
+
+        // 4. Testimonios de estudiantes
+        Route::get('/testimonials', [LandingPageController::class, 'getTestimonials'])->name('testimonials');
+
+        // 5. Noticias públicas
+        Route::get('/news', [LandingPageController::class, 'getPublicNews'])->name('news');
+        Route::get('/news/{id}', [LandingPageController::class, 'getNewsDetail'])->name('news.detail');
+
+        // 6. Anuncios activos
+        Route::get('/announcements', [LandingPageController::class, 'getActiveAnnouncements'])->name('announcements');
+
+        // 7. Alertas activas
+        Route::get('/alerts', [LandingPageController::class, 'getActiveAlerts'])->name('alerts');
     });
 });

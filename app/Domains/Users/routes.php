@@ -3,11 +3,17 @@
 use App\Domains\Users\Controllers\UserController;
 use App\Domains\Users\Controllers\RoleController;
 use App\Domains\Users\Controllers\PermissionController;
+use App\Domains\Users\Controllers\AdminDashboardController;
 use Illuminate\Support\Facades\Route;
 
 // All routes require authentication with Sanctum
 // Authorization is handled by Policies in the controllers
 Route::middleware(['auth:sanctum'])->group(function () {
+    // ========================================
+    // DASHBOARD DE ADMINISTRACIÓN
+    // ========================================
+    Route::get('/admin/dashboard', [AdminDashboardController::class, 'index']);
+
     // ========================================
     // GESTIÓN DE USUARIOS
     // ========================================

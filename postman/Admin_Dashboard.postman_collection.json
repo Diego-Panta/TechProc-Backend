@@ -1,0 +1,63 @@
+{
+  "info": {
+    "name": "Admin Dashboard - TechProc",
+    "description": "Endpoint para obtener estadísticas del dashboard de administración",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Admin Dashboard",
+      "item": [
+        {
+          "name": "GET Dashboard Stats",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "Token de autenticación Sanctum"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/dashboard",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "dashboard"]
+            },
+            "description": "Obtiene estadísticas generales del panel de administración:\n- Total Usuarios\n- Roles Activos\n- Permisos\n- Sesiones Activas\n- Últimas acciones del sistema"
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Dashboard de administración\",\n  \"data\": {\n    \"users\": {\n      \"total\": 150,\n      \"with_roles\": 145,\n      \"without_roles\": 5,\n      \"with_2fa\": 50,\n      \"without_2fa\": 100,\n      \"verified_emails\": 140,\n      \"unverified_emails\": 10,\n      \"new_last_30_days\": 25,\n      \"by_role\": [{\"role\": \"student\", \"count\": 80}]\n    },\n    \"roles\": {\n      \"total\": 18,\n      \"with_users\": 15,\n      \"without_users\": 3,\n      \"with_permissions\": 18,\n      \"top_roles\": []\n    },\n    \"permissions\": {\n      \"total\": 200,\n      \"in_use\": 180,\n      \"unused\": 20,\n      \"by_category\": {}\n    },\n    \"activity\": {\n      \"active_sessions\": 45,\n      \"blocked_sessions\": 2,\n      \"users_online\": 30,\n      \"sessions_today\": 120,\n      \"sessions_last_7_days\": 500,\n      \"device_distribution\": {}\n    },\n    \"recent_actions\": {\n      \"recent_events\": [],\n      \"event_stats_7_days\": {},\n      \"critical_events_count\": 0\n    }\n  }\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000/api",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "TU_TOKEN_AQUI",
+      "type": "string"
+    }
+  ]
+}

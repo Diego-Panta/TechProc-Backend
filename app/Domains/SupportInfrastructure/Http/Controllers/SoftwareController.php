@@ -20,7 +20,6 @@ class SoftwareController extends Controller{
 
     public function store(Request $request){
         $data = $request->validate([
-            'asset_id' =>'required|integer',
             'software_name' =>'required|string',
             'version' => 'nullable|string',
             'type' => 'nullable|string',
@@ -49,7 +48,6 @@ class SoftwareController extends Controller{
         public function update(Request $request, $id)
         {
             $data = $request->validate([
-                'asset_id' =>'sometimes|integer|exists:tech_assets,id',
                 'software_name' =>'nullable|string',
                 'version' => 'nullable|string',
                 'type' => 'nullable|string',

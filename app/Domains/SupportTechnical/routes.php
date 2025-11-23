@@ -16,11 +16,14 @@ use App\Domains\SupportTechnical\Http\Controllers\AttachmentController;
 */
 
 Route::middleware(['auth:sanctum'])->prefix('support')->group(function () {
-    
+
     // Statistics (must be before dynamic routes)
     Route::get('/statistics', [TicketController::class, 'statistics']);
-    
-    // Tickets
+
+    // My Tickets (tickets del usuario autenticado)
+    Route::get('/my-tickets', [TicketController::class, 'myTickets']);
+
+    // Tickets (admin/support ven todos, otros usuarios solo los suyos)
     Route::get('/tickets', [TicketController::class, 'index']);
     Route::post('/tickets', [TicketController::class, 'store']);
     Route::get('/tickets/{id}', [TicketController::class, 'show']);

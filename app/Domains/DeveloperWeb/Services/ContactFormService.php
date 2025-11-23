@@ -8,16 +8,16 @@ use Illuminate\Support\Facades\Http;
 
 class ContactFormService
 {
-    private string $brevoApiKey;
-    private string $brevoSenderEmail;
-    private string $brevoSenderName;
+    private ?string $brevoApiKey;
+    private ?string $brevoSenderEmail;
+    private ?string $brevoSenderName;
     private bool $useGmailAsPrimary;
 
     public function __construct()
     {
         $this->brevoApiKey = env('BREVO_API_KEY');
         $this->brevoSenderEmail = env('BREVO_SENDER_EMAIL');
-        $this->brevoSenderName = env('BREVO_SENDER_NAME');
+        $this->brevoSenderName = env('BREVO_SENDER_NAME', 'Incadev');
         $this->useGmailAsPrimary = env('USE_GMAIL_AS_PRIMARY', true);
     }
 
@@ -260,16 +260,16 @@ class ContactFormService
     }
 
     /**
-     * Verificar si Gmail está configurado
+     * Verificar si el mailer SMTP está configurado (Gmail o Brevo SMTP)
      */
     private function isGmailConfigured(): bool
     {
-        $gmailUser = env('MAIL_USERNAME');
-        $gmailPass = env('MAIL_PASSWORD');
+        $mailUser = env('MAIL_USERNAME');
+        $mailPass = env('MAIL_PASSWORD');
+        $mailHost = env('MAIL_HOST');
 
-        return !empty($gmailUser) && !empty($gmailPass) &&
-            env('MAIL_MAILER') === 'smtp' &&
-            env('MAIL_HOST') === 'smtp.gmail.com';
+        return !empty($mailUser) && !empty($mailPass) && !empty($mailHost) &&
+            env('MAIL_MAILER') === 'smtp';
     }
 
     /**
