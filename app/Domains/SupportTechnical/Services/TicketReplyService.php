@@ -23,9 +23,9 @@ class TicketReplyService
     /**
      * Create a reply with optional attachments
      */
-    public function createReply(int $ticketId, array $data, int $userId, ?array $files = null): TicketReply
+    public function createReply(int $ticketId, array $data, int $userId, ?array $files = null, bool $isSupport = false): TicketReply
     {
-        return DB::transaction(function () use ($ticketId, $data, $userId, $files) {
+        return DB::transaction(function () use ($ticketId, $data, $userId, $files, $isSupport) {
             // Verify ticket exists and is not closed
             $ticket = $this->repository->findById($ticketId);
 
@@ -35,6 +35,14 @@ class TicketReplyService
 
             if ($ticket->status->value === 'closed') {
                 throw new \Exception('No se puede responder a un ticket cerrado');
+            }
+
+            // Si es un usuario de soporte respondiendo y el ticket está en estado 'pending', cambiar a 'open'
+            if ($isSupport && $ticket->status->value === 'pending') {
+                $this->repository->update($ticketId, [
+                    'status' => \IncadevUns\CoreDomain\Enums\TicketStatus::Open,
+                ]);
+                $ticket->refresh();
             }
 
             // Create the reply
