@@ -67,7 +67,7 @@ class SoftwareController extends Controller{
             }catch(ModelNotFoundException $e){
                 return response()->json(['message' => 'Software no encontrado'], 404);
             }
-            $software->update($data);        }
+        }
 
         public function destroy($id){
             try{

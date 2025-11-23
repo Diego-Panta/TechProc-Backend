@@ -1,0 +1,445 @@
+{
+	"info": {
+		"_postman_id": "support-infrastructure-collection",
+		"name": "SupportInfrastructure API",
+		"description": "API para gestión de infraestructura tecnológica: activos, hardware, software, licencias y asignaciones.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{token}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000/api"
+		},
+		{
+			"key": "token",
+			"value": ""
+		}
+	],
+	"item": [
+		{
+			"name": "Tech Assets",
+			"item": [
+				{
+					"name": "Listar Activos",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/infrastructure/assets",
+							"host": ["{{base_url}}"],
+							"path": ["infrastructure", "assets"]
+						}
+					}
+				},
+				{
+					"name": "Ver Activo",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/infrastructure/assets/1",
+							"host": ["{{base_url}}"],
+							"path": ["infrastructure", "assets", "1"]
+						}
+					}
+				},
+				{
+					"name": "Crear Activo",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Laptop Dell XPS 15\",\n    \"type\": \"hardware\",\n    \"status\": \"in_use\",\n    \"user_id\": 1,\n    \"acquisition_date\": \"2024-01-15\",\n    \"expiration_date\": \"2027-01-15\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/infrastructure/assets",
+							"host": ["{{base_url}}"],
+							"path": ["infrastructure", "assets"]
+						}
+					}
+				},
+				{
+					"name": "Actualizar Activo",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Laptop Dell XPS 15 - Actualizado\",\n    \"status\": \"in_repair\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/infrastructure/assets/1",
+							"host": ["{{base_url}}"],
+							"path": ["infrastructure", "assets", "1"]
+						}
+					}
+				},
+				{
+					"name": "Eliminar Activo",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/infrastructure/assets/1",
+							"host": ["{{base_url}}"],
+							"path": ["infrastructure", "assets", "1"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Hardware",
+			"item": [
+				{
+					"name": "Listar Hardware",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/infrastructure/hardwares",
+							"host": ["{{base_url}}"],
+							"path": ["infrastructure", "hardwares"]
+						}
+					}
+				},
+				{
+					"name": "Ver Hardware",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/infrastructure/hardwares/1",
+							"host": ["{{base_url}}"],
+							"path": ["infrastructure", "hardwares", "1"]
+						}
+					}
+				},
+				{
+					"name": "Crear Hardware",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"asset_id\": 1,\n    \"model\": \"Dell XPS 15 9520\",\n    \"serial_number\": \"SN-DELL-2024-001\",\n    \"warranty_expiration\": \"2027-01-15\",\n    \"specs\": \"Intel Core i7-12700H, 32GB RAM, 1TB SSD, NVIDIA RTX 3050 Ti\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/infrastructure/hardwares",
+							"host": ["{{base_url}}"],
+							"path": ["infrastructure", "hardwares"]
+						}
+					}
+				},
+				{
+					"name": "Actualizar Hardware",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"model\": \"Dell XPS 15 9530\",\n    \"specs\": \"Intel Core i9-13900H, 64GB RAM, 2TB SSD\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/infrastructure/hardwares/1",
+							"host": ["{{base_url}}"],
+							"path": ["infrastructure", "hardwares", "1"]
+						}
+					}
+				},
+				{
+					"name": "Eliminar Hardware",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/infrastructure/hardwares/1",
+							"host": ["{{base_url}}"],
+							"path": ["infrastructure", "hardwares", "1"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Software",
+			"item": [
+				{
+					"name": "Listar Software",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/infrastructure/softwares",
+							"host": ["{{base_url}}"],
+							"path": ["infrastructure", "softwares"]
+						}
+					}
+				},
+				{
+					"name": "Ver Software",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/infrastructure/softwares/1",
+							"host": ["{{base_url}}"],
+							"path": ["infrastructure", "softwares", "1"]
+						}
+					}
+				},
+				{
+					"name": "Crear Software",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"software_name\": \"Microsoft Office 365\",\n    \"version\": \"2024\",\n    \"type\": \"productivity\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/infrastructure/softwares",
+							"host": ["{{base_url}}"],
+							"path": ["infrastructure", "softwares"]
+						}
+					}
+				},
+				{
+					"name": "Actualizar Software",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"software_name\": \"Microsoft 365\",\n    \"version\": \"2025\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/infrastructure/softwares/1",
+							"host": ["{{base_url}}"],
+							"path": ["infrastructure", "softwares", "1"]
+						}
+					}
+				},
+				{
+					"name": "Eliminar Software",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/infrastructure/softwares/1",
+							"host": ["{{base_url}}"],
+							"path": ["infrastructure", "softwares", "1"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Licenses",
+			"item": [
+				{
+					"name": "Listar Licencias",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/infrastructure/licenses",
+							"host": ["{{base_url}}"],
+							"path": ["infrastructure", "licenses"]
+						}
+					}
+				},
+				{
+					"name": "Ver Licencia",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/infrastructure/licenses/1",
+							"host": ["{{base_url}}"],
+							"path": ["infrastructure", "licenses", "1"]
+						}
+					}
+				},
+				{
+					"name": "Crear Licencia",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"software_id\": 1,\n    \"key_code\": \"XXXXX-XXXXX-XXXXX-XXXXX-XXXXX\",\n    \"provider\": \"Microsoft\",\n    \"purchase_date\": \"2024-01-01\",\n    \"expiration_date\": \"2025-01-01\",\n    \"cost\": 299.99,\n    \"status\": \"active\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/infrastructure/licenses",
+							"host": ["{{base_url}}"],
+							"path": ["infrastructure", "licenses"]
+						}
+					}
+				},
+				{
+					"name": "Actualizar Licencia",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"expired\",\n    \"expiration_date\": \"2024-12-31\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/infrastructure/licenses/1",
+							"host": ["{{base_url}}"],
+							"path": ["infrastructure", "licenses", "1"]
+						}
+					}
+				},
+				{
+					"name": "Eliminar Licencia",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/infrastructure/licenses/1",
+							"host": ["{{base_url}}"],
+							"path": ["infrastructure", "licenses", "1"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "License Assignments",
+			"item": [
+				{
+					"name": "Listar Asignaciones",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/infrastructure/assignments",
+							"host": ["{{base_url}}"],
+							"path": ["infrastructure", "assignments"]
+						}
+					}
+				},
+				{
+					"name": "Ver Asignación",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/infrastructure/assignments/1",
+							"host": ["{{base_url}}"],
+							"path": ["infrastructure", "assignments", "1"]
+						}
+					}
+				},
+				{
+					"name": "Crear Asignación",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"license_id\": 1,\n    \"asset_id\": 1,\n    \"assigned_date\": \"2024-01-15\",\n    \"status\": \"active\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/infrastructure/assignments",
+							"host": ["{{base_url}}"],
+							"path": ["infrastructure", "assignments"]
+						}
+					}
+				},
+				{
+					"name": "Actualizar Asignación",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"inactive\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/infrastructure/assignments/1",
+							"host": ["{{base_url}}"],
+							"path": ["infrastructure", "assignments", "1"]
+						}
+					}
+				},
+				{
+					"name": "Eliminar Asignación",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/infrastructure/assignments/1",
+							"host": ["{{base_url}}"],
+							"path": ["infrastructure", "assignments", "1"]
+						}
+					}
+				}
+			]
+		}
+	]
+}

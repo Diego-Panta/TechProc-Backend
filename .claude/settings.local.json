@@ -11,7 +11,8 @@
       "Bash(nul)",
       "Bash(findstr:*)",
       "Bash(dir:*)",
-      "Bash(where /r vendorincadevuns TicketStatus.php 2)"
+      "Bash(where /r vendorincadevuns TicketStatus.php 2)",
+      "Bash(if not exist \"c:\\Users\\anton\\Documents\\GitHub\\TechProc-Backend\\app\\Domains\\SupportInfrastructure\\Policies\" mkdir \"c:\\Users\\anton\\Documents\\GitHub\\TechProc-Backend\\app\\Domains\\SupportInfrastructure\\Policies\")"
     ],
     "deny": [],
     "ask": []
