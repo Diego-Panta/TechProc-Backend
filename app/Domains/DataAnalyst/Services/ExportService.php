@@ -6,7 +6,6 @@ namespace App\Domains\DataAnalyst\Services;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class ExportService
 {
@@ -26,7 +25,11 @@ class ExportService
      */
     public function exportAttendance(array $filters, string $format): string
     {
+        // Obtener métricas principales
         $metrics = $this->analyticsService->getAttendanceMetrics($filters);
+        
+        // Obtener datos de las gráficas
+        $chartsData = $this->getAttendanceChartsData($filters);
 
         $data = [
             'title' => 'Reporte de Asistencia',
@@ -34,6 +37,7 @@ class ExportService
             'summary' => $metrics['summary'] ?? [],
             'student_data' => $metrics['student_level'] ?? [],
             'group_data' => $metrics['group_level'] ?? [],
+            'charts' => $chartsData, // Incluir datos de gráficas
             'export_date' => now()->format('Y-m-d H:i:s')
         ];
 
@@ -41,11 +45,27 @@ class ExportService
     }
 
     /**
+     * Obtener datos de todas las gráficas de asistencia
+     */
+    private function getAttendanceChartsData(array $filters): array
+    {
+        return [
+            'status_distribution' => $this->analyticsService->getAttendanceStatusDistribution($filters),
+            'weekly_absence_trends' => $this->analyticsService->getWeeklyAbsenceTrends($filters),
+            'attendance_calendar' => $this->analyticsService->getAttendanceCalendar($filters)
+        ];
+    }
+
+    /**
      * Exportar métricas de progreso
      */
     public function exportProgress(array $filters, string $format): string
     {
+        // Obtener métricas principales
         $metrics = $this->analyticsService->getProgressMetrics($filters);
+        
+        // Obtener datos de las gráficas
+        $chartsData = $this->getProgressChartsData($filters);
 
         $data = [
             'title' => 'Reporte de Progreso',
@@ -53,6 +73,7 @@ class ExportService
             'summary' => $metrics['summary'] ?? [],
             'module_data' => $metrics['module_completion'] ?? [],
             'grade_data' => $metrics['grade_consistency'] ?? [],
+            'charts' => $chartsData, // Incluir datos de gráficas
             'export_date' => now()->format('Y-m-d H:i:s')
         ];
 
@@ -60,11 +81,25 @@ class ExportService
     }
 
     /**
+     * Obtener datos de todas las gráficas de progreso
+     */
+    private function getProgressChartsData(array $filters): array
+    {
+        return [
+            'grade_evolution' => $this->analyticsService->getGradeEvolution($filters)
+        ];
+    }
+
+    /**
      * Exportar métricas de rendimiento
      */
     public function exportPerformance(array $filters, string $format): string
     {
+        // Obtener métricas principales
         $metrics = $this->analyticsService->getPerformanceMetrics($filters);
+        
+        // Obtener datos de las gráficas
+        $chartsData = $this->getPerformanceChartsData($filters);
 
         $data = [
             'title' => 'Reporte de Rendimiento',
@@ -72,10 +107,23 @@ class ExportService
             'summary' => $metrics['summary'] ?? [],
             'student_performance' => $metrics['student_performance'] ?? [],
             'course_performance' => $metrics['course_performance'] ?? [],
+            'charts' => $chartsData, // Incluir datos de gráficas
             'export_date' => now()->format('Y-m-d H:i:s')
         ];
 
         return $this->generateExport($data, 'performance', $format);
+    }
+
+    /**
+     * Obtener datos de todas las gráficas de rendimiento
+     */
+    private function getPerformanceChartsData(array $filters): array
+    {
+        return [
+            'grade_distribution' => $this->analyticsService->getGradeDistribution($filters),
+            'attendance_grade_correlation' => $this->analyticsService->getAttendanceGradeCorrelation($filters),
+            'group_performance_radar' => $this->analyticsService->getGroupPerformanceRadar($filters)
+        ];
     }
 
     /**
