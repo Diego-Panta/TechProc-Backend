@@ -45,7 +45,7 @@ class TicketService
                 'user_id' => $userId,
                 'title' => $data['title'],
                 'type' => $data['type'] ?? null,
-                'status' => TicketStatus::Open,
+                'status' => TicketStatus::Pending,
                 'priority' => $data['priority'],
             ]);
 
