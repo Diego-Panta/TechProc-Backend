@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(del \"c:\\Users\\anton\\Documents\\GitHub\\TechProc-Backend\\database\\seeders\\SurveyModuleSeeder.php\")",
+      "Bash(del \"c:\\Users\\anton\\Documents\\GitHub\\TechProc-Backend\\database\\seeders\\SecuritySettingsSeeder.php\")",
+      "Bash(del \"c:\\Users\\anton\\Documents\\GitHub\\TechProc-Backend\\database\\seeders\\ContentItemsSeeder.php\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
