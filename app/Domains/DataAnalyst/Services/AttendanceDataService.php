@@ -32,7 +32,6 @@ class AttendanceDataService
             'summary' => $this->calculateAttendanceSummary($studentLevel, $groupLevel),
             'filters_applied' => $this->getAttendanceFiltersSummary($filters),
             'data_range_info' => $this->getDataRangeInfo($filters),
-            'debug_info' => $this->getDebugInfo($filters, $studentLevel) // ✅ Para debugging
         ];
     }
 
@@ -165,11 +164,9 @@ class AttendanceDataService
                     $conditions[] = "g.course_version_id = " . (int)$value;
                     break;
                 case 'start_date':
-                    // ✅ CORREGIDO: Usar formato correcto para TIMESTAMP
                     $conditions[] = "cs.start_time >= TIMESTAMP('{$value} 00:00:00')";
                     break;
                 case 'end_date':
-                    // ✅ CORREGIDO: Incluir todo el día final
                     $conditions[] = "cs.start_time <= TIMESTAMP('{$value} 23:59:59')";
                     break;
                 case 'status':
@@ -190,19 +187,6 @@ class AttendanceDataService
         ]);
 
         return $whereClause;
-    }
-
-    /**
-     * Información de debugging
-     */
-    private function getDebugInfo(array $filters, array $studentLevel): array
-    {
-        return [
-            'filters_received' => $filters,
-            'students_returned' => count($studentLevel),
-            'expected_behavior' => 'Solo sesiones entre ' . ($filters['start_date'] ?? 'N/A') . ' y ' . ($filters['end_date'] ?? 'N/A'),
-            'notes' => 'Si hay datos fuera del rango, verificar: 1) Formato fechas, 2) Condiciones WHERE, 3) Timezone'
-        ];
     }
 
     /**
@@ -261,26 +245,6 @@ class AttendanceDataService
                 'absent_count' => $row['absent_count'] ?? 0,
                 'late_count' => $row['late_count'] ?? 0,
                 'attendance_rate' => $row['attendance_rate'] ?? 0.0
-            ];
-        }
-        return $formatted;
-    }
-
-    /**
-     * Formatea resultados a nivel de grupo
-     */
-    private function formatGroupLevelResults(array $results): array
-    {
-        $formatted = [];
-        foreach ($results as $row) {
-            $formatted[] = [
-                'group_id' => $row['group_id'] ?? 0,
-                'group_name' => $row['group_name'] ?? '',
-                'course_name' => $row['course_name'] ?? '',
-                'course_version' => $row['course_version'] ?? '',
-                'total_students' => $row['total_students'] ?? 0,
-                'avg_attendance_rate' => $row['avg_attendance_rate'] ?? 0.0,
-                'avg_absence_rate' => $row['avg_absence_rate'] ?? 0.0
             ];
         }
         return $formatted;

@@ -32,7 +32,7 @@ class SyncPredictionDataset extends Command
 
             if ($this->option('incremental')) {
                 $this->info('🔄 Realizando sincronización incremental...');
-                $result = $syncService->syncIncrementalPredictionDataset();
+                $result = null;
             } else {
                 $this->info('🔄 Realizando sincronización completa...');
                 $result = $syncService->syncPredictionDataset();

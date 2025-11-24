@@ -31,12 +31,12 @@ class DropoutPredictionService
         return Cache::remember($cacheKey, $ttl, function () use ($query) {
             $queryJobConfig = $this->bigQuery->query($query);
             $queryResults = $this->bigQuery->runQuery($queryJobConfig);
-            
+
             $results = [];
             foreach ($queryResults as $row) {
                 $results[] = $row;
             }
-            
+
             return $results;
         });
     }
@@ -92,7 +92,7 @@ class DropoutPredictionService
         ";
 
         $cacheKey = 'dropout_predictions_' . md5(serialize($filters));
-        
+
         try {
             $results = $this->executeCachedQuery($query, $cacheKey);
             return $this->formatPredictionResults($results);
@@ -191,7 +191,7 @@ class DropoutPredictionService
         ";
 
         $cacheKey = 'detailed_predictions_' . md5(serialize($filters));
-        
+
         try {
             $results = $this->executeCachedQuery($query, $cacheKey);
             return $this->formatDetailedResults($results);
@@ -224,7 +224,7 @@ class DropoutPredictionService
                 CASE
                     WHEN predicted_dropped_out_probs[OFFSET(0)].prob >= 0.7 THEN '🚨 INTERVENCIÓN INMEDIATA'
                     WHEN predicted_dropped_out_probs[OFFSET(0)].prob >= 0.5 THEN '⚠️ SEGUIMIENTO SEMANAL' 
-                    ELSE '📊 MONITOREO MENSUAL'
+                    ELSE 'MONITOREO MENSUAL'
                 END as accion_recomendada
 
             FROM ML.PREDICT(
@@ -276,7 +276,7 @@ class DropoutPredictionService
         ";
 
         $cacheKey = 'group_predictions_' . $groupId;
-        
+
         try {
             $results = $this->executeCachedQuery($query, $cacheKey);
             return $this->formatPredictionResults($results);
@@ -337,10 +337,15 @@ class DropoutPredictionService
      */
     private function formatPredictionResults(array $results): array
     {
+        // Contar estudiantes únicos
+        $uniqueStudentIds = array_unique(array_column($results, 'user_id'));
+        $totalUniqueStudents = count($uniqueStudentIds);
+
         $formatted = [
             'predictions' => $results,
             'summary' => [
-                'total_students' => count($results),
+                'total_students' => $totalUniqueStudents,
+                'total_enrollments' => count($results),
                 'high_risk_count' => 0,
                 'medium_risk_count' => 0,
                 'low_risk_count' => 0,
@@ -356,7 +361,7 @@ class DropoutPredictionService
         if (!empty($results)) {
             $probabilities = array_column($results, 'dropout_probability');
             $formatted['summary']['avg_dropout_probability'] = round(array_sum($probabilities) / count($probabilities), 4);
-            
+
             $riskLevels = array_column($results, 'risk_level');
             $formatted['summary']['high_risk_count'] = count(array_filter($riskLevels, fn($level) => $level === 'ALTO'));
             $formatted['summary']['medium_risk_count'] = count(array_filter($riskLevels, fn($level) => $level === 'MEDIO'));
@@ -410,7 +415,7 @@ class DropoutPredictionService
         }
 
         $highRiskStudents = array_filter($students, fn($s) => $s['risk_level'] === 'ALTO');
-        
+
         $insights = [
             'common_issues' => [],
             'avg_metrics_high_risk' => [
@@ -422,13 +427,16 @@ class DropoutPredictionService
 
         if (!empty($highRiskStudents)) {
             $insights['avg_metrics_high_risk']['attendance_rate'] = round(
-                array_sum(array_column($highRiskStudents, 'attendance_rate')) / count($highRiskStudents), 2
+                array_sum(array_column($highRiskStudents, 'attendance_rate')) / count($highRiskStudents),
+                2
             );
             $insights['avg_metrics_high_risk']['avg_grade'] = round(
-                array_sum(array_column($highRiskStudents, 'avg_grade')) / count($highRiskStudents), 2
+                array_sum(array_column($highRiskStudents, 'avg_grade')) / count($highRiskStudents),
+                2
             );
             $insights['avg_metrics_high_risk']['payment_regularity'] = round(
-                array_sum(array_column($highRiskStudents, 'payment_regularity')) / count($highRiskStudents), 2
+                array_sum(array_column($highRiskStudents, 'payment_regularity')) / count($highRiskStudents),
+                2
             );
         }
 

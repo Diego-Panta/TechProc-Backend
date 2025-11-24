@@ -527,11 +527,6 @@ class BigQuerySyncController extends Controller
 
         return $query->exists();
     }
-
-    // Los siguientes métodos son idénticos a los de tu comando:
-    // formatRowForBigQuery, getFieldType, autoConvertField, 
-    // formatDateForBigQuery, formatDateTimeForBigQuery, 
-    // truncateTable, insertInBatches, insertRowByRow, handleInsertErrors
     
     // Copia exactamente los mismos métodos de tu comando aquí...
     private function formatRowForBigQuery(array $row, string $tableName): array

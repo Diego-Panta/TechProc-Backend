@@ -3,16 +3,11 @@ namespace App\Domains\DeveloperWeb\Enums;
 
 enum NewsCategory: string
 {
-    case TECHNOLOGY = 'technology';
-    case SCIENCE = 'science';
-    case BUSINESS = 'business';
-    case HEALTH = 'health';
-    case SPORTS = 'sports';
-    case ENTERTAINMENT = 'entertainment';
-    case POLITICS = 'politics';
-    case EDUCATION = 'education';
-    case TRAVEL = 'travel';
-    case LIFESTYLE = 'lifestyle';
+    case ACADEMIC = 'academic';
+    case EVENTS = 'events';
+    case COURSES = 'courses';
+    case RESEARCH = 'research';
+    case ADMINISTRATIVE = 'administrative';
     
     /**
      * Obtener todos los tipos como array
@@ -28,16 +23,11 @@ enum NewsCategory: string
     public function label(): string
     {
         return match($this) {
-            self::TECHNOLOGY => 'Tecnología',
-            self::SCIENCE => 'Ciencia',
-            self::BUSINESS => 'Negocios',
-            self::HEALTH => 'Salud',
-            self::SPORTS => 'Deportes',
-            self::ENTERTAINMENT => 'Entretenimiento',
-            self::POLITICS => 'Política',
-            self::EDUCATION => 'Educación',
-            self::TRAVEL => 'Viajes',
-            self::LIFESTYLE => 'Estilo de Vida',
+            self::ACADEMIC => 'Académico',
+            self::EVENTS => 'Eventos',
+            self::COURSES => 'Cursos y Programas',
+            self::RESEARCH => 'Investigación',
+            self::ADMINISTRATIVE => 'Administrativo',
         };
     }
     

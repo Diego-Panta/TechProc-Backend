@@ -18,7 +18,7 @@ Route::prefix('data-analyst')->name('api.data-analyst.')->group(function () {
     Route::get('/groups/active', [AnalyticsController::class, 'getActiveGroups']);
 
 
-    // Nuevas gráficas VIABLES - Módulo Asistencia
+    // Módulo Asistencia
     Route::get('/attendance', [AnalyticsController::class, 'getAttendanceMetrics']);
     Route::get('/charts/attendance-status', [AnalyticsController::class, 'getAttendanceStatusDistribution']);
     Route::get('/charts/weekly-absence-trends', [AnalyticsController::class, 'getWeeklyAbsenceTrends']);
@@ -57,7 +57,7 @@ Route::prefix('data-analyst')->name('api.data-analyst.')->group(function () {
         Route::get('/status', [DropoutDatasetSyncController::class, 'getSyncStatus']);
     });
 
-    // Sincronización completa (REEMPLAZA todos los datos)
+    // Sincronización completa
     Route::post('/bigquery/sync-full', [BigQuerySyncController::class, 'syncFull']);
     // Sincronización incremental (solo nuevos datos)
     Route::post('/bigquery/sync-incremental', [BigQuerySyncController::class, 'syncIncremental']);
