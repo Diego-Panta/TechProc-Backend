@@ -77,6 +77,18 @@ class ContentItemRepository
     }
 
     /**
+     * Obtener contenido activo por fecha (sin validar status) - Para anuncios
+     */
+    public function getActiveByDate(string $contentType, int $perPage = 15): LengthAwarePaginator
+    {
+        return ContentItem::ofType($contentType)
+            ->activeByDate()
+            ->orderBy('priority', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage);
+    }
+
+    /**
      * Buscar contenido por ID (sin filtrar por tipo)
      */
     public function findById(int $id): ?ContentItem
