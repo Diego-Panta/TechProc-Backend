@@ -12,7 +12,10 @@
       "Bash(findstr:*)",
       "Bash(dir:*)",
       "Bash(where /r vendorincadevuns TicketStatus.php 2)",
-      "Bash(if not exist \"c:\\Users\\anton\\Documents\\GitHub\\TechProc-Backend\\app\\Domains\\SupportInfrastructure\\Policies\" mkdir \"c:\\Users\\anton\\Documents\\GitHub\\TechProc-Backend\\app\\Domains\\SupportInfrastructure\\Policies\")"
+      "Bash(if not exist \"c:\\Users\\anton\\Documents\\GitHub\\TechProc-Backend\\app\\Domains\\SupportInfrastructure\\Policies\" mkdir \"c:\\Users\\anton\\Documents\\GitHub\\TechProc-Backend\\app\\Domains\\SupportInfrastructure\\Policies\")",
+      "Bash(php artisan:*)",
+      "Bash(mysql:*)",
+      "Bash(del \"c:\\Users\\anton\\Documents\\GitHub\\TechProc-Backend\\database\\migrations\\2025_11_23_204116_add_secondary_email_to_users_table.php\")"
     ],
     "deny": [],
     "ask": []
