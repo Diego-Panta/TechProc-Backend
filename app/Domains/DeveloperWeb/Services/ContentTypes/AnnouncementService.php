@@ -61,11 +61,11 @@ class AnnouncementService extends ContentService
     }
 
     // MÉTODOS ESPECÍFICOS SOLICITADOS
-    
+
     public function getPublishedAnnouncements(int $perPage = 15)
     {
-        // CORREGIDO: Usar el repository para obtener datos paginados
-        return $this->contentItemRepository->getPublishedByType($this->contentType->value, $perPage);
+        // Obtener anuncios activos por fecha (sin validar status published)
+        return $this->contentItemRepository->getActiveByDate($this->contentType->value, $perPage);
     }
 
     public function resetViews(int $id): bool

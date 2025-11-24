@@ -113,6 +113,17 @@ class ContentItem extends Model
     }
 
     /**
+     * Scope para anuncios activos (valida fechas Y que status sea active o published)
+     */
+    public function scopeActiveByDate($query)
+    {
+        return $query->whereIn('status', [
+            ContentStatus::ACTIVE->value,
+            ContentStatus::PUBLISHED->value
+        ])->active();
+    }
+
+    /**
      * Accessor para determinar si el contenido está activo
      */
     protected function isActive(): Attribute
