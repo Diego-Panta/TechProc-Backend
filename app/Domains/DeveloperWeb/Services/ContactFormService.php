@@ -168,22 +168,12 @@ class ContactFormService
     private function sendEmailViaGmail(string $toEmail, string $subject, string $content): bool
     {
         try {
-            // Para emails de respuesta personalizados
-            if (str_contains($subject, 'Respuesta a tu consulta')) {
-                // Aquí podrías usar una Mailable class específica si lo prefieres
-                Mail::raw($content, function ($message) use ($toEmail, $subject) {
-                    $message->to($toEmail)
-                        ->subject($subject)
-                        ->from(env('MAIL_FROM_ADDRESS'), env('MAIL_FROM_NAME'));
-                });
-            } else {
-                // Para notificaciones automáticas
-                Mail::raw($content, function ($message) use ($toEmail, $subject) {
-                    $message->to($toEmail)
-                        ->subject($subject)
-                        ->from(env('MAIL_FROM_ADDRESS'), env('MAIL_FROM_NAME'));
-                });
-            }
+            // Usar Mail::html() para enviar contenido HTML correctamente
+            Mail::html($content, function ($message) use ($toEmail, $subject) {
+                $message->to($toEmail)
+                    ->subject($subject)
+                    ->from(env('MAIL_FROM_ADDRESS'), env('MAIL_FROM_NAME'));
+            });
 
             return true;
         } catch (\Exception $e) {
