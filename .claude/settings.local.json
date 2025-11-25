@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(php unlock-admin.php:*)",
+      "Bash(php test-contact-form-email.php:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

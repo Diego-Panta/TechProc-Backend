@@ -34,7 +34,7 @@ class VerifySecondaryEmailNotification extends Notification
     public function toMail($notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Verificación de Email Secundario - TechProc')
+            ->subject('Verificación de Email Secundario - ' . config('app.name'))
             ->greeting('¡Hola!')
             ->line('Has agregado este email como tu email secundario para notificaciones y recuperación de cuenta.')
             ->line('Tu código de verificación es:')
@@ -44,6 +44,15 @@ class VerifySecondaryEmailNotification extends Notification
             ->line('Este código expirará en 15 minutos.')
             ->line('Si no solicitaste esto, puedes ignorar este correo.')
             ->salutation('Saludos, ' . config('app.name'));
+    }
+
+    /**
+     * Obtener el destinatario del email (enviar a secondary_email en lugar del email principal)
+     */
+    public function routeNotificationForMail($notifiable)
+    {
+        // Retornar el secondary_email en lugar del email principal
+        return $notifiable->secondary_email ?? $notifiable->email;
     }
 
     /**
