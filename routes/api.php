@@ -91,7 +91,7 @@ require app_path('Domains/Users/routes.php');
 require base_path('app/Domains/SupportTechnical/routes.php');
 
 // Incluir rutas del dominio LMS
-require base_path('app/Domains/Lms/routes.php');
+// require base_path('app/Domains/Lms/routes.php'); // Módulo LMS eliminado
 
 require base_path('app/Domains/DeveloperWeb/api.php');
 
