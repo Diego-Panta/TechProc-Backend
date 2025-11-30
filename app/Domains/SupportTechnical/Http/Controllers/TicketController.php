@@ -30,15 +30,15 @@ class TicketController extends Controller
     {
         try {
             $user = $request->user();
-            
+
             // Authorize - verifica que el usuario pueda ver tickets
             $this->authorize('viewAny', Ticket::class);
-            
+
             // Verificar si puede ver TODOS los tickets o solo los propios
             $canViewAll = $user->can('viewAll', Ticket::class);
 
             $perPage = $request->input('per_page', 15);
-            
+
             $filters = [
                 'status' => $request->input('status'),
                 'priority' => $request->input('priority'),
@@ -60,6 +60,11 @@ class TicketController extends Controller
                 'status' => 'success',
                 'data' => new TicketCollection($tickets)
             ]);
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'No tienes permiso para ver tickets'
+            ], 403);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
@@ -92,6 +97,11 @@ class TicketController extends Controller
                 'status' => 'success',
                 'data' => ['ticket' => new TicketResource($ticket)]
             ]);
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'No tienes permiso para ver este ticket'
+            ], 403);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
@@ -108,10 +118,10 @@ class TicketController extends Controller
     {
         try {
             $user = $request->user();
-            
+
             // Authorize
             $this->authorize('create', Ticket::class);
-            
+
             $ticket = $this->ticketService->createTicket(
                 $request->validated(),
                 $user->id
@@ -122,6 +132,11 @@ class TicketController extends Controller
                 'message' => 'Ticket creado exitosamente',
                 'data' => ['ticket' => new TicketResource($ticket)]
             ], 201);
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'No tienes permiso para crear tickets'
+            ], 403);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
@@ -151,7 +166,7 @@ class TicketController extends Controller
             $this->authorize('update', $ticket);
 
             // Verificar si puede actualizar todos los campos (status, priority, type)
-            $canUpdateAll = $user->hasPermissionTo('tickets.update') || 
+            $canUpdateAll = $user->hasPermissionTo('tickets.update') ||
                            $user->hasRole(['support', 'admin']);
 
             $updatedTicket = $this->ticketService->updateTicket(
@@ -166,6 +181,11 @@ class TicketController extends Controller
                 'message' => 'Ticket actualizado exitosamente',
                 'data' => ['ticket' => new TicketResource($updatedTicket)]
             ]);
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'No tienes permiso para actualizar este ticket'
+            ], 403);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
@@ -207,6 +227,11 @@ class TicketController extends Controller
                     ]
                 ]
             ]);
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'No tienes permiso para cerrar este ticket'
+            ], 403);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
@@ -248,6 +273,11 @@ class TicketController extends Controller
                     ]
                 ]
             ]);
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'No tienes permiso para reabrir este ticket'
+            ], 403);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
@@ -314,6 +344,11 @@ class TicketController extends Controller
                 'status' => 'success',
                 'data' => ['statistics' => $stats]
             ]);
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'No tienes permiso para ver las estadísticas'
+            ], 403);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',

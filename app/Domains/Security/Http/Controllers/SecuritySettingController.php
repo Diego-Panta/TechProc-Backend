@@ -37,17 +37,28 @@ class SecuritySettingController extends Controller
 
     /**
      * Obtener configuraciones agrupadas
+     * Todos los usuarios autenticados pueden ver configuraciones básicas (sessions, general)
+     * Solo admin/security pueden ver configuraciones sensibles
      */
     public function grouped(Request $request): JsonResponse
     {
-        if (!$request->user()->hasPermissionTo('security-settings.view')) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No tienes permiso para ver las configuraciones de seguridad'
-            ], 403);
-        }
+        $user = $request->user();
 
-        $settings = $this->settingService->getAllSettingsGrouped();
+        // Categorías que todos los usuarios autenticados pueden ver
+        $publicCategories = ['sessions', 'general', 'login'];
+
+        // Si el usuario tiene permiso completo, puede ver todo
+        if ($user->hasPermissionTo('security-settings.view')) {
+            $settings = $this->settingService->getAllSettingsGrouped();
+        } else {
+            // De lo contrario, solo puede ver categorías públicas
+            $settings = $this->settingService->getAllSettingsGrouped();
+
+            // Filtrar solo las categorías públicas
+            $settings = collect($settings)->filter(function($categorySettings, $category) use ($publicCategories) {
+                return in_array($category, $publicCategories);
+            })->toArray();
+        }
 
         return response()->json([
             'success' => true,
