@@ -12,6 +12,7 @@ use App\Http\Controllers\Controller;
 use IncadevUns\CoreDomain\Models\Ticket;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class TicketController extends Controller
 {
@@ -89,6 +90,21 @@ class TicketController extends Controller
                     'message' => 'Ticket no encontrado'
                 ], 404);
             }
+
+            // DEBUG: Log para verificar autorización
+            Log::info('Ticket Authorization Debug', [
+                'ticket_id' => $ticket->id,
+                'ticket_user_id' => $ticket->user_id,
+                'ticket_user_id_type' => gettype($ticket->user_id),
+                'auth_user_id' => $user->id,
+                'auth_user_id_type' => gettype($user->id),
+                'auth_user_email' => $user->email,
+                'auth_user_roles' => $user->getRoleNames()->toArray(),
+                'comparison_strict' => $ticket->user_id === $user->id,
+                'comparison_loose' => $ticket->user_id == $user->id,
+                'has_permission_view_any' => $user->hasPermissionTo('tickets.view-any'),
+                'has_role_support_admin' => $user->hasRole(['support', 'admin']),
+            ]);
 
             // Authorize
             $this->authorize('view', $ticket);

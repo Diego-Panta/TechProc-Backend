@@ -59,8 +59,9 @@ class TicketPolicy
         // 1. Es el propietario del ticket, O
         // 2. Tiene el permiso tickets.view-any (soporte), O
         // 3. Tiene rol de support o admin
-        
-        if ($ticket->user_id === $user->id) {
+
+        // NOTA: Usamos == en lugar de === porque user_id puede venir como string de la BD
+        if ($ticket->user_id == $user->id) {
             return true;
         }
 
@@ -92,8 +93,9 @@ class TicketPolicy
         // Puede actualizar si:
         // 1. Es el propietario (solo título), O
         // 2. Tiene permiso tickets.update (puede actualizar todo)
-        
-        if ($ticket->user_id === $user->id) {
+
+        // NOTA: Usamos == en lugar de === porque user_id puede venir como string de la BD
+        if ($ticket->user_id == $user->id) {
             return true; // Solo podrá actualizar el título (se valida en el service)
         }
 
@@ -117,8 +119,9 @@ class TicketPolicy
         // 1. Es el propietario del ticket, O
         // 2. Tiene permiso tickets.update, O
         // 3. Es soporte o admin
-        
-        if ($ticket->user_id === $user->id) {
+
+        // NOTA: Usamos == en lugar de === porque user_id puede venir como string de la BD
+        if ($ticket->user_id == $user->id) {
             return true;
         }
 
@@ -142,8 +145,9 @@ class TicketPolicy
         // 1. Es el propietario del ticket, O
         // 2. Tiene permiso tickets.update, O
         // 3. Es soporte o admin
-        
-        if ($ticket->user_id === $user->id) {
+
+        // NOTA: Usamos == en lugar de === porque user_id puede venir como string de la BD
+        if ($ticket->user_id == $user->id) {
             return true;
         }
 
