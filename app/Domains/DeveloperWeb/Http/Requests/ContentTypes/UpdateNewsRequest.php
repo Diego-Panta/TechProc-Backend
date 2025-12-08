@@ -26,7 +26,8 @@ class UpdateNewsRequest extends FormRequest
             'slug' => 'sometimes|string|max:255|unique:content_items,slug,' . $newsId,
             'summary' => 'sometimes|string|min:10|max:500',
             'content' => 'sometimes|string|min:50',
-            'image_url' => 'nullable|url|max:500',
+            'image_url' => 'nullable|url|max:500', // URL existente
+            'image_file' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120', // Archivo nuevo (max 5MB)
             'category' => 'sometimes|string|in:' . implode(',', NewsCategory::all()),
             'item_type' => 'nullable|string|in:' . implode(',', NewsItemType::all()),
             'status' => 'sometimes|string|in:' . implode(',', ContentStatus::forNews()),
@@ -47,6 +48,9 @@ class UpdateNewsRequest extends FormRequest
             'summary.min' => 'El resumen debe tener al menos 10 caracteres',
             'summary.max' => 'El resumen no debe exceder los 500 caracteres',
             'content.min' => 'El contenido debe tener al menos 50 caracteres',
+            'image_file.image' => 'El archivo debe ser una imagen',
+            'image_file.mimes' => 'La imagen debe ser de tipo: jpeg, png, jpg, gif o webp',
+            'image_file.max' => 'La imagen no debe pesar más de 5MB',
             'category.in' => 'La categoría seleccionada no es válida',
             'published_date.date_format' => 'La fecha debe tener el formato Y-m-d H:i:s',
             'published_date.after_or_equal' => 'La fecha de publicación no puede ser en el pasado',

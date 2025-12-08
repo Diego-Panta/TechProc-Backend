@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(php artisan db:show:*)",
+      "Bash(composer show:*)",
+      "Bash(php artisan:*)",
+      "Bash(composer require:*)",
+      "Bash(grep:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
