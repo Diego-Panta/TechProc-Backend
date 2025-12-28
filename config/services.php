@@ -39,4 +39,10 @@ return [
         'api_key' => env('GEMINI_API_KEY'),
     ],
 
+    'google_drive' => [
+        'app_name' => env('GOOGLE_DRIVE_APP_NAME', 'TechProc Backend'),
+        'credentials_path' => env('GOOGLE_DRIVE_CREDENTIALS_PATH', storage_path('app/google/google-drive-credentials.json')),
+        'folder_id' => env('GOOGLE_DRIVE_FOLDER_ID'),
+    ],
+
 ];

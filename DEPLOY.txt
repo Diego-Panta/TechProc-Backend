@@ -1,0 +1,7 @@
+DEPLOY DB:
+ID instancia: db-incadev
+Contraseña: inc-ADEV123
+Región: us-central1 (Iowa)
+Versión: PostgreSQL 18
+Edición: Enterprise (Zona de pruebas)
+ip-Pública: 34.136.187.125

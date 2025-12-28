@@ -1,7 +1,16 @@
 {
   "permissions": {
     "allow": [
-      "Bash(php artisan tinker:*)"
+      "Bash(php artisan db:show:*)",
+      "Bash(composer show:*)",
+      "Bash(php artisan:*)",
+      "Bash(composer require:*)",
+      "Bash(grep:*)",
+      "Bash(composer install:*)",
+      "Bash(php -m:*)",
+      "Bash(findstr:*)",
+      "Bash(curl:*)",
+      "Bash(timeout /t 60 /nobreak)"
     ],
     "deny": [],
     "ask": []

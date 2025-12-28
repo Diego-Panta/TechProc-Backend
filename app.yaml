@@ -1,0 +1,42 @@
+runtime: php82
+
+env_variables:
+  APP_NAME: "INCADEV"
+  APP_ENV: "production"
+  APP_DEBUG: "false"
+  APP_KEY: "base64:+ND2YGIDh/angHUmvvU0fjP0WYB7rsoI+uahYK+x0/E="
+  APP_URL: "https://project-48be602c-d967-4478-ab6.ue.r.appspot.com"
+
+  LOG_CHANNEL: "stack"
+  LOG_LEVEL: "error"
+
+  DB_CONNECTION: "pgsql"
+  DB_HOST: "34.31.100.155"
+  DB_PORT: "5432"
+  DB_DATABASE: "postgres"
+  DB_USERNAME: "incadevdml"
+  DB_PASSWORD: "TituzNoHagasDR0P!"
+
+  CACHE_STORE: "file"
+  SESSION_DRIVER: "file"
+  QUEUE_CONNECTION: "sync"
+
+  JWT_SECRET: "NR9wyDE7kNWyiFinOcB93XcDpApsQSwCcc6oJA3djX7StAjfI4pXX19eF7EpagZk"
+
+  GEMINI_API_KEY: "AIzaSyBhyOfssLQlNdeBlRnSI9ukWwOxWSdhhJc"
+  BIGQUERY_PROJECT_ID: "the-dominion-477800-m3"
+
+handlers:
+  - url: /.*
+    script: auto
+    secure: always
+
+automatic_scaling:
+  min_instances: 1
+  max_instances: 5
+  target_cpu_utilization: 0.65
+
+resources:
+  cpu: 1
+  memory_gb: 0.5
+  disk_size_gb: 10

@@ -28,7 +28,8 @@ class StoreNewsRequest extends FormRequest
             
             // Campos OPCIONALES para NEWS
             'slug' => 'nullable|string|max:255|unique:content_items,slug',
-            'image_url' => 'nullable|url|max:500',
+            'image_url' => 'nullable|url|max:500', // URL existente de Google Drive u otro servidor
+            'image_file' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120', // Archivo nuevo (max 5MB)
             'item_type' => 'nullable|string|in:' . implode(',', NewsItemType::all()),
             'published_date' => 'nullable|date_format:Y-m-d H:i:s|after_or_equal:today',
             'seo_title' => 'nullable|string|max:255',
@@ -51,6 +52,9 @@ class StoreNewsRequest extends FormRequest
             'category.in' => 'La categoría seleccionada no es válida',
             'status.required' => 'El estado es obligatorio',
             'slug.unique' => 'Este slug ya está en uso',
+            'image_file.image' => 'El archivo debe ser una imagen',
+            'image_file.mimes' => 'La imagen debe ser de tipo: jpeg, png, jpg, gif o webp',
+            'image_file.max' => 'La imagen no debe pesar más de 5MB',
             'published_date.date_format' => 'La fecha debe tener el formato Y-m-d H:i:s (ej: 2024-01-20 10:00:00)',
             'published_date.after_or_equal' => 'La fecha de publicación no puede ser en el pasado',
         ];
